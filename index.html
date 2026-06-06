@@ -56,7 +56,6 @@
         .search-input:focus { border-color: var(--cor-azul); }
         .search-input::placeholder { color: #64748b; }
 
-        /* ESTILO COMPACTO EXCLUSIVO PARA O FILTRO DA CENTRAL DE RECEITAS */
         .search-input-compacto {
             width: 100%;
             padding: 8px 12px; 
@@ -282,7 +281,7 @@
         <img src="https://lh3.googleusercontent.com/d/1BIAepPrrliHft2rnjcCdQxAWu0icfL2y" alt="Logo Farmed" style="max-width: 150px; height: auto; border-radius: 12px; box-shadow: var(--shadow-out);">
     </div>
 
-    <h1 style="text-align: center;"></h1>
+    <h1 style="text-align: center;">Farmed</h1>
     
     <div class="action-bar">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar acolhido..." onkeyup="renderizar()">
@@ -330,6 +329,18 @@
 
         <label>Link ou ID da Pasta do Google Drive</label>
         <input type="text" id="inpDrive" placeholder="Cole o link ou ID da pasta do paciente">
+
+        <label>Data de Prescrição</label>
+        <input type="date" id="inpDataPrescricao">
+
+        <label>Última Retirada</label>
+        <input type="date" id="inpUltimaRetirada">
+
+        <label>Qtd. Meses</label>
+        <input type="number" id="inpQtdMeses" placeholder="Ex: 3">
+
+        <label>Dias Faltantes</label>
+        <input type="number" id="inpDiasFaltantes" placeholder="Ex: 15">
         
         <button onclick="salvar()" style="width:100%; padding:14px; background:linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; font-size:15px; box-shadow: var(--shadow-out); margin-top:5px;">Salvar Alterações</button>
         <button onclick="fechar('modalCadastro')" style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">Fechar</button>
@@ -339,7 +350,7 @@
 <div id="modalCalendario" class="modal">
     <div class="modal-content modal-grande">
         <div class="agenda-header">
-            <h2>Agenda de Saídas</h2>
+            <h2>Agenda Profissional - Saídas</h2>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <button class="btn-plus" onclick="abrirModalNovaSaida()" title="Agendar Nova Saída">+</button>
                 <button onclick="fechar('modalCalendario')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
@@ -537,6 +548,12 @@
         document.getElementById('inpMed').value = "";
         document.getElementById('inpDrive').value = "";
         document.getElementById('inpHora').value = horaAtual;
+        
+        document.getElementById('inpDataPrescricao').value = "";
+        document.getElementById('inpUltimaRetirada').value = "";
+        document.getElementById('inpQtdMeses').value = "";
+        document.getElementById('inpDiasFaltantes').value = "";
+        
         abrir('modalCadastro');
     }
 
@@ -550,6 +567,12 @@
         document.getElementById('inpMed').value = item.medicamento || "";
         document.getElementById('inpDrive').value = item.links || ""; 
         document.getElementById('inpHora').value = item.hora;
+        
+        document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
+        document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || "";
+        document.getElementById('inpQtdMeses').value = item.qtd_meses || "";
+        document.getElementById('inpDiasFaltantes').value = item.dias_faltantes || "";
+        
         abrir('modalCadastro');
     }
 
@@ -561,9 +584,19 @@
         const hora = document.getElementById('inpHora').value;
         const driveRaw = document.getElementById('inpDrive').value;
         const linkLimpo = extrairIdDrive(driveRaw);
+        
+        const data_prescricao = document.getElementById('inpDataPrescricao').value || null;
+        const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
+        const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null;
+        const dias_faltantes = document.getElementById('inpDiasFaltantes').value ? parseInt(document.getElementById('inpDiasFaltantes').value) : null;
 
         if (!nome) return alert("Por favor, preencha o nome!");
-        const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo };
+        
+        const dados = { 
+            nome, cpf, medicamento: med, hora, links: linkLimpo,
+            data_prescricao, ultima_retirada, qtd_meses, dias_faltantes
+        };
+        
         if (id) {
             const { error } = await supabaseClient.from('pacientes').update(dados).eq('id', id);
             if (!error) { fechar('modalCadastro'); carregar(); }
@@ -590,10 +623,25 @@
                 return alert("A planilha está vazia!");
             }
 
+            // NOVA CORREÇÃO: Função robusta que lê datas normais e datas em número serial do Excel (ex: 46128)
             function formatarDataParaSupabase(dataRaw) {
                 if (!dataRaw) return null;
+                
+                // Se for um número puro (data serial do Excel), converte para Objeto Date correto
+                if (!isNaN(dataRaw) && String(dataRaw).trim() !== "") {
+                    const numeroSerial = Number(dataRaw);
+                    // O Excel inicia sua contagem em 1 de Janeiro de 1900
+                    const dataObj = new Date((numeroSerial - 25569) * 86400 * 1000);
+                    
+                    const ano = dataObj.getUTCFullYear();
+                    const mes = String(dataObj.getUTCMonth() + 1).padStart(2, '0');
+                    const dia = String(dataObj.getUTCDate()).padStart(2, '0');
+                    return `${ano}-${mes}-${dia}`;
+                }
+
                 const dataString = String(dataRaw).trim();
                 if (/^\d{4}-\d{2}-\d{2}$/.test(dataString)) return dataString;
+                
                 const partes = dataString.split(/[\/\-]/);
                 if (partes.length === 3) {
                     if (partes[0].length <= 2 && partes[2].length === 4) {
@@ -603,7 +651,7 @@
                         return `${ano}-${mes}-${dia}`;
                     }
                 }
-                return dataString;
+                return null;
             }
 
             function tratarHorario(horaRaw) {
@@ -624,16 +672,26 @@
 
             const arrayParaSalvar = planilhaJson.map(linha => {
                 const linkTratado = linha.links ? extrairIdDrive(String(linha.links)) : "";
-                const dataTratada = formatarDataParaSupabase(linha["data de acolhimento"]);
+                const dataTratada = formatarDataParaSupabase(linha["data_de_acolhimento"] || linha["data de acolhimento"]);
                 const horaTratada = tratarHorario(linha.hora);
                 
+                const dataPrescricaoTratada = formatarDataParaSupabase(linha["data_prescricao"]);
+                const ultimaRetiradaTratada = formatarDataParaSupabase(linha["ultima_retirada"]);
+                const qtdMesesTratado = linha["qtd_meses"] ? parseInt(linha["qtd_meses"]) : null;
+                const diasFaltantesTratado = linha["dias_faltantes"] ? parseInt(linha["dias_faltantes"]) : null;
+                
                 return {
-                    nome: linha.nomes ? String(linha.nomes).trim() : "Sem Nome",
+                    nome: linha.nome || linha.nomes ? String(linha.nome || linha.nomes).trim() : "Sem Nome",
                     cpf: linha.cpf ? String(linha.cpf).trim() : "",
                     medicamento: linha.medicamento ? String(linha.medicamento).trim() : "",
                     data_acolhimento: dataTratada,
                     links: linkTratado,
-                    hora: horaTratada 
+                    hora: horaTratada,
+                    
+                    data_prescricao: dataPrescricaoTratada,
+                    ultima_retirada: ultimaRetiradaTratada,
+                    qtd_meses: qtdMesesTratado,
+                    dias_faltantes: diasFaltantesTratado
                 };
             });
 
@@ -684,6 +742,7 @@
                     <strong>${r.nome}</strong>
                     ${r.cpf ? `<br><small style="color: var(--cor-azul)">CPF: ${r.cpf}</small>` : ''}
                     <br><small>${r.medicamento || 'Sem medicação definida'}</small>
+                    ${r.dias_faltantes !== null ? `<br><small style="color: #f87171; font-weight: bold;">Faltam: ${r.dias_faltantes} dias</small>` : ''}
                 </div>
                 <div class="actions-wrapper">
                     <button class="btn-action btn-bula" onclick="abrirGoogle('${r.medicamento}')" title="Ver Bula">Bula</button>
@@ -734,7 +793,7 @@
     function selecionarAcolhidoParaDrive(id, nomeAcolhido) {
         document.querySelectorAll('.card-paciente-link').forEach(c => c.classList.remove('selecionado'));
         const cardSelecionado = document.getElementById(`rec-card-${id}`);
-        if(cardSelecionado) cardSelecionado.classList.add('selecionadd');
+        if(cardSelecionado) cardSelecionado.classList.add('selecionado');
 
         const item = registros.find(r => r.id === id);
         if(!item) return;
