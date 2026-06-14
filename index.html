@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,6 +34,7 @@
         
         .add-btn { background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; padding: 14px 25px; border-radius: 16px; cursor: pointer; font-weight: bold; font-size: 15px; box-shadow: var(--shadow-out); text-shadow: 0 1px 2px rgba(0,0,0,0.3); transition: transform 0.1s, box-shadow 0.1s; white-space: nowrap; }
         .add-btn:active { transform: scale(0.97); box-shadow: var(--shadow-in); }
+        .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .upload-label { background: #1e293b; color: var(--texto-s); border: 1px dashed var(--borda); padding: 14px 20px; border-radius: 16px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; box-shadow: var(--shadow-out); }
         .upload-label:hover { border-color: var(--cor-azul); color: white; background: #151f32; }
@@ -84,8 +85,11 @@
         .col-direita { flex: 1.5; background: #151f32; border-radius: 18px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-in); min-height: 300px; }
         .data-selecionada-titulo { font-size: 16px; color: var(--cor-azul); font-weight: bold; margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--borda); padding-bottom: 8px; flex-shrink: 0; }
         .container-scroll-pacientes { flex: 1; overflow-y: auto; padding-right: 5px; }
+        
+        /* CSS Limpo e Otimizado aqui */
         .drive-frame-container { width: 100%; flex: 1; border-radius: 12px; overflow: hidden; background: #0b0f19; border: 1px solid var(--borda); box-shadow: var(--shadow-in); min-height: 400px; }
         .drive-frame-container iframe { width: 100%; height: 100%; border: none; }
+        
         .card-saida-paciente { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: var(--shadow-out); border-left: 5px solid #22c55e; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; }
         .card-saida-conteudo { flex: 1; }
         .card-saida-paciente h4 { color: #fff; margin-bottom: 5px; font-size: 15px; }
@@ -133,11 +137,9 @@
         .alertas-secao-titulo::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
         .badge-count-alerta { display: inline-block; background: #f97316; color: white; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
 
-        /* Estilos Bolinha */
         .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #64748b; cursor: pointer; transition: all 0.3s ease; display: inline-block; flex-shrink: 0; background-color: transparent; }
         .dot.checked { background-color: #22c55e; border-color: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); }
 
-        /* Estilos Relatório */
         .relatorio-filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .relatorio-filtros select, .relatorio-filtros input { flex: 1; min-width: 130px; margin: 0; }
         .relatorio-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--borda); padding: 12px 0; font-size: 14px; }
@@ -146,136 +148,28 @@
         .btn-calendario-header { background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); padding: 8px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-out); transition: all 0.2s; }
         .btn-calendario-header:hover { background: var(--cor-azul); color: white; }
 
-        /* ==========================================
-           ESTILOS DO MENU LATERAL (SIDEBAR)
-           ========================================== */
-        .top-nav {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            align-items: center;
-        }
-        
-        .menu-toggle {
-            background: var(--card-bg);
-            color: var(--texto-p);
-            border: 1px solid var(--borda);
-            padding: 10px 15px;
-            border-radius: 12px;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: var(--shadow-out);
-            transition: all 0.2s;
-        }
-        
-        .menu-toggle:active {
-            transform: scale(0.95);
-            box-shadow: var(--shadow-in);
-        }
+        .top-nav { display: flex; gap: 15px; margin-bottom: 25px; align-items: center; }
+        .menu-toggle { background: var(--card-bg); color: var(--texto-p); border: 1px solid var(--borda); padding: 10px 15px; border-radius: 12px; font-size: 20px; cursor: pointer; box-shadow: var(--shadow-out); transition: all 0.2s; }
+        .menu-toggle:active { transform: scale(0.95); box-shadow: var(--shadow-in); }
 
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: -320px; 
-            width: 300px;
-            height: 100vh;
-            background-color: var(--bg);
-            border-right: 1px solid var(--borda);
-            z-index: 10000;
-            transition: left 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 5px 0 20px rgba(0,0,0,0.7);
-        }
+        .sidebar { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background-color: var(--bg); border-right: 1px solid var(--borda); z-index: 10000; transition: left 0.3s ease; display: flex; flex-direction: column; box-shadow: 5px 0 20px rgba(0,0,0,0.7); }
+        .sidebar.aberta { left: 0; }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 9999; display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .sidebar-overlay.ativa { display: block; opacity: 1; }
+        .sidebar-header { padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--borda); }
+        .sidebar-header h2 { margin: 0; font-size: 1.4rem; color: var(--cor-azul); }
+        .fechar-menu { background: none; border: none; color: var(--texto-s); font-size: 28px; cursor: pointer; transition: color 0.2s; }
+        .fechar-menu:hover { color: white; }
+        .sidebar-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .sidebar-item { background: var(--card-bg); padding: 16px 20px; border-radius: 16px; cursor: pointer; border: 1px solid rgba(255,255,255,0.03); font-weight: 600; color: var(--texto-p); display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-out); transition: all 0.2s ease; }
+        .sidebar-item:hover { transform: translateY(-2px); background: #243147; border-color: rgba(0,156,217,0.3); }
+        .sidebar-item:active { transform: translateY(1px); box-shadow: var(--shadow-in); }
 
-        .sidebar.aberta {
-            left: 0;
-        }
+        /* Estilo para lista interna de remédios */
+        .med-tag-list { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; background: #151f32; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--borda); }
+        .med-tag-item { font-size: 13px !important; color: #e2e8f0 !important; font-weight: 500; display: flex; align-items: center; gap: 6px; }
 
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(2px);
-            z-index: 9999;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.ativa {
-            display: block;
-            opacity: 1;
-        }
-
-        .sidebar-header {
-            padding: 25px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--borda);
-        }
-
-        .sidebar-header h2 {
-            margin: 0;
-            font-size: 1.4rem;
-            color: var(--cor-azul);
-        }
-
-        .fechar-menu {
-            background: none;
-            border: none;
-            color: var(--texto-s);
-            font-size: 28px;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        
-        .fechar-menu:hover {
-            color: white;
-        }
-
-        .sidebar-body {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .sidebar-item {
-            background: var(--card-bg);
-            padding: 16px 20px;
-            border-radius: 16px;
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.03);
-            font-weight: 600;
-            color: var(--texto-p);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: var(--shadow-out);
-            transition: all 0.2s ease;
-        }
-
-        .sidebar-item:hover {
-            transform: translateY(-2px);
-            background: #243147;
-            border-color: rgba(0,156,217,0.3);
-        }
-        
-        .sidebar-item:active {
-            transform: translateY(1px);
-            box-shadow: var(--shadow-in);
-        }
-
-        /* =====================================================================
-           🔥 AJUSTES DE RESPONSIVIDADE PARA CELULAR (Telas < 768px)
-           ===================================================================== */
-       @media (max-width: 768px) {
+        @media (max-width: 768px) {
             .dashboard { padding: 10px; width: 100%; }
             .record-card { flex-direction: column; align-items: flex-start !important; gap: 15px; }
             .actions-wrapper { width: 100%; justify-content: space-between; }
@@ -288,12 +182,7 @@
             .relatorio-item { flex-direction: column; align-items: flex-start !important; gap: 10px; }
         }   
 
-        #modalReceitas .modal-content {
-            display: flex;
-            flex-direction: column;
-            height: 90vh;
-            width: 95% !important;
-        }
+        #modalReceitas .modal-content { display: flex; flex-direction: column; height: 90vh; width: 95% !important; }
     </style>
 </head>
 <body>
@@ -302,11 +191,10 @@
     <div style="text-align: center; margin-bottom: 10px; margin-top: 10px;">
         <img src="https://lh3.googleusercontent.com/d/1BIAepPrrliHft2rnjcCdQxAWu0icfL2y" alt="Logo Farmed" style="max-width: 150px; height: auto; border-radius: 12px; box-shadow: var(--shadow-out);">
     </div>
-    <h1 style="text-align: center;"></h1>
     
     <div class="top-nav">
         <button class="menu-toggle" onclick="abrirMenuLateral()">☰</button>
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar acolhido..." onkeyup="renderizar()">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Procurar acolhido..." onkeyup="renderizar()">
     </div>
 
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="fecharMenuLateral()"></div>
@@ -314,66 +202,73 @@
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h2>⚙️ Ações</h2>
-            <button onclick="fecharMenuLateral()" class="fechar-menu">&times;</button>
+            <button onclick="fecharMenuLateral()" class="fechar-menu">×</button>
         </div>
         
         <div class="sidebar-body">
-            <button class="add-btn" onclick="abrirCadastroNovos(); fecharMenuLateral();" style="width: 100%;">+ Cadastrar Novo</button>
+            <button class="add-btn" id="btnTriggerCadastro" onclick="abrirCadastroNovos(); fecharMenuLateral();" style="width: 100%;">+ Registar Novo</button>
             
-            <label for="importPlanilha" class="upload-label" style="justify-content: center;">📁 Importar Planilha</label>
+            <label for="importPlanilha" class="upload-label" style="justify-content: center;">📁 Importar Excel</label>
             <input type="file" id="importPlanilha" accept=".xlsx, .xls, .csv" style="display: none;" onchange="importarPlanilhaAcolhidos(event)">
             
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 10px 0;">
             
-            <div class="sidebar-item" onclick="abrirCalendarioGrande(); fecharMenuLateral();">
-                📅 Agenda / Saídas
-            </div>
-            
-            <div class="sidebar-item" onclick="abrirGerenciadorReceitas(); fecharMenuLateral();">
-                📄✍️ Gerenciar Receitas
-            </div>
-            
-            <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">
-                ⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span>
-            </div>
+            <div class="sidebar-item" onclick="abrirCalendarioGrande(); fecharMenuLateral();">📅 Agenda / Saídas</div>
+            <div class="sidebar-item" onclick="abrirGerenciadorReceitas(); fecharMenuLateral();">📄✍️ Gerir Receitas</div>
+            <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></div>
         </div>
     </div>
 
-    <div class="time-selector" id="timeSelectorContainer">
-    </div>
-
-    <div id="lista-registros">Carregando dados...</div>
+    <div class="time-selector" id="timeSelectorContainer"></div>
+    <div id="lista-registros">A carregar dados...</div>
 </div>
 
 <div id="modalCadastro" class="modal">
     <div class="modal-content">
         <h2 id="modalTitulo">Novo Acolhido</h2>
         <input type="hidden" id="editId">
+        
         <label>Nome do Acolhido</label>
         <input type="text" id="inpNome" placeholder="Ex: Michael">
+        
         <label>CPF</label>
-        <input type="text" id="inpCpf" placeholder="Ex: 000.000.000-00">
-        <label>Medicamento / Dosagem</label>
-        <input type="text" id="inpMed" placeholder="Ex: Dipirona">
-        <label>Horário fixo</label>
-        <select id="inpHora">
-            <option value="07h">07h</option><option value="15h">15h</option>
-            <option value="19h">19h</option><option value="23h">23h</option>
-        </select>
+        <input type="text" id="inpCpf" placeholder="000.000.000-00" maxlength="14" oninput="aplicarMascaraCPF(this)">
+        
+        <label>Medicamentos <span style="color:var(--cor-azul); font-size:11px;">(Separe por vírgula se forem vários)</span></label>
+        <input type="text" id="inpMed" placeholder="Ex: Dipirona, Omeprazol, Losartana">
+        
+        <label>Horário Fixo</label>
+        <select id="inpHora"></select>
+        
         <label>Link ou ID da Pasta do Google Drive</label>
-        <input type="text" id="inpDrive" placeholder="Cole o link ou ID da pasta do paciente">
+        <input type="text" id="inpDrive" placeholder="Cole o link ou ID da pasta">
+        
         <label>Data de Prescrição</label>
         <input type="date" id="inpDataPrescricao">
-        <label>Última Retirada (data que termina o remédio)</label>
+        
+        <label>Última Retirada (data do início do lote)</label>
         <input type="date" id="inpUltimaRetirada">
-        <label>Qtd. Meses</label>
+        
+        <label>Qtd. Meses de Validade</label>
         <input type="number" id="inpQtdMeses" placeholder="Ex: 3">
+        
         <label>Dias Faltantes <span style="color: #22c55e;">(Calculado Automaticamente)</span></label>
         <input type="number" id="inpDiasFaltantes" placeholder="Preenchido automaticamente" disabled>
-        <div class="info-calculo">ℹ️ Cálculo: última_retirada - data atual OU qtd_meses × 30 dias</div>
+        <div class="info-calculo">ℹ️ Cálculo preciso baseado no calendário real + meses de validade.</div>
         
-        <button onclick="salvar()" style="width:100%; padding:14px; background:linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; margin-top:10px;">Salvar</button>
+        <button id="btnSalvarCadastro" onclick="salvar()" style="width:100%; padding:14px; background:linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; margin-top:10px;">Guardar</button>
         <button onclick="fechar('modalCadastro')" style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">Cancelar</button>
+    </div>
+</div>
+
+<div id="modalConfirmacao" class="modal" style="z-index: 110000;">
+    <div class="modal-content" style="max-width: 380px; text-align: center;">
+        <h3 id="confirmarTitulo" style="margin-bottom: 12px; font-weight: 700;">Confirmar Ação</h3>
+        <p id="confirmarTexto" style="color: var(--texto-s); font-size: 14px; margin-bottom: 24px; line-height: 1.5;"></p>
+        <div style="display: flex; gap: 12px;">
+            <button id="btnConfirmarSim" style="flex: 1; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Sim, Executar</button>
+            <button onclick="fechar('modalConfirmacao')" style="flex: 1; padding: 12px; background: #151f32; color: var(--texto-s); border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Cancelar</button>
+        </div>
     </div>
 </div>
 
@@ -399,7 +294,7 @@
                 <div class="cal-grade-dias" id="calGradeDias"></div>
             </div>
             <div class="col-direita">
-                <div class="data-selecionada-titulo" id="dataSelecionadaTitulo">Carregando...</div>
+                <div class="data-selecionada-titulo" id="dataSelecionadaTitulo">A carregar...</div>
                 <div class="container-scroll-pacientes" id="listaPacientesAgendados"></div>
             </div>
         </div>
@@ -439,7 +334,7 @@
             <button onclick="fechar('modalAlertas')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
         </div>
         <div id="alertasModalBody">
-            <p style="color:#64748b; text-align:center; padding:30px;">Carregando alertas...</p>
+            <p style="color:#64748b; text-align:center; padding:30px;">A carregar alertas...</p>
         </div>
     </div>
 </div>
@@ -454,7 +349,7 @@
         <input type="text" id="saidaLinks" placeholder="https://drive.google.com/...">
         <label>Data da Renovação/Saída:</label>
         <input type="date" id="saidaData">
-        <button onclick="window.salvarSaida()" style="background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px;">Salvar Agendamento</button>
+        <button id="btnSalvarSaida" onclick="window.salvarSaida()" style="background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px;">Salvar Agendamento</button>
         <button onclick="fechar('modalNovaSaida')" style="width:100%; border:none; background:none; color:var(--texto-s); margin-top:10px; cursor:pointer; font-weight:600;">Voltar</button>
     </div>
 </div>
@@ -462,39 +357,39 @@
 <div id="modalRelatorioGeral" class="modal">
     <div class="modal-content" style="max-width: 600px; width: 95%;">
         <h3>Relatório de Medicamentos Tomados</h3>
-        
         <div class="relatorio-filtros">
             <select id="relatorioPacienteSelect"></select>
             <input type="date" id="relatorioDataInicio" title="Data Inicial">
             <input type="date" id="relatorioDataFim" title="Data Final">
         </div>
-        <button onclick="buscarRelatorioGeral()" style="width: 100%; background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px;">🔍 Buscar Relatório</button>
-
+        <button id="btnBuscarRelatorio" onclick="buscarRelatorioGeral()" style="width: 100%; background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px;">🔍 Buscar Relatório</button>
         <div id="conteudoRelatorioGeral" style="background: #151f32; border-radius: 12px; padding: 10px; max-height: 300px; overflow-y: auto;">
             <p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>
         </div>
-        
         <div style="margin-bottom: 20px; margin-top: 15px;">
-            <button onclick="exportarRelatorio()" style="width: 100%; padding: 12px; background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">
-                📄 Exportar Relatório em PDF
-            </button>
+            <button onclick="exportarRelatorio()" style="width: 100%; padding: 12px; background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">📄 Exportar Relatório em PDF</button>
         </div>
-        
         <button onclick="fechar('modalRelatorioGeral')" style="width:100%; padding:12px; margin-top:10px; background:#243147; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Fechar</button>
     </div>
 </div>
 
 <script>
+    // =========================================================================================
+    // 🔴 AVISO DE SEGURANÇA: Certifique-se de ativar o RLS (Row Level Security) no Supabase!
+    // Sem RLS ativo, as chaves de API abaixo ficam vulneráveis a manipulações maliciosas.
+    // =========================================================================================
     const { createClient } = supabase;
     const supabaseClient = createClient(
         'https://xyukqrwjiywemscenqka.supabase.co',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dWtxcndqaXl3ZW1zY2VucWthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjYxNTAsImV4cCI6MjA5Njk0MjE1MH0.j6W4AMU_J3XQYm7RFXHJqEQkoHPWZOQfXU03qHUwXxM'
     );
 
+    // Fonte única de verdade para os Horários Fixos da Aplicação
+    let horariosAtivos = ["07h", "15h", "19h", "23h"]; 
+    
     let registros = [];
     let saidas = [];
     let registrosMedicacaoDia = []; 
-    let horariosAtivos = ["07h", "15h", "19h", "23h"]; 
     let horaAtual = "07h";
     let dataAtual = new Date();
     let dataSelecionada = new Date();
@@ -509,27 +404,70 @@
         const dia = String(data.getDate()).padStart(2, '0');
         return `${ano}-${mes}-${dia}`;
     }
+
+    // ==========================================
+    // MÁSCARA E VALIDAÇÃO ROBUSTA DE CPF
+    // ==========================================
+    function aplicarMascaraCPF(campo) {
+        let v = campo.value.replace(/\D/g, "");
+        v = v.replace(/(\d{3})(\d)/, "$1.$2");
+        v = v.replace(/(\d{3})(\d)/, "$1.$2");
+        v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        campo.value = v;
+    }
+
+    function validarCPF(cpf) {
+        cpf = cpf.replace(/[^\d]+/g, '');
+        if (cpf == '' || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+        let add = 0;
+        for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
+        let rev = 11 - (add % 11);
+        if (rev == 10 || rev == 11) rev = 0;
+        if (rev != parseInt(cpf.charAt(9))) return false;
+        add = 0;
+        for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
+        rev = 11 - (add % 11);
+        if (rev == 10 || rev == 11) rev = 0;
+        if (rev != parseInt(cpf.charAt(10))) return false;
+        return true;
+    }
+
+    // ==========================================
+    // MODAL DE CONFIRMAÇÃO CUSTOMIZADO
+    // ==========================================
+    function perguntarConfirmacao(titulo, texto, acaoSim) {
+        document.getElementById('confirmarTitulo').innerText = titulo;
+        document.getElementById('confirmarTexto').innerText = texto;
+        abrir('modalConfirmacao');
+        document.getElementById('btnConfirmarSim').onclick = function() {
+            fechar('modalConfirmacao');
+            acaoSim();
+        };
+    }
     
     // ==========================================
-    // LÓGICA ORIGINAL COMPLETA DE ALERTAS
+    // CÁLCULO DE DIAS FALTANTES CORRIGIDO
     // ==========================================
     function calcularDiasFaltantes(paciente) {
+        if (!paciente.ultima_retirada) return null;
+        
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
-        if (paciente.ultima_retirada && paciente.qtd_meses && paciente.qtd_meses > 0) {
-            const dataRetirada = new Date(paciente.ultima_retirada);
-            dataRetirada.setHours(0, 0, 0, 0);
-            const diasEstoque = paciente.qtd_meses * 30;
-            const dataVencimento = new Date(dataRetirada.getTime() + diasEstoque * 24 * 60 * 60 * 1000);
-            return Math.floor((dataVencimento - hoje) / (1000 * 60 * 60 * 24));
+        
+        // Evita distorções de fuso horário local na conversão de string ISO
+        const dataRetirada = new Date(paciente.ultima_retirada + 'T00:00:00');
+        let dataVencimento = new Date(dataRetirada.getTime());
+
+        if (paciente.qtd_meses && paciente.qtd_meses > 0) {
+            // Adiciona meses de forma exata baseada em calendário (tratando 28, 30 e 31 dias)
+            dataVencimento.setMonth(dataVencimento.getMonth() + parseInt(paciente.qtd_meses));
+        } else {
+            // Fallback sem quantidade de meses estipulada
+            dataVencimento = dataRetirada;
         }
-        if (paciente.ultima_retirada) {
-            const dataRetirada = new Date(paciente.ultima_retirada);
-            dataRetirada.setHours(0, 0, 0, 0);
-            return Math.floor((dataRetirada - hoje) / (1000 * 60 * 60 * 24));
-        }
-        if (paciente.qtd_meses && paciente.qtd_meses > 0) { return paciente.qtd_meses * 30; }
-        return null;
+        
+        const diferencaTempo = dataVencimento.getTime() - hoje.getTime();
+        return Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
     }
 
     function calcularStatusReceita(paciente) {
@@ -547,7 +485,7 @@
     function calcularStatusRenovacao(saidaItem) {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
-        const dataSaida = new Date(saidaItem.data); dataSaida.setHours(0, 0, 0, 0);
+        const dataSaida = new Date(saidaItem.data + 'T00:00:00');
         const diasRestantes = Math.floor((dataSaida - hoje) / (1000 * 60 * 60 * 24));
         let status = 'ok', mensagem = '', alerta = false;
         if (diasRestantes < 0) { status = 'vencida'; mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true; } 
@@ -577,7 +515,6 @@
     }
 
     function buildCardEstoque(alerta) {
-        const status = alerta.dias_faltantes < 0 ? 'critico' : (alerta.dias_faltantes <= 5 ? 'atencao' : 'ok');
         return alerta.medicamentos.map(m => {
             const receitaTag = m.receita_valida === true ? `<span class="alerta-receita-tag valida">✓ Receita Válida</span>` : m.receita_valida === false ? `<span class="alerta-receita-tag invalida">✗ Receita Inválida</span>` : `<span class="alerta-receita-tag nd">— Receita N/D</span>`;
             const mStatus = m.diasFaltantes < 0 ? 'critico' : (m.diasFaltantes <= 5 ? 'atencao' : 'ok');
@@ -641,7 +578,7 @@
             else { badge.style.display = 'none'; }
         }
         if (btnAlertas) btnAlertas.classList.toggle('alerta-ativo', totalAlertas > 0);
-        if (totalAlertas === 0) return `<p style='color:#22c55e; text-align:center; font-size:13px; padding:30px 0;'>✅ Nenhum alerta no momento!</p>`;
+        if (totalAlertas === 0) return `<p style='color:#22c55e; text-align:center; font-size:13px; padding:30px 0;'>✅ Nenhum alerta de momento!</p>`;
 
         let html = '';
         if (alertasEstoque.length > 0) { html += `<div class="alertas-secao-titulo">💊 Estoque de Medicamentos</div><div class="alertas-grid">`; alertasEstoque.forEach(a => { html += buildCardEstoque(a); }); html += `</div>`; }
@@ -667,13 +604,12 @@
         }
         const modalBody = document.getElementById('alertasModalBody');
         if (modalBody) modalBody.innerHTML = buildAlertasHTML();
-        else buildAlertasHTML();
     }
 
     function abrirModalAlertas() { abrir('modalAlertas'); document.getElementById('alertasModalBody').innerHTML = buildAlertasHTML(); }
     
     // ==========================================
-    // CARREGAMENTO DE DADOS
+    // CARREGAMENTO DE DADOS (BASE DE DADOS)
     // ==========================================
     async function carregar() {
         try {
@@ -689,15 +625,21 @@
             const respMed = await supabaseClient.from('registro_medicacao').select('*').eq('data', hoje);
             if(respMed.data) registrosMedicacaoDia = respMed.data;
             
+            popularSelectHorariosFixo();
             renderizarHorarios();
             renderizar();
             gerarAlertas();
-        } catch (err) { console.error("Erro comunicação Supabase:", err); }
+        } catch (err) { console.error("Erro na comunicação com o Supabase:", err); }
     }
 
-    // ==========================================
-    // BOTÃO "+" E HORÁRIOS E RELATÓRIO GERAL
-    // ==========================================
+    // Centraliza a criação do select do Modal vindo do Array global de tempos ativos
+    function popularSelectHorariosFixo() {
+        const select = document.getElementById('inpHora');
+        if(select) {
+            select.innerHTML = horariosAtivos.map(h => `<option value="${h}">${h}</option>`).join('');
+        }
+    }
+
     function renderizarHorarios() {
         const container = document.getElementById('timeSelectorContainer');
         container.innerHTML = horariosAtivos.map(h => `<button class="time-btn ${horaAtual === h ? 'active' : ''}" onclick="filtrar('${h}')">${h}</button>`).join('') + `
@@ -709,55 +651,46 @@
     }
 
     function adicionarNovoHorario() {
-        const novo = prompt("Digite o novo horário (ex: 13h):");
+        const novo = prompt("Introduza o novo horário desejado (ex: 13h):");
         if (novo && novo.trim() !== "") {
             const h = novo.trim();
-            if (!horariosAtivos.includes(h)) { horariosAtivos.push(h); horariosAtivos.sort((a,b) => parseInt(a) - parseInt(b)); filtrar(h); }
+            if (!horariosAtivos.includes(h)) { horariosAtivos.push(h); horariosAtivos.sort((a,b) => parseInt(a) - parseInt(b)); popularSelectHorariosFixo(); filtrar(h); }
         }
     }
 
     function filtrar(hora) { horaAtual = hora; renderizarHorarios(); renderizar(); }
 
     // ==========================================
-    // BOLINHA (CHECKLIST)
+    // CHECKLIST DE ASSINATURA DA MEDICAÇÃO
     // ==========================================
     async function toggleMedicacao(pacienteId) {
         const hoje = new Date().toISOString().split('T')[0];
         const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
-        try {
-            if (existente) {
-                if (existente.status === true) {
-                    const confirmar = confirm("Este medicamento já foi registrado como TOMADO.\n\nDeseja realmente APAGAR este registro?");
-                    if (confirmar) {
-                        const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
-                        if (error) throw error;
+        
+        if (existente && existente.status === true) {
+            perguntarConfirmacao(
+                "Inverter Registo", 
+                "Este medicamento já foi marcado como TOMADO.\n\nDeseja realmente anular esta confirmação?", 
+                async () => {
+                    const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
+                    if (!error) {
                         registrosMedicacaoDia = registrosMedicacaoDia.filter(rm => rm.id !== existente.id);
                         renderizar();
                     }
-                } else {
-                    const { error } = await supabaseClient.from('registro_medicacao').update({ status: true }).eq('id', existente.id);
-                    if (error) throw error;
-                    existente.status = true;
-                    renderizar();
                 }
-            } else {
-                const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true };
-                renderizar(); 
-                const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
-                if (error) throw error;
-                if(data && data[0]) {
-                    registrosMedicacaoDia.push(data[0]);
-                    renderizar();
-                }
+            );
+        } else {
+            const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true };
+            const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
+            if (!error && data && data[0]) {
+                registrosMedicacaoDia.push(data[0]);
+                renderizar();
             }
-        } catch (error) {
-            console.error("ERRO:", error);
-            alert("Erro ao comunicar com o banco de dados. Tente novamente.");
         }
     }
 
     // ==========================================
-    // RELATÓRIO GERAL
+    // FILTROS & EMISSÃO DE RELATÓRIO GERAL
     // ==========================================
     function abrirModalRelatorioGeral() {
         const select = document.getElementById('relatorioPacienteSelect');
@@ -779,35 +712,30 @@
         const pacId = document.getElementById('relatorioPacienteSelect').value;
         const dataIn = document.getElementById('relatorioDataInicio').value;
         const dataFim = document.getElementById('relatorioDataFim').value;
-        if(!pacId) return alert("Selecione um paciente ou a opção Todos!");
+        if(!pacId) return alert("Selecione um paciente ou a opção de Todos!");
 
-        document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#00b4ff;">Buscando...</p>';
+        const btn = document.getElementById('btnBuscarRelatorio');
+        btn.disabled = true;
+        btn.innerText = "A pesquisar...";
+
         let query = supabaseClient.from('registro_medicacao').select('*').order('data', { ascending: false }).order('horario', { ascending: true });
-        
-        if (pacId !== 'todos') {
-            query = query.eq('paciente_id', pacId);
-        }
-        
+        if (pacId !== 'todos') query = query.eq('paciente_id', pacId);
         if (dataIn) query = query.gte('data', dataIn);
         if (dataFim) query = query.lte('data', dataFim);
+        
         const { data, error } = await query;
         window.dadosRelatorioAtual = data;
+        
+        btn.disabled = false;
+        btn.innerText = "🔍 Buscar Relatório";
 
         const container = document.getElementById('conteudoRelatorioGeral');
-        if (error) { 
-            container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`;
-            return;
-        }
-        
-        if (!data || data.length === 0) { 
-            container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registro encontrado para este período.</p>`;
-            return; 
-        }
+        if (error) { container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`; return; }
+        if (!data || data.length === 0) { container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registo encontrado.</p>`; return; }
 
         container.innerHTML = data.map(item => {
             const paciente = registros.find(r => r.id == item.paciente_id);
-            const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
-            
+            const nomePac = paciente ? paciente.nome : 'Acolhido Eliminado';
             return `
             <div class="relatorio-item" style="align-items: flex-start;">
                 <div style="display:flex; flex-direction:column; gap:4px;">
@@ -817,118 +745,80 @@
                 <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content;">
                     ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
                 </span>
-            </div>
-        `}).join('');
+            </div>`
+        }).join('');
     }
 
     async function exportarRelatorio() {
-        if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) {
-            alert("Por favor, faça uma busca no relatório primeiro!");
-            return;
-        }
-
-        let dadosParaExportar = window.dadosRelatorioAtual;
+        if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) return alert("Efetue uma procura primeiro!");
         const select = document.getElementById('relatorioPacienteSelect');
         const nomePaciente = select.options[select.selectedIndex].text.replace('👤 ', '').replace('👥 ', '');
         const buscandoTodos = select.value === 'todos' || select.value === '';
         
         let linhasHtml = '';
-        dadosParaExportar.forEach(item => {
+        window.dadosRelatorioAtual.forEach(item => {
             const paciente = registros.find(r => r.id == item.paciente_id);
-            const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
-            const statusTexto = item.status ? '✅ TOMADO' : '❌ PENDENTE';
-            const statusBg = item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-            const statusCor = item.status ? '#4ade80' : '#f87171';
-            
-            let tagPaciente = buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : '';
-
+            const nomePac = paciente ? paciente.nome : 'Acolhido Eliminado';
             linhasHtml += `
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
                 <div style="display:flex; flex-direction:column; gap:4px;">
                     <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                    ${tagPaciente}
+                    ${buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : ''}
                 </div>
-                <span style="font-weight: bold; background: ${statusBg}; color: ${statusCor}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
-                    ${statusTexto}
+                <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                    ${item.status ? 'TOMADO' : 'PENDENTE'}
                 </span>
-            </div>
-            `;
+            </div>`;
         });
 
         const divPdf = document.createElement('div');
-        divPdf.style.padding = '30px';
-        divPdf.style.background = '#121824'; 
-        divPdf.style.color = '#f8fafc';
-        divPdf.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
-        
-        divPdf.innerHTML = `
-            <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
-                <h2 style="color: #009cd9; margin: 0; font-size: 24px;">Relatório de Medicamentos</h2>
-                <p style="color: #94a3b8; margin-top: 5px; font-size: 14px;">
-                    Acolhido: <strong>${nomePaciente}</strong>
-                </p>
-            </div>
-            <div style="background: #1e293b; border-radius: 12px; padding: 15px; border: 1px solid #334155;">
-                ${linhasHtml}
-            </div>
-        `;
-
-        const opt = {
-            margin:       10,
-            filename:     `Relatorio_${nomePaciente.replace(/\s+/g, '_')}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, backgroundColor: '#121824' },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(divPdf).save();
+        divPdf.style.padding = '30px'; divPdf.style.background = '#121824'; divPdf.style.color = '#f8fafc'; divPdf.style.fontFamily = "sans-serif";
+        divPdf.innerHTML = `<h2 style="color: #009cd9; border-bottom: 2px solid #334155; padding-bottom: 10px;">Relatório - ${nomePaciente}</h2><br><div style="background: #1e293b; border-radius: 12px; padding: 15px;">${linhasHtml}</div>`;
+        html2pdf().set({ margin: 10, filename: `Relatorio_${nomePaciente}.pdf`, html2canvas: { scale: 2, backgroundColor: '#121824' }, jsPDF: { format: 'a4', orientation: 'portrait' } }).from(divPdf).save();
     }
 
     // ==========================================
-    // RENDERIZAR LISTA PRINCIPAL
+    // RENDERIZAR PAINEL PRINCIPAL (COM SUPORTE MULTI-MEDS VIA UI)
     // ==========================================
-   function renderizar() {
+    function renderizar() {
         const termo = document.getElementById('searchInput').value.toLowerCase();
         const lista = document.getElementById('lista-registros');
         if (!lista) return;
         
-        let filtrados = registros.filter(r => {
-            if (termo !== "") {
-                return (r.nome || "").toLowerCase().includes(termo); 
-            }
-            return r.hora === horaAtual;
-        });
+        let filtrados = registros.filter(r => termo !== "" ? (r.nome || "").toLowerCase().includes(termo) : r.hora === horaAtual);
         filtrados.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' }));
+        
         lista.innerHTML = filtrados.map(r => {
             const diasFaltantes = calcularDiasFaltantes(r);
             const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
             const medHoje = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horaAtual);
             const isChecked = medHoje && medHoje.status === true;
             
+            // Separa os medicamentos por vírgula na visualização de cartões
+            const listaMeds = (r.medicamento || 'Sem medicação definida').split(',');
+            const blocoMedicamentosHtml = `<div class="med-tag-list">` + listaMeds.map(med => `<div class="med-tag-item">💊 ${med.trim()}</div>`).join('') + `</div>`;
+
             return `
             <div class="record-card">
                 <div style="flex: 1; display: flex; align-items: flex-start; gap: 15px;">
                     <div class="dot ${isChecked ? 'checked' : ''}" onclick="toggleMedicacao('${r.id}')" title="Marcar como tomado" style="margin-top: 2px;"></div>
-                    <div>
+                    <div style="flex: 1;">
                         <strong>${r.nome} ${termo !== "" ? `<span style="font-size:12px; color:var(--cor-azul);">(${r.hora})</span>` : ''}</strong>
-                        ${r.cpf ? `<br><small style="color: var(--cor-azul)">CPF: ${r.cpf}</small>` : ''}
-                        <br><small>${r.medicamento || 'Sem medicação definida'}</small>
-                        ${diasFaltantes !== null ? `<br><small style="${statusAlerta} font-weight: bold;">${diasFaltantes < 0 ? '❌ Sem Estoque' : (diasFaltantes <= 30 ? '⏰ Faltam: ' + diasFaltantes + ' dias' : '')}</small>` : ''}
+                        ${r.cpf ? `<br><small style="color: var(--cor-azul); font-weight: 600;">CPF: ${r.cpf}</small>` : ''}
+                        ${blocoMedicamentosHtml}
+                        ${diasFaltantes !== null ? `<small style="${statusAlerta} font-weight: bold; margin-top:6px; display:inline-block;">${diasFaltantes < 0 ? '❌ Sem Estoque / Renovação Necessária' : (diasFaltantes <= 30 ? '⏰ Faltam: ' + diasFaltantes + ' dias' : '')}</small>` : ''}
                     </div>
                 </div>
                 <div class="actions-wrapper">
                     <button class="btn-action btn-bula" onclick="abrirGoogle('${r.medicamento}')" title="Ver Bula">Bula</button>
-                    <button class="btn-action btn-edit" onclick="prepararEdicao(${r.id})" title="Editar Informações">✏️</button>
-                    <button class="btn-action btn-delete" onclick="excluirRegistro(${r.id}, '${r.nome.replace(/'/g, "\\'")}')" title="Excluir do Sistema">🗑️</button>
+                    <button class="btn-action btn-edit" onclick="prepararEdicao(${r.id})" title="Editar">✏️</button>
+                    <button class="btn-action btn-delete" onclick="excluirRegistro(${r.id}, '${r.nome.replace(/'/g, "\\'")}')" title="Excluir">🗑️</button>
                 </div>
-            </div>
-        `}).join('') || `<p style='text-align:center; color:#64748b; padding:20px;'>Nenhum acolhido encontrado.</p>`;
+            </div>`
+        }).join('') || `<p style='text-align:center; color:#64748b; padding:20px;'>Nenhum acolhido encontrado.</p>`;
     }
 
-    // ==========================================
-    // DEMAIS FUNÇÕES ORIGINAIS
-    // ==========================================
-    function formatarDataBr(dataStr) { if (!dataStr) return 'N/A'; const data = new Date(dataStr + 'T00:00:00'); return data.toLocaleDateString('pt-BR'); }
+    function formatarDataBr(dataStr) { if (!dataStr) return 'N/A'; const data = new Date(dataStr + 'T00:00:00'); return data.toLocaleDateString('pt-PT'); }
     function extrairIdDrive(input) { if (!input) return ""; const match = input.match(/folders\/([a-zA-Z0-9-_]+)/); return match ? match[1] : input.trim(); }
     
     window.prepararEdicaoSaida = function(id) { 
@@ -938,18 +828,23 @@
     
     window.salvarSaida = async function() { 
         const id = document.getElementById('editSaidaId').value; const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value; if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados!");
+        const btn = document.getElementById('btnSalvarSaida'); btn.disabled = true; btn.innerText = "A guardar...";
         const dados = { nome, links, data }; 
-        if (id) { 
-            const idTratado = isNaN(id) ? id : Number(id); const { error } = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); if (!error) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + error.message);
-        } else { 
-            const { error } = await supabaseClient.from('calendario').insert([dados]); if (!error) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + error.message); 
-        } 
+        
+        let erro = null;
+        if (id) { const idTratado = isNaN(id) ? id : Number(id); const res = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); erro = res.error; } 
+        else { const res = await supabaseClient.from('calendario').insert([dados]); erro = res.error; } 
+        
+        btn.disabled = false; btn.innerText = "Salvar Agendamento";
+        if (!erro) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + erro.message);
     };
     
     window.excluirSaida = async function(id, nome) { 
-        if (confirm(`Deseja remover "${nome}"?`)) { 
-            const idTratado = isNaN(id) ? id : Number(id); const { error } = await supabaseClient.from('calendario').delete().eq('id', idTratado); if (!error) carregar(); else alert("Erro: " + error.message);
-        } 
+        perguntarConfirmacao("Remover Saída", `Deseja remover o agendamento de "${nome}"?`, async () => {
+            const idTratado = isNaN(id) ? id : Number(id);
+            const { error } = await supabaseClient.from('calendario').delete().eq('id', idTratado);
+            if (!error) carregar(); else alert("Erro: " + error.message);
+        });
     };
     
     function abrirCadastroNovos() { 
@@ -961,28 +856,43 @@
     }
     
     async function salvar() { 
-        const id = document.getElementById('editId').value; const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value; const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null; const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses }); if (!nome) return alert("Por favor, preencha o nome!");
+        const id = document.getElementById('editId').value; const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value; const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null; const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
+        
+        if (!nome) return alert("Por favor, preencha o nome!");
+        if (cpf && !validarCPF(cpf)) return alert("O CPF introduzido não é válido! Por favor corrija.");
+
+        const btn = document.getElementById('btnSalvarCadastro');
+        btn.disabled = true;
+        btn.innerText = "A guardar...";
+
+        const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses });
         const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc };
-        if (id) { 
-            const { error } = await supabaseClient.from('pacientes').update(dados).eq('id', id); if (!error) { fechar('modalCadastro'); carregar(); } else alert("Erro ao editar: " + error.message); 
-        } else { 
-            const { error } = await supabaseClient.from('pacientes').insert([dados]); if (!error) { fechar('modalCadastro'); carregar(); } else alert("Erro ao cadastrar: " + error.message);
-        } 
+        
+        let erro = null;
+        if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error; } 
+        else { const res = await supabaseClient.from('pacientes').insert([dados]); erro = res.error; } 
+        
+        btn.disabled = false;
+        btn.innerText = "Guardar";
+
+        if (!erro) { fechar('modalCadastro'); carregar(); } else alert("Erro na gravação: " + erro.message);
+    }
+
+    async function excluirRegistro(id, nome) { 
+        perguntarConfirmacao("Excluir Registo", `Tem a certeza que deseja eliminar o cadastro de ${nome} permanentemente do sistema?`, async () => {
+            const { error } = await supabaseClient.from('pacientes').delete().eq('id', id);
+            if (!error) carregar(); else alert("Erro ao excluir: " + error.message);
+        });
     }
     
     function abrirModalNovaSaida() { 
         document.getElementById('modalSaidaTitulo').innerText = "Agendar Renovação/Saída"; document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = ''; const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
-        if(nomesUnicos.length === 0) { 
-            const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido cadastrado"; select.appendChild(opt);
-        } else { 
-            nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); }); 
-        } 
+        if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido registado"; select.appendChild(opt); } 
+        else { nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); }); } 
         abrir('modalNovaSaida');
     }
     
-    function abrirGerenciadorReceitas() { 
-        document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas();
-    }
+    function abrirGerenciadorReceitas() { document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas(); }
     
     function gerarListaAcolhidosReceitas() { 
         const container = document.getElementById('listaNomesReceitas'); const termo = document.getElementById('searchReceitasInput').value.toLowerCase();
@@ -1000,17 +910,9 @@
         const idPasta = linkFinal ? extrairIdDrive(linkFinal) : "1kGWG5rLmVBET55jxG9kPxGw2GWZv5PGf"; iframe.src = `https://drive.google.com/embeddedfolderview?id=${idPasta}&hl=pt-BR#grid`; 
     }
     
-    function abrirCalendarioGrande() { 
-        abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia(); 
-    }
-    
-    function mudarMes(direcao) { 
-        dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
-    }
-    
-    function selecionarDia(ano, mes, dia) { 
-        dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia();
-    }
+    function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia(); }
+    function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario(); }
+    function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia(); }
     
     function gerarCalendario() { 
         const ano = dataAtual.getFullYear(); const mes = dataAtual.getMonth(); document.getElementById('calMesAno').innerText = `${mesesNomes[mes].substring(0,3)}. de ${ano}`;
@@ -1028,46 +930,28 @@
     function renderizarPacientesDoDia() { 
         const dia = String(dataSelecionada.getDate()).padStart(2, '0'); const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0'); const ano = dataSelecionada.getFullYear(); const dIso = `${ano}-${mes}-${dia}`;
         document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return;
-        const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento.</p>"; return; } 
+        const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>"; return; } 
         lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
     }
     
     function abrir(id) { document.getElementById(id).style.display = 'flex'; }
     function fechar(id) { document.getElementById(id).style.display = 'none'; if (id === 'modalNovaSaida') document.getElementById('editSaidaId').value = ""; }
     function abrirGoogle(med) { if(med && med !== "undefined") window.open('https://www.google.com/search?q=bula+'+med, '_blank'); }
-    async function excluirRegistro(id, nome) { 
-        if (confirm(`Excluir o cadastro de ${nome}?`)) { 
-            const { error } = await supabaseClient.from('pacientes').delete().eq('id', id); if (!error) carregar(); else alert("Erro ao excluir: " + error.message); 
-        } 
-    }
 
-    // ==========================================
-    // CONTROLE DO MENU LATERAL
-    // ==========================================
     function abrirMenuLateral() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        
         sidebar.classList.add('aberta');
         overlay.style.display = 'block';
-        
-        // Pequeno atraso para a transição do CSS (fade-in) funcionar
-        setTimeout(() => {
-            overlay.classList.add('ativa');
-        }, 10);
+        setTimeout(() => { overlay.classList.add('ativa'); }, 10);
     }
 
     function fecharMenuLateral() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        
         sidebar.classList.remove('aberta');
         overlay.classList.remove('ativa');
-        
-        // Aguarda a animação acabar para esconder a div
-        setTimeout(() => {
-            overlay.style.display = 'none';
-        }, 300);
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
