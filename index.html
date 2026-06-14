@@ -162,6 +162,106 @@
             display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-out); transition: all 0.2s;
         }
         .btn-calendario-header:hover { background: var(--cor-azul); color: white; }
+   /* =====================================================================
+   🔥 AJUSTES DE RESPONSIVIDADE PARA CELULAR (Telas < 768px)
+   ===================================================================== */
+@media (max-width: 768px) {
+    /* 1. Botões do Topo (Novo Paciente, Alertas, Relatórios, etc.) */
+    .container > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    .container > div[style*="display: flex"] > button {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* 2. Botões nos Cards Principais (Bula, Editar, Excluir) */
+    .paciente-card > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    .paciente-card button, 
+    .paciente-card a.btn-bula {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* 3. Central de Receitas Médicas */
+    #listaReceitas {
+        grid-template-columns: 1fr !important; /* 1 receita por linha no celular */
+    }
+    #listaReceitas > div > div {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    #listaReceitas button, 
+    #listaReceitas a {
+        width: 100% !important;
+    }
+    /* Topo da aba de receitas (botões "Nova Receita") */
+    #modalReceitas .modal-content > div[style*="display: flex"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    /* 4. Alertas de Renovação */
+    #listaAvisosRenovacao > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    #listaAvisosRenovacao button {
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    /* 5. Agenda Profissional de Saída */
+    #listaAgenda > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+    }
+    #listaAgenda > div > div {
+        width: 100% !important;
+    }
+    #listaAgenda button {
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    /* 6. Relatório de Medicamentos Tomados */
+    #conteudoRelatorioGeral > div > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+    #conteudoRelatorioGeral .header-relatorio {
+        flex-direction: column !important;
+        text-align: center;
+    }
+    
+    /* 7. Ajustes Gerais de Modais (Tamanho da Janela) */
+    .modal-content {
+        width: 95% !important;
+        padding: 15px !important;
+        margin: 10px auto !important;
+    }
+    
+    /* 8. Cabeçalho Geral e Barra de Pesquisa */
+    .header {
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+    .search-bar {
+        width: 100% !important;
+        margin-top: 15px !important;
+    }
+    .search-bar input {
+        width: 100% !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -320,10 +420,9 @@
         <div id="conteudoRelatorioGeral" style="background: #151f32; border-radius: 12px; padding: 10px; max-height: 300px; overflow-y: auto;">
             <p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>
         </div>
- <div style="margin-bottom: 20px;">
-    <button onclick="exportarRelatorio()" style="width: 100%; padding: 12px; background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">
-        📄 Exportar Relatório em PDF
-    </button>
+        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <button onclick="exportarRelatorio('todos')" style="padding: 10px; cursor: pointer;">Exportar Todos os Horários</button>
+    <button onclick="exportarRelatorio('filtrado')" style="padding: 10px; cursor: pointer;">Exportar Horário Selecionado</button>
 </div>
         <button onclick="fechar('modalRelatorioGeral')" style="width:100%; padding:12px; margin-top:20px; background:#243147; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Fechar</button>
     </div>
@@ -842,68 +941,67 @@ async function buscarRelatorioGeral() {
 
 }
 
-async function exportarRelatorio() {
+async function exportarRelatorio(tipo) {
     // 1. Verifica se há dados da última busca
     if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) {
         alert("Por favor, faça uma busca no relatório primeiro!");
         return;
     }
 
-    // Exporta exatamente o que a busca retornou
     let dadosParaExportar = window.dadosRelatorioAtual;
 
-    // 2. Pega o nome do paciente para colocar no título
+    // 2. Filtra pelo horário selecionado na tela principal (se clicou no botão filtrado)
+    if (tipo === 'filtrado') {
+        dadosParaExportar = dadosParaExportar.filter(r => r.horario === horaAtual);
+        if (dadosParaExportar.length === 0) {
+            alert(`Não há registros para o horário de ${horaAtual} neste filtro.`);
+            return;
+        }
+    }
+
+    // 3. Pega o nome do paciente para colocar no título e verifica se é a opção "Todos"
     const select = document.getElementById('relatorioPacienteSelect');
     const nomePaciente = select.options[select.selectedIndex].text.replace('👤 ', '').replace('👥 ', '');
     const buscandoTodos = select.value === 'todos' || select.value === '';
 
-    // 3. Constrói as linhas do relatório primeiro (evita erros de sintaxe por aninhamento)
-    let linhasHtml = '';
-    dadosParaExportar.forEach(item => {
-        const paciente = registros.find(r => r.id == item.paciente_id);
-        const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
-        const statusTexto = item.status ? '✅ TOMADO' : '❌ PENDENTE';
-        const statusBg = item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-        const statusCor = item.status ? '#4ade80' : '#f87171';
-        
-        let tagPaciente = buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : '';
-
-        linhasHtml += `
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                ${tagPaciente}
-            </div>
-            <span style="font-weight: bold; background: ${statusBg}; color: ${statusCor}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
-                ${statusTexto}
-            </span>
-        </div>
-        `;
-    });
-
-    // 4. Cria o layout principal do PDF (em memória)
+    // 4. Cria o layout do PDF copiando as cores originais do seu CSS
     const divPdf = document.createElement('div');
     divPdf.style.padding = '30px';
-    divPdf.style.background = '#121824'; 
-    divPdf.style.color = '#f8fafc';
+    divPdf.style.background = '#121824'; // Cor de fundo do app
+    divPdf.style.color = '#f8fafc'; // Cor do texto
     divPdf.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
-    
+
     divPdf.innerHTML = `
         <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
             <h2 style="color: #009cd9; margin: 0; font-size: 24px;">Relatório de Medicamentos</h2>
             <p style="color: #94a3b8; margin-top: 5px; font-size: 14px;">
-                Acolhido: <strong>${nomePaciente}</strong>
+                Acolhido: <strong>${nomePaciente}</strong> ${tipo === 'filtrado' ? ' | Horário: ' + horaAtual : ''}
             </p>
         </div>
         <div style="background: #1e293b; border-radius: 12px; padding: 15px; border: 1px solid #334155;">
-            ${linhasHtml}
+            ${dadosParaExportar.map(item => {
+                // Busca o nome do paciente para mostrar caso seja o relatório de "Todos"
+                const paciente = registros.find(r => r.id == item.paciente_id);
+                const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
+                
+                return `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
+                        ${buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : ''}
+                    </div>
+                    <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                        ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
+                    </span>
+                </div>
+            `}).join('')}
         </div>
     `;
 
-    // 5. Configura e gera o PDF via html2pdf
+    // 5. Configura e gera o PDF
     const opt = {
         margin:       10,
-        filename:     `Relatorio_${nomePaciente.replace(/\s+/g, '_')}.pdf`,
+        filename:     `Relatorio_${nomePaciente.replace(/\s+/g, '_')}_${tipo === 'todos' ? 'Geral' : horaAtual}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, backgroundColor: '#121824' },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -911,6 +1009,7 @@ async function exportarRelatorio() {
 
     html2pdf().set(opt).from(divPdf).save();
 }
+
 </script>
 </body>
 </html>
