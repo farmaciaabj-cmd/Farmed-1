@@ -157,28 +157,36 @@
         /* =====================================================================
            🔥 AJUSTES DE RESPONSIVIDADE PARA CELULAR (Telas < 768px)
            ===================================================================== */
-        @media (max-width: 768px) {
-            .container > div[style*="display: flex"] { flex-direction: column !important; gap: 10px !important; }
-            .container > div[style*="display: flex"] > button { width: 100% !important; margin: 0 !important; }
-            .paciente-card > div[style*="display: flex"] { flex-direction: column !important; gap: 8px !important; }
-            .paciente-card button, .paciente-card a.btn-bula { width: 100% !important; justify-content: center !important; }
-            #listaReceitas { grid-template-columns: 1fr !important; }
-            #listaReceitas > div > div { flex-direction: column !important; gap: 10px !important; }
-            #listaReceitas button, #listaReceitas a { width: 100% !important; }
-            #modalReceitas .modal-content > div[style*="display: flex"] { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
-            #listaAvisosRenovacao > div { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
-            #listaAvisosRenovacao button { width: 100% !important; margin-top: 10px !important; }
-            #listaAgenda > div { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
-            #listaAgenda > div > div { width: 100% !important; }
-            #listaAgenda button { width: 100% !important; margin-top: 10px !important; }
-            #conteudoRelatorioGeral > div > div { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
-            #conteudoRelatorioGeral .header-relatorio { flex-direction: column !important; text-align: center; }
-            .modal-content { width: 95% !important; padding: 15px !important; margin: 10px auto !important; }
-            .header { flex-direction: column !important; text-align: center !important; }
-            .search-bar { width: 100% !important; margin-top: 15px !important; }
-            .search-bar input { width: 100% !important; }
-        }
-    </style>
+       @media (max-width: 768px) {
+            /* Força a dashboard a ocupar toda a largura sem margens excessivas */
+            .dashboard { padding: 10px; width: 100%; }
+            
+            /* Ajusta a barra de ações para empilhar */
+            .action-bar { flex-direction: column; gap: 10px; }
+            .add-btn, .upload-label { width: 100%; justify-content: center; }
+            
+            /* Empilha os ícones principais */
+            .icon-grid { flex-direction: column; gap: 10px; }
+            
+            /* Ajusta os cards de registro para ficar um embaixo do outro */
+            .record-card { flex-direction: column; align-items: flex-start !important; gap: 15px; }
+            .actions-wrapper { width: 100%; justify-content: space-between; }
+            .btn-action { flex: 1; }
+            
+            /* Ajusta o Modal de Cadastro e outros modais */
+            .modal-content { width: 95% !important; margin: 10px auto !important; padding: 20px !important; }
+            
+            /* Corrige a lista de horários */
+            .time-selector { flex-wrap: wrap; }
+            .time-btn { min-width: 45%; }
+            
+            /* Força quebras em elementos flex que insistirem em ficar lado a lado */
+            .agenda-body { flex-direction: column !important; }
+            .col-esquerda, .col-direita { min-width: 100% !important; height: auto !important; }
+            
+            /* Ajuste fino na lista de medicamentos */
+            .relatorio-item { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+        }    </style>
 </head>
 <body>
    
