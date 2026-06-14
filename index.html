@@ -142,11 +142,7 @@
         .badge-count-alerta { display: inline-block; background: #f97316; color: white; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
 
         /* Estilos Bolinha */
-        .dot { 
-            width: 24px; height: 24px; border-radius: 50%; border: 2px solid #64748b; 
-            cursor: pointer; transition: all 0.3s ease; display: inline-block; flex-shrink: 0;
-            background-color: transparent;
-        }
+        .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #64748b; cursor: pointer; transition: all 0.3s ease; display: inline-block; flex-shrink: 0; background-color: transparent; }
         .dot.checked { background-color: #22c55e; border-color: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); }
 
         /* Estilos Relatório */
@@ -155,113 +151,33 @@
         .relatorio-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--borda); padding: 12px 0; font-size: 14px; }
         .relatorio-item:last-child { border-bottom: none; }
 
-        
-        .btn-calendario-header { 
-            background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); 
-            padding: 8px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; 
-            display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-out); transition: all 0.2s;
-        }
+        .btn-calendario-header { background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); padding: 8px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-out); transition: all 0.2s; }
         .btn-calendario-header:hover { background: var(--cor-azul); color: white; }
-   /* =====================================================================
-   🔥 AJUSTES DE RESPONSIVIDADE PARA CELULAR (Telas < 768px)
-   ===================================================================== */
-@media (max-width: 768px) {
-    /* 1. Botões do Topo (Novo Paciente, Alertas, Relatórios, etc.) */
-    .container > div[style*="display: flex"] {
-        flex-direction: column !important;
-        gap: 10px !important;
-    }
-    .container > div[style*="display: flex"] > button {
-        width: 100% !important;
-        margin: 0 !important;
-    }
 
-    /* 2. Botões nos Cards Principais (Bula, Editar, Excluir) */
-    .paciente-card > div[style*="display: flex"] {
-        flex-direction: column !important;
-        gap: 8px !important;
-    }
-    .paciente-card button, 
-    .paciente-card a.btn-bula {
-        width: 100% !important;
-        justify-content: center !important;
-    }
-
-    /* 3. Central de Receitas Médicas */
-    #listaReceitas {
-        grid-template-columns: 1fr !important; /* 1 receita por linha no celular */
-    }
-    #listaReceitas > div > div {
-        flex-direction: column !important;
-        gap: 10px !important;
-    }
-    #listaReceitas button, 
-    #listaReceitas a {
-        width: 100% !important;
-    }
-    /* Topo da aba de receitas (botões "Nova Receita") */
-    #modalReceitas .modal-content > div[style*="display: flex"] {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-    }
-
-    /* 4. Alertas de Renovação */
-    #listaAvisosRenovacao > div {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 12px !important;
-    }
-    #listaAvisosRenovacao button {
-        width: 100% !important;
-        margin-top: 10px !important;
-    }
-
-    /* 5. Agenda Profissional de Saída */
-    #listaAgenda > div {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 15px !important;
-    }
-    #listaAgenda > div > div {
-        width: 100% !important;
-    }
-    #listaAgenda button {
-        width: 100% !important;
-        margin-top: 10px !important;
-    }
-
-    /* 6. Relatório de Medicamentos Tomados */
-    #conteudoRelatorioGeral > div > div {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 10px !important;
-    }
-    #conteudoRelatorioGeral .header-relatorio {
-        flex-direction: column !important;
-        text-align: center;
-    }
-    
-    /* 7. Ajustes Gerais de Modais (Tamanho da Janela) */
-    .modal-content {
-        width: 95% !important;
-        padding: 15px !important;
-        margin: 10px auto !important;
-    }
-    
-    /* 8. Cabeçalho Geral e Barra de Pesquisa */
-    .header {
-        flex-direction: column !important;
-        text-align: center !important;
-    }
-    .search-bar {
-        width: 100% !important;
-        margin-top: 15px !important;
-    }
-    .search-bar input {
-        width: 100% !important;
-    }
-}
+        /* =====================================================================
+           🔥 AJUSTES DE RESPONSIVIDADE PARA CELULAR (Telas < 768px)
+           ===================================================================== */
+        @media (max-width: 768px) {
+            .container > div[style*="display: flex"] { flex-direction: column !important; gap: 10px !important; }
+            .container > div[style*="display: flex"] > button { width: 100% !important; margin: 0 !important; }
+            .paciente-card > div[style*="display: flex"] { flex-direction: column !important; gap: 8px !important; }
+            .paciente-card button, .paciente-card a.btn-bula { width: 100% !important; justify-content: center !important; }
+            #listaReceitas { grid-template-columns: 1fr !important; }
+            #listaReceitas > div > div { flex-direction: column !important; gap: 10px !important; }
+            #listaReceitas button, #listaReceitas a { width: 100% !important; }
+            #modalReceitas .modal-content > div[style*="display: flex"] { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+            #listaAvisosRenovacao > div { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+            #listaAvisosRenovacao button { width: 100% !important; margin-top: 10px !important; }
+            #listaAgenda > div { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
+            #listaAgenda > div > div { width: 100% !important; }
+            #listaAgenda button { width: 100% !important; margin-top: 10px !important; }
+            #conteudoRelatorioGeral > div > div { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+            #conteudoRelatorioGeral .header-relatorio { flex-direction: column !important; text-align: center; }
+            .modal-content { width: 95% !important; padding: 15px !important; margin: 10px auto !important; }
+            .header { flex-direction: column !important; text-align: center !important; }
+            .search-bar { width: 100% !important; margin-top: 15px !important; }
+            .search-bar input { width: 100% !important; }
+        }
     </style>
 </head>
 <body>
@@ -286,7 +202,7 @@
     </div>
 
     <div class="time-selector" id="timeSelectorContainer">
-        </div>
+    </div>
 
     <div id="lista-registros">Carregando dados...</div>
 </div>
@@ -420,11 +336,14 @@
         <div id="conteudoRelatorioGeral" style="background: #151f32; border-radius: 12px; padding: 10px; max-height: 300px; overflow-y: auto;">
             <p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>
         </div>
-        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-    <button onclick="exportarRelatorio('todos')" style="padding: 10px; cursor: pointer;">Exportar Todos os Horários</button>
-    <button onclick="exportarRelatorio('filtrado')" style="padding: 10px; cursor: pointer;">Exportar Horário Selecionado</button>
-</div>
-        <button onclick="fechar('modalRelatorioGeral')" style="width:100%; padding:12px; margin-top:20px; background:#243147; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Fechar</button>
+        
+        <div style="margin-bottom: 20px; margin-top: 15px;">
+            <button onclick="exportarRelatorio()" style="width: 100%; padding: 12px; background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">
+                📄 Exportar Relatório em PDF
+            </button>
+        </div>
+        
+        <button onclick="fechar('modalRelatorioGeral')" style="width:100%; padding:12px; margin-top:10px; background:#243147; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Fechar</button>
     </div>
 </div>
 
@@ -458,18 +377,22 @@ function obterDataAtualLocal() {
     // LÓGICA ORIGINAL COMPLETA DE ALERTAS
     // ==========================================
     function calcularDiasFaltantes(paciente) {
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
         if (paciente.ultima_retirada && paciente.qtd_meses && paciente.qtd_meses > 0) {
-            const dataRetirada = new Date(paciente.ultima_retirada); dataRetirada.setHours(0, 0, 0, 0);
+            const dataRetirada = new Date(paciente.ultima_retirada);
+            dataRetirada.setHours(0, 0, 0, 0);
             const diasEstoque = paciente.qtd_meses * 30;
             const dataVencimento = new Date(dataRetirada.getTime() + diasEstoque * 24 * 60 * 60 * 1000);
             return Math.floor((dataVencimento - hoje) / (1000 * 60 * 60 * 24));
         }
         if (paciente.ultima_retirada) {
-            const dataRetirada = new Date(paciente.ultima_retirada); dataRetirada.setHours(0, 0, 0, 0);
+            const dataRetirada = new Date(paciente.ultima_retirada);
+            dataRetirada.setHours(0, 0, 0, 0);
             return Math.floor((dataRetirada - hoje) / (1000 * 60 * 60 * 24));
         }
-        if (paciente.qtd_meses && paciente.qtd_meses > 0) { return paciente.qtd_meses * 30; }
+        if (paciente.qtd_meses && paciente.qtd_meses > 0) { return paciente.qtd_meses * 30;
+        }
         return null;
     }
 
@@ -477,23 +400,37 @@ function obterDataAtualLocal() {
         const diasFaltantes = calcularDiasFaltantes(paciente);
         const resultado = { nome: paciente.nome, medicamento: paciente.medicamento, dias_faltantes: diasFaltantes, ultima_retirada: paciente.ultima_retirada, data_prescricao: paciente.data_prescricao, qtd_meses: paciente.qtd_meses, status: 'ok', mensagem: '', alerta: false };
         if (resultado.dias_faltantes !== null) {
-            if (resultado.dias_faltantes < 0) { resultado.status = 'critico'; resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
-            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao'; resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
-            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok'; resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
-            else { resultado.status = 'ok'; resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false; }
+            if (resultado.dias_faltantes < 0) { resultado.status = 'critico';
+            resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
+            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao';
+            resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true;
+            } 
+            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok';
+            resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
+            else { resultado.status = 'ok';
+            resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false;
+            }
         }
         return resultado;
     }
 
     function calcularStatusRenovacao(saidaItem) {
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
         const dataSaida = new Date(saidaItem.data); dataSaida.setHours(0, 0, 0, 0);
         const diasRestantes = Math.floor((dataSaida - hoje) / (1000 * 60 * 60 * 24));
         let status = 'ok', mensagem = '', alerta = false;
-        if (diasRestantes < 0) { status = 'vencida'; mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true; } 
-        else if (diasRestantes === 0) { status = 'proxima'; mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
-        else if (diasRestantes <= 7) { status = 'proxima'; mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true; } 
-        else { status = 'ok'; mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false; }
+        if (diasRestantes < 0) { status = 'vencida';
+        mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true;
+        } 
+        else if (diasRestantes === 0) { status = 'proxima';
+        mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
+        else if (diasRestantes <= 7) { status = 'proxima';
+        mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true;
+        } 
+        else { status = 'ok';
+        mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false;
+        }
         return { status, mensagem, diasRestantes, alerta };
     }
 
@@ -517,7 +454,8 @@ function obterDataAtualLocal() {
     }
 
     function buildCardEstoque(alerta) {
-        const status = alerta.dias_faltantes < 0 ? 'critico' : (alerta.dias_faltantes <= 5 ? 'atencao' : 'ok');
+        const status = alerta.dias_faltantes < 0 ?
+        'critico' : (alerta.dias_faltantes <= 5 ? 'atencao' : 'ok');
         return alerta.medicamentos.map(m => {
             const receitaTag = m.receita_valida === true ? `<span class="alerta-receita-tag valida">✓ Receita Válida</span>` : m.receita_valida === false ? `<span class="alerta-receita-tag invalida">✗ Receita Inválida</span>` : `<span class="alerta-receita-tag nd">— Receita N/D</span>`;
             const mStatus = m.diasFaltantes < 0 ? 'critico' : (m.diasFaltantes <= 5 ? 'atencao' : 'ok');
@@ -572,7 +510,6 @@ function obterDataAtualLocal() {
         const alertasPacientes = agruparAlertasPorPaciente();
         const alertasRenovacao = saidas.map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
         const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes, alerta: true })).sort((a, b) => (a.dias_faltantes || 0) - (b.dias_faltantes || 0));
-
         const totalAlertas = alertasEstoque.length + alertasRenovacao.length;
         const badge = document.getElementById('badgeAlertasCount');
         const btnAlertas = document.getElementById('btnAlertas');
@@ -595,7 +532,6 @@ function obterDataAtualLocal() {
             const alertasPacientes = agruparAlertasPorPaciente();
             const alertasRenovacao = saidas.map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
             const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes })).sort((a, b) => (a.dias_faltantes || 0) - (b.dias_faltantes || 0));
-
             if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) {
                 container.innerHTML = `<p style='color:#22c55e; text-align:center; font-size:12px; padding:15px;'>✓ Nenhum alerta!</p>`;
             } else {
@@ -627,52 +563,15 @@ function obterDataAtualLocal() {
         }
 
         // CORREÇÃO DO FUSO HORÁRIO AQUI 👇
-        const hoje = obterDataAtualLocal(); 
+        const hoje = obterDataAtualLocal();
         const respMed = await supabaseClient.from('registro_medicacao').select('*').eq('data', hoje);
         if(respMed.data) registrosMedicacaoDia = respMed.data;
         
         renderizarHorarios();
         renderizar();
         gerarAlertas();
-    } catch (err) { console.error("Erro comunicação Supabase:", err); }
-}
-
-async function toggleMedicacao(pacienteId) {
-    // CORREÇÃO DO FUSO HORÁRIO AQUI 👇
-    const hoje = obterDataAtualLocal();
-    const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
-    
-    try {
-        if (existente) {
-            if (existente.status === true) {
-                const confirmar = confirm("Este medicamento já foi registrado como TOMADO.\n\nDeseja realmente APAGAR este registro?");
-                if (confirmar) {
-                    const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
-                    if (error) throw error;
-                    registrosMedicacaoDia = registrosMedicacaoDia.filter(rm => rm.id !== existente.id);
-                    renderizar();
-                }
-            } else {
-                const { error } = await supabaseClient.from('registro_medicacao').update({ status: true }).eq('id', existente.id);
-                if (error) throw error;
-                existente.status = true;
-                renderizar();
-            }
-        } else {
-            const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true };
-            renderizar(); 
-            const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
-            if (error) throw error;
-            if(data && data[0]) {
-                registrosMedicacaoDia.push(data[0]);
-                renderizar();
-            }
-        }
-    } catch (error) {
-        console.error("ERRO:", error);
-        alert("Erro ao comunicar com o banco de dados. Tente novamente.");
+        } catch (err) { console.error("Erro comunicação Supabase:", err); }
     }
-}
 
     // ==========================================
     // BOTÃO "+" E HORÁRIOS E RELATÓRIO GERAL
@@ -703,13 +602,11 @@ async function toggleMedicacao(pacienteId) {
 async function toggleMedicacao(pacienteId) {
     const hoje = new Date().toISOString().split('T')[0];
     const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
-
     try {
         if (existente) {
             // SE JÁ EXISTE (está verde/tomado): pede confirmação para excluir
             if (existente.status === true) {
                 const confirmar = confirm("Este medicamento já foi registrado como TOMADO.\n\nDeseja realmente APAGAR este registro?");
-                
                 if (confirmar) {
                     // Remove do banco de dados
                     const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
@@ -749,51 +646,140 @@ async function toggleMedicacao(pacienteId) {
     // RELATÓRIO GERAL (NOVO)
     // ==========================================
     function abrirModalRelatorioGeral() {
-        const select = document.getElementById('relatorioPacienteSelect');
-        const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
+    const select = document.getElementById('relatorioPacienteSelect');
+    const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
+    
+    // ADICIONADA A OPÇÃO "TODOS" 👇
+    select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
+        nomesUnicos.map(n => {
+            const idPaciente = registros.find(r => r.nome === n).id;
+            return `<option value="${idPaciente}">${n}</option>`;
+        }).join('');
         
-        select.innerHTML = '<option value="">👤 Selecione o Acolhido</option>' + 
-            nomesUnicos.map(n => {
-                const idPaciente = registros.find(r => r.nome === n).id;
-                return `<option value="${idPaciente}">${n}</option>`;
-            }).join('');
-            
-        document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>';
-        document.getElementById('relatorioDataInicio').value = "";
-        document.getElementById('relatorioDataFim').value = "";
-        
-        abrir('modalRelatorioGeral');
+    document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>';
+    document.getElementById('relatorioDataInicio').value = "";
+    document.getElementById('relatorioDataFim').value = "";
+    
+    abrir('modalRelatorioGeral');
     }
 
-    async function buscarRelatorioGeral() {
-        const pacId = document.getElementById('relatorioPacienteSelect').value;
-        const dataIn = document.getElementById('relatorioDataInicio').value;
-        const dataFim = document.getElementById('relatorioDataFim').value;
+async function buscarRelatorioGeral() {
+    const pacId = document.getElementById('relatorioPacienteSelect').value;
+    const dataIn = document.getElementById('relatorioDataInicio').value;
+    const dataFim = document.getElementById('relatorioDataFim').value;
+    if(!pacId) return alert("Selecione um paciente ou a opção Todos!");
 
-        if(!pacId) return alert("Selecione um paciente!");
+    document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#00b4ff;">Buscando...</p>';
+    let query = supabaseClient.from('registro_medicacao').select('*').order('data', { ascending: false }).order('horario', { ascending: true });
+    
+    // SE NÃO FOR "TODOS", FILTRA PELO ID 👇
+    if (pacId !== 'todos') {
+        query = query.eq('paciente_id', pacId);
+    }
+    
+    if (dataIn) query = query.gte('data', dataIn);
+    if (dataFim) query = query.lte('data', dataFim);
+    const { data, error } = await query;
+    window.dadosRelatorioAtual = data;
 
-        document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#00b4ff;">Buscando...</p>';
+    const container = document.getElementById('conteudoRelatorioGeral');
+    if (error) { 
+        container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`;
+        return;
+    }
+    
+    if (!data || data.length === 0) { 
+        container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registro encontrado para este período.</p>`;
+        return; 
+    }
 
-        let query = supabaseClient.from('registro_medicacao').select('*').eq('paciente_id', pacId).order('data', { ascending: false });
+    container.innerHTML = data.map(item => {
+        // Busca o nome do paciente para mostrar no relatório geral
+        const paciente = registros.find(r => r.id == item.paciente_id);
+        const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
         
-        if (dataIn) query = query.gte('data', dataIn);
-        if (dataFim) query = query.lte('data', dataFim);
-
-        const { data, error } = await query;
-
-        const container = document.getElementById('conteudoRelatorioGeral');
-        if (error) { container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`; return; }
-        if (!data || data.length === 0) { container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registro encontrado para este período.</p>`; return; }
-
-        container.innerHTML = data.map(item => `
-            <div class="relatorio-item">
+        return `
+        <div class="relatorio-item" style="align-items: flex-start;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
                 <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px;">
-                    ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
-                </span>
+                ${pacId === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
             </div>
-        `).join('');
+            <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content;">
+                ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
+            </span>
+        </div>
+    `}).join('');
+}
+
+async function exportarRelatorio() {
+    // 1. Verifica se há dados da última busca
+    if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) {
+        alert("Por favor, faça uma busca no relatório primeiro!");
+        return;
     }
+
+    // Exporta exatamente o que a busca retornou
+    let dadosParaExportar = window.dadosRelatorioAtual;
+
+    // 2. Pega o nome do paciente para colocar no título
+    const select = document.getElementById('relatorioPacienteSelect');
+    const nomePaciente = select.options[select.selectedIndex].text.replace('👤 ', '').replace('👥 ', '');
+    const buscandoTodos = select.value === 'todos' || select.value === '';
+
+    // 3. Constrói as linhas do relatório primeiro (evita erros de sintaxe por aninhamento)
+    let linhasHtml = '';
+    dadosParaExportar.forEach(item => {
+        const paciente = registros.find(r => r.id == item.paciente_id);
+        const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
+        const statusTexto = item.status ? '✅ TOMADO' : '❌ PENDENTE';
+        const statusBg = item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+        const statusCor = item.status ? '#4ade80' : '#f87171';
+        
+        let tagPaciente = buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : '';
+
+        linhasHtml += `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
+                ${tagPaciente}
+            </div>
+            <span style="font-weight: bold; background: ${statusBg}; color: ${statusCor}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                ${statusTexto}
+            </span>
+        </div>
+        `;
+    });
+
+    // 4. Cria o layout principal do PDF (em memória)
+    const divPdf = document.createElement('div');
+    divPdf.style.padding = '30px';
+    divPdf.style.background = '#121824'; 
+    divPdf.style.color = '#f8fafc';
+    divPdf.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
+    
+    divPdf.innerHTML = `
+        <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="color: #009cd9; margin: 0; font-size: 24px;">Relatório de Medicamentos</h2>
+            <p style="color: #94a3b8; margin-top: 5px; font-size: 14px;">
+                Acolhido: <strong>${nomePaciente}</strong>
+            </p>
+        </div>
+        <div style="background: #1e293b; border-radius: 12px; padding: 15px; border: 1px solid #334155;">
+            ${linhasHtml}
+        </div>
+    `;
+
+    // 5. Configura e gera o PDF via html2pdf
+    const opt = {
+        margin:       10,
+        filename:     `Relatorio_${nomePaciente.replace(/\s+/g, '_')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, backgroundColor: '#121824' },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(divPdf).save();
+}
 
     // ==========================================
     // RENDERIZAR LISTA PRINCIPAL
@@ -812,9 +798,7 @@ async function toggleMedicacao(pacienteId) {
         // Se a busca estiver vazia, mostra normalmente os pacientes do horário selecionado
         return r.hora === horaAtual; 
     });
-
     filtrados.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' }));
-    
     lista.innerHTML = filtrados.map(r => {
         const diasFaltantes = calcularDiasFaltantes(r);
         const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
@@ -869,147 +853,6 @@ async function toggleMedicacao(pacienteId) {
         carregar();
         document.querySelectorAll('.modal').forEach(modal => { modal.addEventListener('click', (e) => { if (e.target === modal) fechar(modal.id); }); });
     });
-
-function abrirModalRelatorioGeral() {
-    const select = document.getElementById('relatorioPacienteSelect');
-    const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
-    
-    // ADICIONADA A OPÇÃO "TODOS" 👇
-    select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
-        nomesUnicos.map(n => {
-            const idPaciente = registros.find(r => r.nome === n).id;
-            return `<option value="${idPaciente}">${n}</option>`;
-        }).join('');
-        
-    document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>';
-    document.getElementById('relatorioDataInicio').value = "";
-    document.getElementById('relatorioDataFim').value = "";
-    
-    abrir('modalRelatorioGeral');
-}
-
-async function buscarRelatorioGeral() {
-    const pacId = document.getElementById('relatorioPacienteSelect').value;
-    const dataIn = document.getElementById('relatorioDataInicio').value;
-    const dataFim = document.getElementById('relatorioDataFim').value;
-
-    if(!pacId) return alert("Selecione um paciente ou a opção Todos!");
-
-    document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#00b4ff;">Buscando...</p>';
-    
-    let query = supabaseClient.from('registro_medicacao').select('*').order('data', { ascending: false }).order('horario', { ascending: true });
-    
-    // SE NÃO FOR "TODOS", FILTRA PELO ID 👇
-    if (pacId !== 'todos') {
-        query = query.eq('paciente_id', pacId);
-    }
-    
-    if (dataIn) query = query.gte('data', dataIn);
-    if (dataFim) query = query.lte('data', dataFim);
-
-    const { data, error } = await query;
-    window.dadosRelatorioAtual = data;
-
-    const container = document.getElementById('conteudoRelatorioGeral');
-    
-    if (error) { 
-        container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`;
-        return;
-    }
-    
-    if (!data || data.length === 0) { 
-        container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registro encontrado para este período.</p>`;
-        return; 
-    }
-
-    container.innerHTML = data.map(item => {
-        // Busca o nome do paciente para mostrar no relatório geral
-        const paciente = registros.find(r => r.id == item.paciente_id);
-        const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
-        
-        return `
-        <div class="relatorio-item" style="align-items: flex-start;">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                ${pacId === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
-            </div>
-            <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content;">
-                ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
-            </span>
-        </div>
-    `}).join('');
-
-}
-
-async function exportarRelatorio(tipo) {
-    // 1. Verifica se há dados da última busca
-    if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) {
-        alert("Por favor, faça uma busca no relatório primeiro!");
-        return;
-    }
-
-    let dadosParaExportar = window.dadosRelatorioAtual;
-
-    // 2. Filtra pelo horário selecionado na tela principal (se clicou no botão filtrado)
-    if (tipo === 'filtrado') {
-        dadosParaExportar = dadosParaExportar.filter(r => r.horario === horaAtual);
-        if (dadosParaExportar.length === 0) {
-            alert(`Não há registros para o horário de ${horaAtual} neste filtro.`);
-            return;
-        }
-    }
-
-    // 3. Pega o nome do paciente para colocar no título e verifica se é a opção "Todos"
-    const select = document.getElementById('relatorioPacienteSelect');
-    const nomePaciente = select.options[select.selectedIndex].text.replace('👤 ', '').replace('👥 ', '');
-    const buscandoTodos = select.value === 'todos' || select.value === '';
-
-    // 4. Cria o layout do PDF copiando as cores originais do seu CSS
-    const divPdf = document.createElement('div');
-    divPdf.style.padding = '30px';
-    divPdf.style.background = '#121824'; // Cor de fundo do app
-    divPdf.style.color = '#f8fafc'; // Cor do texto
-    divPdf.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
-
-    divPdf.innerHTML = `
-        <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
-            <h2 style="color: #009cd9; margin: 0; font-size: 24px;">Relatório de Medicamentos</h2>
-            <p style="color: #94a3b8; margin-top: 5px; font-size: 14px;">
-                Acolhido: <strong>${nomePaciente}</strong> ${tipo === 'filtrado' ? ' | Horário: ' + horaAtual : ''}
-            </p>
-        </div>
-        <div style="background: #1e293b; border-radius: 12px; padding: 15px; border: 1px solid #334155;">
-            ${dadosParaExportar.map(item => {
-                // Busca o nome do paciente para mostrar caso seja o relatório de "Todos"
-                const paciente = registros.find(r => r.id == item.paciente_id);
-                const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
-                
-                return `
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                        ${buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : ''}
-                    </div>
-                    <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
-                        ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
-                    </span>
-                </div>
-            `}).join('')}
-        </div>
-    `;
-
-    // 5. Configura e gera o PDF
-    const opt = {
-        margin:       10,
-        filename:     `Relatorio_${nomePaciente.replace(/\s+/g, '_')}_${tipo === 'todos' ? 'Geral' : horaAtual}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, backgroundColor: '#121824' },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(divPdf).save();
-}
-
 </script>
 </body>
 </html>
