@@ -25,7 +25,6 @@
         .dashboard { max-width: 800px; margin: 0 auto; }
         h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 25px; background: linear-gradient(135deg, #fff 0%, var(--cor-azul) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
         
-        .action-bar { display: flex; gap: 12px; margin-bottom: 25px; align-items: center; }
         .search-input { flex: 1; padding: 14px 20px; border-radius: 16px; border: 1px solid var(--borda); background: #151f32; color: white; outline: none; font-size: 16px; box-shadow: var(--shadow-in); transition: all 0.3s ease; }
         .search-input:focus { border-color: var(--cor-azul); }
         .search-input::placeholder { color: #64748b; }
@@ -38,12 +37,6 @@
 
         .upload-label { background: #1e293b; color: var(--texto-s); border: 1px dashed var(--borda); padding: 14px 20px; border-radius: 16px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; box-shadow: var(--shadow-out); }
         .upload-label:hover { border-color: var(--cor-azul); color: white; background: #151f32; }
-        
-        .icon-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
-        .icon-item { background: var(--card-bg); padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.03); box-shadow: var(--shadow-out); transition: all 0.2s ease; flex: 1; min-width: 140px; }
-        .icon-item:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0,0,0,0.5), 0 0 10px rgba(0,156,217,0.2); border-color: rgba(0,156,217,0.3); }
-        .icon-item:active { transform: translateY(1px); box-shadow: var(--shadow-in); }
-        .icon-item span { display: block; font-weight: 600; font-size: 14px; margin-top: 8px; color: var(--texto-p); }
         
         .time-selector { display: flex; gap: 10px; margin-bottom: 25px; background: #151f32; padding: 6px; border-radius: 16px; box-shadow: var(--shadow-in); overflow-x: auto; align-items: center; }
         .time-btn { flex: 1; padding: 12px; border: none; background: transparent; color: var(--texto-s); border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s ease; min-width: 60px; }
@@ -88,30 +81,10 @@
         .card-paciente-link { background: var(--card-bg); padding: 14px 18px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; box-shadow: var(--shadow-out); font-weight: 600; color: var(--texto-p); transition: all 0.2s ease; }
         .card-paciente-link:hover { background: #243147; border-color: rgba(0,156,217,0.2); }
         .card-paciente-link.selecionado { background: var(--cor-azul); color: white; box-shadow: 0 0 10px rgba(0,156,217,0.4); }
-        .col-direita { 
-            flex: 1.5; /* Aumentei um pouco o peso para dar destaque */
-            background: #151f32; 
-            border-radius: 18px; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            box-shadow: var(--shadow-in);
-            min-height: 300px; /* Garante visibilidade */
-        }
+        .col-direita { flex: 1.5; background: #151f32; border-radius: 18px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-in); min-height: 300px; }
         .data-selecionada-titulo { font-size: 16px; color: var(--cor-azul); font-weight: bold; margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--borda); padding-bottom: 8px; flex-shrink: 0; }
         .container-scroll-pacientes { flex: 1; overflow-y: auto; padding-right: 5px; }
-        .drive-frame-container { 
-            width: 100%; 
-            flex: 1; /* Força ele a preencher o espaço disponível */
-            border-radius: 12px; 
-            overflow: hidden; 
-            background: #0b0f19; 
-            border: 1px solid var(--borda); 
-            box-shadow: var(--shadow-in);
-            min-height: 400px; /* Garante altura mínima no celular */
-        }
-        .drive-frame-container iframe { width: 100%; height: 100%; border: none; }
+        .drive-frame-container { width: 100%; flex: 1; border-radius: 12px; overflow: hidden; background: #0b0f19; border: 1px solid var(--borda); box-shadow: var(--shadow-in); min-height: 400px; }
         .drive-frame-container iframe { width: 100%; height: 100%; border: none; }
         .card-saida-paciente { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: var(--shadow-out); border-left: 5px solid #22c55e; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; }
         .card-saida-conteudo { flex: 1; }
@@ -158,7 +131,6 @@
         .alerta-card-footer.ok      { color: #fbbf24; }
         .alertas-secao-titulo { font-size: 11px; font-weight: 800; color: var(--texto-s); text-transform: uppercase; letter-spacing: 0.8px; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
         .alertas-secao-titulo::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
-        .icon-item.alerta-ativo { border-color: rgba(249, 115, 22, 0.4); box-shadow: 0 0 12px rgba(249,115,22,0.2), var(--shadow-out); }
         .badge-count-alerta { display: inline-block; background: #f97316; color: white; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
 
         /* Estilos Bolinha */
@@ -174,46 +146,154 @@
         .btn-calendario-header { background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); padding: 8px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-out); transition: all 0.2s; }
         .btn-calendario-header:hover { background: var(--cor-azul); color: white; }
 
+        /* ==========================================
+           ESTILOS DO MENU LATERAL (SIDEBAR)
+           ========================================== */
+        .top-nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        
+        .menu-toggle {
+            background: var(--card-bg);
+            color: var(--texto-p);
+            border: 1px solid var(--borda);
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-out);
+            transition: all 0.2s;
+        }
+        
+        .menu-toggle:active {
+            transform: scale(0.95);
+            box-shadow: var(--shadow-in);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px; 
+            width: 300px;
+            height: 100vh;
+            background-color: var(--bg);
+            border-right: 1px solid var(--borda);
+            z-index: 10000;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.7);
+        }
+
+        .sidebar.aberta {
+            left: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px);
+            z-index: 9999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.ativa {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--borda);
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--cor-azul);
+        }
+
+        .fechar-menu {
+            background: none;
+            border: none;
+            color: var(--texto-s);
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .fechar-menu:hover {
+            color: white;
+        }
+
+        .sidebar-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.03);
+            font-weight: 600;
+            color: var(--texto-p);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-out);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-item:hover {
+            transform: translateY(-2px);
+            background: #243147;
+            border-color: rgba(0,156,217,0.3);
+        }
+        
+        .sidebar-item:active {
+            transform: translateY(1px);
+            box-shadow: var(--shadow-in);
+        }
+
         /* =====================================================================
            🔥 AJUSTES DE RESPONSIVIDADE PARA CELULAR (Telas < 768px)
            ===================================================================== */
        @media (max-width: 768px) {
-            /* Força a dashboard a ocupar toda a largura sem margens excessivas */
             .dashboard { padding: 10px; width: 100%; }
-            
-            /* Ajusta a barra de ações para empilhar */
-            .action-bar { flex-direction: column; gap: 10px; }
-            .add-btn, .upload-label { width: 100%; justify-content: center; }
-            
-            /* Empilha os ícones principais */
-            .icon-grid { flex-direction: column; gap: 10px; }
-            
-            /* Ajusta os cards de registro para ficar um embaixo do outro */
             .record-card { flex-direction: column; align-items: flex-start !important; gap: 15px; }
             .actions-wrapper { width: 100%; justify-content: space-between; }
             .btn-action { flex: 1; }
-            
-            /* Ajusta o Modal de Cadastro e outros modais */
             .modal-content { width: 95% !important; margin: 10px auto !important; padding: 20px !important; }
-            
-            /* Corrige a lista de horários */
             .time-selector { flex-wrap: wrap; }
             .time-btn { min-width: 45%; }
-            
-            /* Força quebras em elementos flex que insistirem em ficar lado a lado */
             .agenda-body { flex-direction: column !important; }
             .col-esquerda, .col-direita { min-width: 100% !important; height: auto !important; }
-            
-            /* Ajuste fino na lista de medicamentos */
             .relatorio-item { flex-direction: column; align-items: flex-start !important; gap: 10px; }
         }   
 
         #modalReceitas .modal-content {
-    display: flex;
-    flex-direction: column;
-    height: 90vh; /* Ocupa quase toda a altura da tela */
-    width: 95% !important;
-}
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            width: 95% !important;
+        }
     </style>
 </head>
 <body>
@@ -224,17 +304,39 @@
     </div>
     <h1 style="text-align: center;"></h1>
     
-    <div class="action-bar">
+    <div class="top-nav">
+        <button class="menu-toggle" onclick="abrirMenuLateral()">☰</button>
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar acolhido..." onkeyup="renderizar()">
-        <label for="importPlanilha" class="upload-label">📁 Importar</label>
-        <input type="file" id="importPlanilha" accept=".xlsx, .xls, .csv" style="display: none;" onchange="importarPlanilhaAcolhidos(event)">
-        <button class="add-btn" onclick="abrirCadastroNovos()">+ Cadastrar</button>
     </div>
 
-    <div class="icon-grid">
-        <div class="icon-item" onclick="abrirCalendarioGrande()">📅<span>Agenda / Saídas</span></div>
-        <div class="icon-item" onclick="abrirGerenciadorReceitas()">📄✍️<span>Gerenciar Receitas</span></div>
-        <div class="icon-item" id="btnAlertas" onclick="abrirModalAlertas()">⚠️<span>Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></span></div>
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="fecharMenuLateral()"></div>
+
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>⚙️ Ações</h2>
+            <button onclick="fecharMenuLateral()" class="fechar-menu">&times;</button>
+        </div>
+        
+        <div class="sidebar-body">
+            <button class="add-btn" onclick="abrirCadastroNovos(); fecharMenuLateral();" style="width: 100%;">+ Cadastrar Novo</button>
+            
+            <label for="importPlanilha" class="upload-label" style="justify-content: center;">📁 Importar Planilha</label>
+            <input type="file" id="importPlanilha" accept=".xlsx, .xls, .csv" style="display: none;" onchange="importarPlanilhaAcolhidos(event)">
+            
+            <hr style="border: none; border-top: 1px solid var(--borda); margin: 10px 0;">
+            
+            <div class="sidebar-item" onclick="abrirCalendarioGrande(); fecharMenuLateral();">
+                📅 Agenda / Saídas
+            </div>
+            
+            <div class="sidebar-item" onclick="abrirGerenciadorReceitas(); fecharMenuLateral();">
+                📄✍️ Gerenciar Receitas
+            </div>
+            
+            <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">
+                ⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span>
+            </div>
+        </div>
     </div>
 
     <div class="time-selector" id="timeSelectorContainer">
@@ -247,7 +349,6 @@
     <div class="modal-content">
         <h2 id="modalTitulo">Novo Acolhido</h2>
         <input type="hidden" id="editId">
-        
         <label>Nome do Acolhido</label>
         <input type="text" id="inpNome" placeholder="Ex: Michael">
         <label>CPF</label>
@@ -401,14 +502,14 @@
     const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const diasSemanaNomes = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 
-// Adicione isso no topo do seu script
-function obterDataAtualLocal() {
-    const data = new Date();
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
-}
+    function obterDataAtualLocal() {
+        const data = new Date();
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const dia = String(data.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
+    
     // ==========================================
     // LÓGICA ORIGINAL COMPLETA DE ALERTAS
     // ==========================================
@@ -427,8 +528,7 @@ function obterDataAtualLocal() {
             dataRetirada.setHours(0, 0, 0, 0);
             return Math.floor((dataRetirada - hoje) / (1000 * 60 * 60 * 24));
         }
-        if (paciente.qtd_meses && paciente.qtd_meses > 0) { return paciente.qtd_meses * 30;
-        }
+        if (paciente.qtd_meses && paciente.qtd_meses > 0) { return paciente.qtd_meses * 30; }
         return null;
     }
 
@@ -436,16 +536,10 @@ function obterDataAtualLocal() {
         const diasFaltantes = calcularDiasFaltantes(paciente);
         const resultado = { nome: paciente.nome, medicamento: paciente.medicamento, dias_faltantes: diasFaltantes, ultima_retirada: paciente.ultima_retirada, data_prescricao: paciente.data_prescricao, qtd_meses: paciente.qtd_meses, status: 'ok', mensagem: '', alerta: false };
         if (resultado.dias_faltantes !== null) {
-            if (resultado.dias_faltantes < 0) { resultado.status = 'critico';
-            resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
-            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao';
-            resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true;
-            } 
-            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok';
-            resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
-            else { resultado.status = 'ok';
-            resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false;
-            }
+            if (resultado.dias_faltantes < 0) { resultado.status = 'critico'; resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
+            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao'; resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
+            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok'; resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
+            else { resultado.status = 'ok'; resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false; }
         }
         return resultado;
     }
@@ -456,17 +550,10 @@ function obterDataAtualLocal() {
         const dataSaida = new Date(saidaItem.data); dataSaida.setHours(0, 0, 0, 0);
         const diasRestantes = Math.floor((dataSaida - hoje) / (1000 * 60 * 60 * 24));
         let status = 'ok', mensagem = '', alerta = false;
-        if (diasRestantes < 0) { status = 'vencida';
-        mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true;
-        } 
-        else if (diasRestantes === 0) { status = 'proxima';
-        mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
-        else if (diasRestantes <= 7) { status = 'proxima';
-        mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true;
-        } 
-        else { status = 'ok';
-        mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false;
-        }
+        if (diasRestantes < 0) { status = 'vencida'; mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true; } 
+        else if (diasRestantes === 0) { status = 'proxima'; mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
+        else if (diasRestantes <= 7) { status = 'proxima'; mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true; } 
+        else { status = 'ok'; mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false; }
         return { status, mensagem, diasRestantes, alerta };
     }
 
@@ -490,8 +577,7 @@ function obterDataAtualLocal() {
     }
 
     function buildCardEstoque(alerta) {
-        const status = alerta.dias_faltantes < 0 ?
-        'critico' : (alerta.dias_faltantes <= 5 ? 'atencao' : 'ok');
+        const status = alerta.dias_faltantes < 0 ? 'critico' : (alerta.dias_faltantes <= 5 ? 'atencao' : 'ok');
         return alerta.medicamentos.map(m => {
             const receitaTag = m.receita_valida === true ? `<span class="alerta-receita-tag valida">✓ Receita Válida</span>` : m.receita_valida === false ? `<span class="alerta-receita-tag invalida">✗ Receita Inválida</span>` : `<span class="alerta-receita-tag nd">— Receita N/D</span>`;
             const mStatus = m.diasFaltantes < 0 ? 'critico' : (m.diasFaltantes <= 5 ? 'atencao' : 'ok');
@@ -549,6 +635,7 @@ function obterDataAtualLocal() {
         const totalAlertas = alertasEstoque.length + alertasRenovacao.length;
         const badge = document.getElementById('badgeAlertasCount');
         const btnAlertas = document.getElementById('btnAlertas');
+        
         if (badge) {
             if (totalAlertas > 0) { badge.textContent = totalAlertas; badge.style.display = 'inline-block'; } 
             else { badge.style.display = 'none'; }
@@ -589,23 +676,22 @@ function obterDataAtualLocal() {
     // CARREGAMENTO DE DADOS
     // ==========================================
     async function carregar() {
-    try {
-        const respPacientes = await supabaseClient.from('pacientes').select('*');
-        if (respPacientes.data) registros = respPacientes.data; 
+        try {
+            const respPacientes = await supabaseClient.from('pacientes').select('*');
+            if (respPacientes.data) registros = respPacientes.data; 
 
-        const respSaidas = await supabaseClient.from('calendario').select('*');
-        if (respSaidas.data) { 
-            saidas = respSaidas.data.map(item => ({ id: item.id || item.Id || item.ID, nome: item.nome || item.Nome || "", links: item.links || item.Links || "", data: item.data || item.Data || "" }));
-        }
+            const respSaidas = await supabaseClient.from('calendario').select('*');
+            if (respSaidas.data) { 
+                saidas = respSaidas.data.map(item => ({ id: item.id || item.Id || item.ID, nome: item.nome || item.Nome || "", links: item.links || item.Links || "", data: item.data || item.Data || "" }));
+            }
 
-        // CORREÇÃO DO FUSO HORÁRIO AQUI 👇
-        const hoje = obterDataAtualLocal();
-        const respMed = await supabaseClient.from('registro_medicacao').select('*').eq('data', hoje);
-        if(respMed.data) registrosMedicacaoDia = respMed.data;
-        
-        renderizarHorarios();
-        renderizar();
-        gerarAlertas();
+            const hoje = obterDataAtualLocal();
+            const respMed = await supabaseClient.from('registro_medicacao').select('*').eq('data', hoje);
+            if(respMed.data) registrosMedicacaoDia = respMed.data;
+            
+            renderizarHorarios();
+            renderizar();
+            gerarAlertas();
         } catch (err) { console.error("Erro comunicação Supabase:", err); }
     }
 
@@ -633,257 +719,356 @@ function obterDataAtualLocal() {
     function filtrar(hora) { horaAtual = hora; renderizarHorarios(); renderizar(); }
 
     // ==========================================
-    // BOLINHA (CHECKLIST COM TRATAMENTO DE ERRO RLS)
+    // BOLINHA (CHECKLIST)
     // ==========================================
-async function toggleMedicacao(pacienteId) {
-    const hoje = new Date().toISOString().split('T')[0];
-    const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
-    try {
-        if (existente) {
-            // SE JÁ EXISTE (está verde/tomado): pede confirmação para excluir
-            if (existente.status === true) {
-                const confirmar = confirm("Este medicamento já foi registrado como TOMADO.\n\nDeseja realmente APAGAR este registro?");
-                if (confirmar) {
-                    // Remove do banco de dados
-                    const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
+    async function toggleMedicacao(pacienteId) {
+        const hoje = new Date().toISOString().split('T')[0];
+        const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
+        try {
+            if (existente) {
+                if (existente.status === true) {
+                    const confirmar = confirm("Este medicamento já foi registrado como TOMADO.\n\nDeseja realmente APAGAR este registro?");
+                    if (confirmar) {
+                        const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
+                        if (error) throw error;
+                        registrosMedicacaoDia = registrosMedicacaoDia.filter(rm => rm.id !== existente.id);
+                        renderizar();
+                    }
+                } else {
+                    const { error } = await supabaseClient.from('registro_medicacao').update({ status: true }).eq('id', existente.id);
                     if (error) throw error;
-                    
-                    // Remove da lista local e atualiza a tela
-                    registrosMedicacaoDia = registrosMedicacaoDia.filter(rm => rm.id !== existente.id);
+                    existente.status = true;
                     renderizar();
                 }
             } else {
-                // Caso o status esteja false (mas o registro exista), apenas marca como true
-                const { error } = await supabaseClient.from('registro_medicacao').update({ status: true }).eq('id', existente.id);
+                const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true };
+                renderizar(); 
+                const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
                 if (error) throw error;
-                existente.status = true;
-                renderizar();
+                if(data && data[0]) {
+                    registrosMedicacaoDia.push(data[0]);
+                    renderizar();
+                }
             }
-        } else {
-            // SE NÃO EXISTE: insere novo registro (Salvar)
-            const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true };
-            renderizar(); // Mostra visualmente rápido
-            
-            const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
-            if (error) throw error;
-            
-            // Atualiza com o dado real vindo do banco (com ID)
-            if(data && data[0]) {
-                registrosMedicacaoDia.push(data[0]);
-                renderizar();
-            }
+        } catch (error) {
+            console.error("ERRO:", error);
+            alert("Erro ao comunicar com o banco de dados. Tente novamente.");
         }
-    } catch (error) {
-        console.error("ERRO:", error);
-        alert("Erro ao comunicar com o banco de dados. Tente novamente.");
     }
-}
+
     // ==========================================
-    // RELATÓRIO GERAL (NOVO)
+    // RELATÓRIO GERAL
     // ==========================================
     function abrirModalRelatorioGeral() {
-    const select = document.getElementById('relatorioPacienteSelect');
-    const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
-    
-    // ADICIONADA A OPÇÃO "TODOS" 👇
-    select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
-        nomesUnicos.map(n => {
-            const idPaciente = registros.find(r => r.nome === n).id;
-            return `<option value="${idPaciente}">${n}</option>`;
-        }).join('');
+        const select = document.getElementById('relatorioPacienteSelect');
+        const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
         
-    document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>';
-    document.getElementById('relatorioDataInicio').value = "";
-    document.getElementById('relatorioDataFim').value = "";
-    
-    abrir('modalRelatorioGeral');
-    }
-
-async function buscarRelatorioGeral() {
-    const pacId = document.getElementById('relatorioPacienteSelect').value;
-    const dataIn = document.getElementById('relatorioDataInicio').value;
-    const dataFim = document.getElementById('relatorioDataFim').value;
-    if(!pacId) return alert("Selecione um paciente ou a opção Todos!");
-
-    document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#00b4ff;">Buscando...</p>';
-    let query = supabaseClient.from('registro_medicacao').select('*').order('data', { ascending: false }).order('horario', { ascending: true });
-    
-    // SE NÃO FOR "TODOS", FILTRA PELO ID 👇
-    if (pacId !== 'todos') {
-        query = query.eq('paciente_id', pacId);
-    }
-    
-    if (dataIn) query = query.gte('data', dataIn);
-    if (dataFim) query = query.lte('data', dataFim);
-    const { data, error } = await query;
-    window.dadosRelatorioAtual = data;
-
-    const container = document.getElementById('conteudoRelatorioGeral');
-    if (error) { 
-        container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`;
-        return;
-    }
-    
-    if (!data || data.length === 0) { 
-        container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registro encontrado para este período.</p>`;
-        return; 
-    }
-
-    container.innerHTML = data.map(item => {
-        // Busca o nome do paciente para mostrar no relatório geral
-        const paciente = registros.find(r => r.id == item.paciente_id);
-        const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
+        select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
+            nomesUnicos.map(n => {
+                const idPaciente = registros.find(r => r.nome === n).id;
+                return `<option value="${idPaciente}">${n}</option>`;
+            }).join('');
+        document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>';
+        document.getElementById('relatorioDataInicio').value = "";
+        document.getElementById('relatorioDataFim').value = "";
         
-        return `
-        <div class="relatorio-item" style="align-items: flex-start;">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                ${pacId === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
+        abrir('modalRelatorioGeral');
+    }
+
+    async function buscarRelatorioGeral() {
+        const pacId = document.getElementById('relatorioPacienteSelect').value;
+        const dataIn = document.getElementById('relatorioDataInicio').value;
+        const dataFim = document.getElementById('relatorioDataFim').value;
+        if(!pacId) return alert("Selecione um paciente ou a opção Todos!");
+
+        document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#00b4ff;">Buscando...</p>';
+        let query = supabaseClient.from('registro_medicacao').select('*').order('data', { ascending: false }).order('horario', { ascending: true });
+        
+        if (pacId !== 'todos') {
+            query = query.eq('paciente_id', pacId);
+        }
+        
+        if (dataIn) query = query.gte('data', dataIn);
+        if (dataFim) query = query.lte('data', dataFim);
+        const { data, error } = await query;
+        window.dadosRelatorioAtual = data;
+
+        const container = document.getElementById('conteudoRelatorioGeral');
+        if (error) { 
+            container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`;
+            return;
+        }
+        
+        if (!data || data.length === 0) { 
+            container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registro encontrado para este período.</p>`;
+            return; 
+        }
+
+        container.innerHTML = data.map(item => {
+            const paciente = registros.find(r => r.id == item.paciente_id);
+            const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
+            
+            return `
+            <div class="relatorio-item" style="align-items: flex-start;">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
+                    ${pacId === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
+                </div>
+                <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content;">
+                    ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
+                </span>
             </div>
-            <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content;">
-                ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
-            </span>
-        </div>
-    `}).join('');
-}
-
-async function exportarRelatorio() {
-    // 1. Verifica se há dados da última busca
-    if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) {
-        alert("Por favor, faça uma busca no relatório primeiro!");
-        return;
+        `}).join('');
     }
 
-    // Exporta exatamente o que a busca retornou
-    let dadosParaExportar = window.dadosRelatorioAtual;
+    async function exportarRelatorio() {
+        if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) {
+            alert("Por favor, faça uma busca no relatório primeiro!");
+            return;
+        }
 
-    // 2. Pega o nome do paciente para colocar no título
-    const select = document.getElementById('relatorioPacienteSelect');
-    const nomePaciente = select.options[select.selectedIndex].text.replace('👤 ', '').replace('👥 ', '');
-    const buscandoTodos = select.value === 'todos' || select.value === '';
-
-    // 3. Constrói as linhas do relatório primeiro (evita erros de sintaxe por aninhamento)
-    let linhasHtml = '';
-    dadosParaExportar.forEach(item => {
-        const paciente = registros.find(r => r.id == item.paciente_id);
-        const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
-        const statusTexto = item.status ? '✅ TOMADO' : '❌ PENDENTE';
-        const statusBg = item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-        const statusCor = item.status ? '#4ade80' : '#f87171';
+        let dadosParaExportar = window.dadosRelatorioAtual;
+        const select = document.getElementById('relatorioPacienteSelect');
+        const nomePaciente = select.options[select.selectedIndex].text.replace('👤 ', '').replace('👥 ', '');
+        const buscandoTodos = select.value === 'todos' || select.value === '';
         
-        let tagPaciente = buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : '';
+        let linhasHtml = '';
+        dadosParaExportar.forEach(item => {
+            const paciente = registros.find(r => r.id == item.paciente_id);
+            const nomePac = paciente ? paciente.nome : 'Acolhido Excluído';
+            const statusTexto = item.status ? '✅ TOMADO' : '❌ PENDENTE';
+            const statusBg = item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            const statusCor = item.status ? '#4ade80' : '#f87171';
+            
+            let tagPaciente = buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : '';
 
-        linhasHtml += `
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                ${tagPaciente}
+            linhasHtml += `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
+                    ${tagPaciente}
+                </div>
+                <span style="font-weight: bold; background: ${statusBg}; color: ${statusCor}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                    ${statusTexto}
+                </span>
             </div>
-            <span style="font-weight: bold; background: ${statusBg}; color: ${statusCor}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
-                ${statusTexto}
-            </span>
-        </div>
+            `;
+        });
+
+        const divPdf = document.createElement('div');
+        divPdf.style.padding = '30px';
+        divPdf.style.background = '#121824'; 
+        divPdf.style.color = '#f8fafc';
+        divPdf.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
+        
+        divPdf.innerHTML = `
+            <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 style="color: #009cd9; margin: 0; font-size: 24px;">Relatório de Medicamentos</h2>
+                <p style="color: #94a3b8; margin-top: 5px; font-size: 14px;">
+                    Acolhido: <strong>${nomePaciente}</strong>
+                </p>
+            </div>
+            <div style="background: #1e293b; border-radius: 12px; padding: 15px; border: 1px solid #334155;">
+                ${linhasHtml}
+            </div>
         `;
-    });
 
-    // 4. Cria o layout principal do PDF (em memória)
-    const divPdf = document.createElement('div');
-    divPdf.style.padding = '30px';
-    divPdf.style.background = '#121824'; 
-    divPdf.style.color = '#f8fafc';
-    divPdf.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
-    
-    divPdf.innerHTML = `
-        <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
-            <h2 style="color: #009cd9; margin: 0; font-size: 24px;">Relatório de Medicamentos</h2>
-            <p style="color: #94a3b8; margin-top: 5px; font-size: 14px;">
-                Acolhido: <strong>${nomePaciente}</strong>
-            </p>
-        </div>
-        <div style="background: #1e293b; border-radius: 12px; padding: 15px; border: 1px solid #334155;">
-            ${linhasHtml}
-        </div>
-    `;
+        const opt = {
+            margin:       10,
+            filename:     `Relatorio_${nomePaciente.replace(/\s+/g, '_')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, backgroundColor: '#121824' },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
 
-    // 5. Configura e gera o PDF via html2pdf
-    const opt = {
-        margin:       10,
-        filename:     `Relatorio_${nomePaciente.replace(/\s+/g, '_')}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, backgroundColor: '#121824' },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(divPdf).save();
-}
+        html2pdf().set(opt).from(divPdf).save();
+    }
 
     // ==========================================
     // RENDERIZAR LISTA PRINCIPAL
     // ==========================================
    function renderizar() {
-    const termo = document.getElementById('searchInput').value.toLowerCase();
-    const lista = document.getElementById('lista-registros');
-    if (!lista) return;
-    
-    // CORREÇÃO DA BUSCA AQUI 👇
-    let filtrados = registros.filter(r => {
-        if (termo !== "") {
-            // Se digitou algo na busca, ignora a aba de horário e acha o paciente
-            return (r.nome || "").toLowerCase().includes(termo); 
-        }
-        // Se a busca estiver vazia, mostra normalmente os pacientes do horário selecionado
-        return r.hora === horaAtual; 
-    });
-    filtrados.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' }));
-    lista.innerHTML = filtrados.map(r => {
-        const diasFaltantes = calcularDiasFaltantes(r);
-        const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
-        const medHoje = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horaAtual);
-        const isChecked = medHoje && medHoje.status === true;
+        const termo = document.getElementById('searchInput').value.toLowerCase();
+        const lista = document.getElementById('lista-registros');
+        if (!lista) return;
         
-        return `
-        <div class="record-card">
-            <div style="flex: 1; display: flex; align-items: flex-start; gap: 15px;">
-                <div class="dot ${isChecked ? 'checked' : ''}" onclick="toggleMedicacao('${r.id}')" title="Marcar como tomado" style="margin-top: 2px;"></div>
-                <div>
-                    <strong>${r.nome} ${termo !== "" ? `<span style="font-size:12px; color:var(--cor-azul);">(${r.hora})</span>` : ''}</strong>
-                    ${r.cpf ? `<br><small style="color: var(--cor-azul)">CPF: ${r.cpf}</small>` : ''}
-                    <br><small>${r.medicamento || 'Sem medicação definida'}</small>
-                    ${diasFaltantes !== null ? `<br><small style="${statusAlerta} font-weight: bold;">${diasFaltantes < 0 ? '❌ Sem Estoque' : (diasFaltantes <= 30 ? '⏰ Faltam: ' + diasFaltantes + ' dias' : '')}</small>` : ''}
+        let filtrados = registros.filter(r => {
+            if (termo !== "") {
+                return (r.nome || "").toLowerCase().includes(termo); 
+            }
+            return r.hora === horaAtual;
+        });
+        filtrados.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' }));
+        lista.innerHTML = filtrados.map(r => {
+            const diasFaltantes = calcularDiasFaltantes(r);
+            const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
+            const medHoje = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horaAtual);
+            const isChecked = medHoje && medHoje.status === true;
+            
+            return `
+            <div class="record-card">
+                <div style="flex: 1; display: flex; align-items: flex-start; gap: 15px;">
+                    <div class="dot ${isChecked ? 'checked' : ''}" onclick="toggleMedicacao('${r.id}')" title="Marcar como tomado" style="margin-top: 2px;"></div>
+                    <div>
+                        <strong>${r.nome} ${termo !== "" ? `<span style="font-size:12px; color:var(--cor-azul);">(${r.hora})</span>` : ''}</strong>
+                        ${r.cpf ? `<br><small style="color: var(--cor-azul)">CPF: ${r.cpf}</small>` : ''}
+                        <br><small>${r.medicamento || 'Sem medicação definida'}</small>
+                        ${diasFaltantes !== null ? `<br><small style="${statusAlerta} font-weight: bold;">${diasFaltantes < 0 ? '❌ Sem Estoque' : (diasFaltantes <= 30 ? '⏰ Faltam: ' + diasFaltantes + ' dias' : '')}</small>` : ''}
+                    </div>
+                </div>
+                <div class="actions-wrapper">
+                    <button class="btn-action btn-bula" onclick="abrirGoogle('${r.medicamento}')" title="Ver Bula">Bula</button>
+                    <button class="btn-action btn-edit" onclick="prepararEdicao(${r.id})" title="Editar Informações">✏️</button>
+                    <button class="btn-action btn-delete" onclick="excluirRegistro(${r.id}, '${r.nome.replace(/'/g, "\\'")}')" title="Excluir do Sistema">🗑️</button>
                 </div>
             </div>
-            <div class="actions-wrapper">
-                <button class="btn-action btn-bula" onclick="abrirGoogle('${r.medicamento}')" title="Ver Bula">Bula</button>
-                <button class="btn-action btn-edit" onclick="prepararEdicao(${r.id})" title="Editar Informações">✏️</button>
-                <button class="btn-action btn-delete" onclick="excluirRegistro(${r.id}, '${r.nome.replace(/'/g, "\\'")}')" title="Excluir do Sistema">🗑️</button>
-            </div>
-        </div>
-    `}).join('') || `<p style='text-align:center; color:#64748b; padding:20px;'>Nenhum acolhido encontrado.</p>`;
-}
+        `}).join('') || `<p style='text-align:center; color:#64748b; padding:20px;'>Nenhum acolhido encontrado.</p>`;
+    }
+
     // ==========================================
     // DEMAIS FUNÇÕES ORIGINAIS
     // ==========================================
     function formatarDataBr(dataStr) { if (!dataStr) return 'N/A'; const data = new Date(dataStr + 'T00:00:00'); return data.toLocaleDateString('pt-BR'); }
     function extrairIdDrive(input) { if (!input) return ""; const match = input.match(/folders\/([a-zA-Z0-9-_]+)/); return match ? match[1] : input.trim(); }
-    window.prepararEdicaoSaida = function(id) { const item = saidas.find(s => String(s.id) === String(id)); if (!item) return; abrirModalNovaSaida(); document.getElementById('modalSaidaTitulo').innerText = "Editar Renovação/Saída"; document.getElementById('editSaidaId').value = String(item.id); document.getElementById('saidaNomeSelect').value = item.nome || ""; document.getElementById('saidaLinks').value = item.links || ""; document.getElementById('saidaData').value = item.data || ""; };
-    window.salvarSaida = async function() { const id = document.getElementById('editSaidaId').value; const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value; if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados!"); const dados = { nome, links, data }; if (id) { const idTratado = isNaN(id) ? id : Number(id); const { error } = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); if (!error) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + error.message); } else { const { error } = await supabaseClient.from('calendario').insert([dados]); if (!error) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + error.message); } };
-    window.excluirSaida = async function(id, nome) { if (confirm(`Deseja remover "${nome}"?`)) { const idTratado = isNaN(id) ? id : Number(id); const { error } = await supabaseClient.from('calendario').delete().eq('id', idTratado); if (!error) carregar(); else alert("Erro: " + error.message); } };
-    function abrirCadastroNovos() { document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = ""; document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = ""; document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; abrir('modalCadastro'); }
-    function prepararEdicao(id) { const item = registros.find(r => r.id === id); if (!item) return; document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || ""; document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || ""; document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ? diasCalc : ""; abrir('modalCadastro'); }
-    async function salvar() { const id = document.getElementById('editId').value; const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value; const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null; const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses }); if (!nome) return alert("Por favor, preencha o nome!"); const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc }; if (id) { const { error } = await supabaseClient.from('pacientes').update(dados).eq('id', id); if (!error) { fechar('modalCadastro'); carregar(); } else alert("Erro ao editar: " + error.message); } else { const { error } = await supabaseClient.from('pacientes').insert([dados]); if (!error) { fechar('modalCadastro'); carregar(); } else alert("Erro ao cadastrar: " + error.message); } }
-    function abrirModalNovaSaida() { document.getElementById('modalSaidaTitulo').innerText = "Agendar Renovação/Saída"; document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = ''; const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort(); if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido cadastrado"; select.appendChild(opt); } else { nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); }); } abrir('modalNovaSaida'); }
-    function abrirGerenciadorReceitas() { document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas(); }
-    function gerarListaAcolhidosReceitas() { const container = document.getElementById('listaNomesReceitas'); const termo = document.getElementById('searchReceitasInput').value.toLowerCase(); if(registros.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum acolhido.</p>"; return; } const nomesUnicos = [...new Set(registros.map(p => p.nome))]; let nomesFiltrados = nomesUnicos.filter(nome => nome.toLowerCase().includes(termo)).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' })); if(nomesFiltrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum resultado.</p>"; return; } container.innerHTML = nomesFiltrados.map(nome => { const id = registros.find(r => r.nome === nome)?.id || 0; return `<div class="card-paciente-link" id="rec-card-${id}" onclick="selecionarAcolhidoParaDrive(${id}, '${nome.replace(/'/g, "\\'")}')"><span>👤 ${nome}</span><span style="font-size: 11px; color: var(--cor-azul);">Ver Pasta ➔</span></div>`; }).join(''); }
-    function selecionarAcolhidoParaDrive(id, nomeAcolhido) { document.querySelectorAll('.card-paciente-link').forEach(c => c.classList.remove('selecionado')); const card = document.getElementById(`rec-card-${id}`); if(card) card.classList.add('selecionado'); const item = registros.find(r => r.id === id); if(!item) return; document.getElementById('nomeAcolhidoTitulo').innerText = `Acolhido: ${nomeAcolhido}`; const iframe = document.getElementById('driveIframe'); const evento = saidas.filter(s => s.nome === nomeAcolhido && s.links).pop(); const linkFinal = (evento && evento.links) ? evento.links : item.links; const idPasta = linkFinal ? extrairIdDrive(linkFinal) : "1kGWG5rLmVBET55jxG9kPxGw2GWZv5PGf"; iframe.src = `https://drive.google.com/embeddedfolderview?id=${idPasta}&hl=pt-BR#grid`; }
-    function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia(); }
-    function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario(); }
-    function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia(); }
-    function gerarCalendario() { const ano = dataAtual.getFullYear(); const mes = dataAtual.getMonth(); document.getElementById('calMesAno').innerText = `${mesesNomes[mes].substring(0,3)}. de ${ano}`; const prim = new Date(ano, mes, 1).getDay(); const ult = new Date(ano, mes + 1, 0).getDate(); const ultAnt = new Date(ano, mes, 0).getDate(); const grade = document.getElementById('calGradeDias'); if (!grade) return; grade.innerHTML = ''; for (let i = prim; i > 0; i--) { const div = document.createElement('div'); div.className = 'cal-dia outro-mes'; div.innerText = ultAnt - i + 1; grade.appendChild(div); } for (let dia = 1; dia <= ult; dia++) { const div = document.createElement('div'); div.className = 'cal-dia'; div.innerText = dia; const dIso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`; if(dataSelecionada.getDate() === dia && dataSelecionada.getMonth() === mes && dataSelecionada.getFullYear() === ano) div.classList.add('selecionado'); if (saidas.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador'; div.appendChild(m); } div.onclick = () => selecionarDia(ano, mes, dia); grade.appendChild(div); } }
-    function renderizarPacientesDoDia() { const dia = String(dataSelecionada.getDate()).padStart(2, '0'); const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0'); const ano = dataSelecionada.getFullYear(); const dIso = `${ano}-${mes}-${dia}`; document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return; const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento.</p>"; return; } lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join(''); }
+    
+    window.prepararEdicaoSaida = function(id) { 
+        const item = saidas.find(s => String(s.id) === String(id)); if (!item) return; abrirModalNovaSaida();
+        document.getElementById('modalSaidaTitulo').innerText = "Editar Renovação/Saída"; document.getElementById('editSaidaId').value = String(item.id); document.getElementById('saidaNomeSelect').value = item.nome || ""; document.getElementById('saidaLinks').value = item.links || ""; document.getElementById('saidaData').value = item.data || ""; 
+    };
+    
+    window.salvarSaida = async function() { 
+        const id = document.getElementById('editSaidaId').value; const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value; if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados!");
+        const dados = { nome, links, data }; 
+        if (id) { 
+            const idTratado = isNaN(id) ? id : Number(id); const { error } = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); if (!error) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + error.message);
+        } else { 
+            const { error } = await supabaseClient.from('calendario').insert([dados]); if (!error) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + error.message); 
+        } 
+    };
+    
+    window.excluirSaida = async function(id, nome) { 
+        if (confirm(`Deseja remover "${nome}"?`)) { 
+            const idTratado = isNaN(id) ? id : Number(id); const { error } = await supabaseClient.from('calendario').delete().eq('id', idTratado); if (!error) carregar(); else alert("Erro: " + error.message);
+        } 
+    };
+    
+    function abrirCadastroNovos() { 
+        document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = ""; document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = ""; document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; abrir('modalCadastro'); 
+    }
+    
+    function prepararEdicao(id) { 
+        const item = registros.find(r => r.id === id); if (!item) return; document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || ""; document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || ""; document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ? diasCalc : ""; abrir('modalCadastro'); 
+    }
+    
+    async function salvar() { 
+        const id = document.getElementById('editId').value; const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value; const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null; const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses }); if (!nome) return alert("Por favor, preencha o nome!");
+        const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc };
+        if (id) { 
+            const { error } = await supabaseClient.from('pacientes').update(dados).eq('id', id); if (!error) { fechar('modalCadastro'); carregar(); } else alert("Erro ao editar: " + error.message); 
+        } else { 
+            const { error } = await supabaseClient.from('pacientes').insert([dados]); if (!error) { fechar('modalCadastro'); carregar(); } else alert("Erro ao cadastrar: " + error.message);
+        } 
+    }
+    
+    function abrirModalNovaSaida() { 
+        document.getElementById('modalSaidaTitulo').innerText = "Agendar Renovação/Saída"; document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = ''; const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
+        if(nomesUnicos.length === 0) { 
+            const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido cadastrado"; select.appendChild(opt);
+        } else { 
+            nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); }); 
+        } 
+        abrir('modalNovaSaida');
+    }
+    
+    function abrirGerenciadorReceitas() { 
+        document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas();
+    }
+    
+    function gerarListaAcolhidosReceitas() { 
+        const container = document.getElementById('listaNomesReceitas'); const termo = document.getElementById('searchReceitasInput').value.toLowerCase();
+        if(registros.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum acolhido.</p>"; return; } 
+        const nomesUnicos = [...new Set(registros.map(p => p.nome))];
+        let nomesFiltrados = nomesUnicos.filter(nome => nome.toLowerCase().includes(termo)).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
+        if(nomesFiltrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum resultado.</p>"; return; } 
+        container.innerHTML = nomesFiltrados.map(nome => { const id = registros.find(r => r.nome === nome)?.id || 0; return `<div class="card-paciente-link" id="rec-card-${id}" onclick="selecionarAcolhidoParaDrive(${id}, '${nome.replace(/'/g, "\\'")}')"><span>👤 ${nome}</span><span style="font-size: 11px; color: var(--cor-azul);">Ver Pasta ➔</span></div>`; }).join('');
+    }
+    
+    function selecionarAcolhidoParaDrive(id, nomeAcolhido) { 
+        document.querySelectorAll('.card-paciente-link').forEach(c => c.classList.remove('selecionado')); const card = document.getElementById(`rec-card-${id}`); if(card) card.classList.add('selecionado');
+        const item = registros.find(r => r.id === id); if(!item) return; document.getElementById('nomeAcolhidoTitulo').innerText = `Acolhido: ${nomeAcolhido}`; const iframe = document.getElementById('driveIframe');
+        const evento = saidas.filter(s => s.nome === nomeAcolhido && s.links).pop(); const linkFinal = (evento && evento.links) ? evento.links : item.links;
+        const idPasta = linkFinal ? extrairIdDrive(linkFinal) : "1kGWG5rLmVBET55jxG9kPxGw2GWZv5PGf"; iframe.src = `https://drive.google.com/embeddedfolderview?id=${idPasta}&hl=pt-BR#grid`; 
+    }
+    
+    function abrirCalendarioGrande() { 
+        abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia(); 
+    }
+    
+    function mudarMes(direcao) { 
+        dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
+    }
+    
+    function selecionarDia(ano, mes, dia) { 
+        dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia();
+    }
+    
+    function gerarCalendario() { 
+        const ano = dataAtual.getFullYear(); const mes = dataAtual.getMonth(); document.getElementById('calMesAno').innerText = `${mesesNomes[mes].substring(0,3)}. de ${ano}`;
+        const prim = new Date(ano, mes, 1).getDay(); const ult = new Date(ano, mes + 1, 0).getDate();
+        const ultAnt = new Date(ano, mes, 0).getDate(); const grade = document.getElementById('calGradeDias'); if (!grade) return; grade.innerHTML = '';
+        for (let i = prim; i > 0; i--) { const div = document.createElement('div'); div.className = 'cal-dia outro-mes'; div.innerText = ultAnt - i + 1; grade.appendChild(div); } 
+        for (let dia = 1; dia <= ult; dia++) { 
+            const div = document.createElement('div'); div.className = 'cal-dia'; div.innerText = dia; const dIso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+            if(dataSelecionada.getDate() === dia && dataSelecionada.getMonth() === mes && dataSelecionada.getFullYear() === ano) div.classList.add('selecionado');
+            if (saidas.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador'; div.appendChild(m); } 
+            div.onclick = () => selecionarDia(ano, mes, dia); grade.appendChild(div); 
+        } 
+    }
+    
+    function renderizarPacientesDoDia() { 
+        const dia = String(dataSelecionada.getDate()).padStart(2, '0'); const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0'); const ano = dataSelecionada.getFullYear(); const dIso = `${ano}-${mes}-${dia}`;
+        document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return;
+        const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento.</p>"; return; } 
+        lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
+    }
+    
     function abrir(id) { document.getElementById(id).style.display = 'flex'; }
     function fechar(id) { document.getElementById(id).style.display = 'none'; if (id === 'modalNovaSaida') document.getElementById('editSaidaId').value = ""; }
     function abrirGoogle(med) { if(med && med !== "undefined") window.open('https://www.google.com/search?q=bula+'+med, '_blank'); }
-    async function excluirRegistro(id, nome) { if (confirm(`Excluir o cadastro de ${nome}?`)) { const { error } = await supabaseClient.from('pacientes').delete().eq('id', id); if (!error) carregar(); else alert("Erro ao excluir: " + error.message); } }
+    async function excluirRegistro(id, nome) { 
+        if (confirm(`Excluir o cadastro de ${nome}?`)) { 
+            const { error } = await supabaseClient.from('pacientes').delete().eq('id', id); if (!error) carregar(); else alert("Erro ao excluir: " + error.message); 
+        } 
+    }
+
+    // ==========================================
+    // CONTROLE DO MENU LATERAL
+    // ==========================================
+    function abrirMenuLateral() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        sidebar.classList.add('aberta');
+        overlay.style.display = 'block';
+        
+        // Pequeno atraso para a transição do CSS (fade-in) funcionar
+        setTimeout(() => {
+            overlay.classList.add('ativa');
+        }, 10);
+    }
+
+    function fecharMenuLateral() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        sidebar.classList.remove('aberta');
+        overlay.classList.remove('ativa');
+        
+        // Aguarda a animação acabar para esconder a div
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 300);
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
         carregar();
