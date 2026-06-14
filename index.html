@@ -36,7 +36,7 @@
         .add-btn:active { transform: scale(0.97); box-shadow: var(--shadow-in); }
         .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .upload-label { background: #1e293b; color: var(--texto-s); border: 1px dashed var(--borda); padding: 14px 20px; border-radius: 16px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; box-shadow: var(--shadow-out); }
+        .upload-label { background: #1e293b; color: var(--texto-s); border: 1px dashed var(--borda); padding: 14px 20px; border-radius: 16px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; box-shadow: var(--shadow-out); justify-content: center; }
         .upload-label:hover { border-color: var(--cor-azul); color: white; background: #151f32; }
         
         .time-selector { display: flex; gap: 10px; margin-bottom: 25px; background: #151f32; padding: 6px; border-radius: 16px; box-shadow: var(--shadow-in); overflow-x: auto; align-items: center; }
@@ -86,7 +86,6 @@
         .data-selecionada-titulo { font-size: 16px; color: var(--cor-azul); font-weight: bold; margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--borda); padding-bottom: 8px; flex-shrink: 0; }
         .container-scroll-pacientes { flex: 1; overflow-y: auto; padding-right: 5px; }
         
-        /* CSS Limpo e Otimizado aqui */
         .drive-frame-container { width: 100%; flex: 1; border-radius: 12px; overflow: hidden; background: #0b0f19; border: 1px solid var(--borda); box-shadow: var(--shadow-in); min-height: 400px; }
         .drive-frame-container iframe { width: 100%; height: 100%; border: none; }
         
@@ -165,7 +164,6 @@
         .sidebar-item:hover { transform: translateY(-2px); background: #243147; border-color: rgba(0,156,217,0.3); }
         .sidebar-item:active { transform: translateY(1px); box-shadow: var(--shadow-in); }
 
-        /* Estilo para lista interna de remédios */
         .med-tag-list { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; background: #151f32; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--borda); }
         .med-tag-item { font-size: 13px !important; color: #e2e8f0 !important; font-weight: 500; display: flex; align-items: center; gap: 6px; }
 
@@ -208,7 +206,7 @@
         <div class="sidebar-body">
             <button class="add-btn" id="btnTriggerCadastro" onclick="abrirCadastroNovos(); fecharMenuLateral();" style="width: 100%;">+ Registar Novo</button>
             
-            <label for="importPlanilha" class="upload-label" style="justify-content: center;">📁 Importar Excel</label>
+            <label for="importPlanilha" class="upload-label" id="lblUploadPlanilha">📁 Importar Excel</label>
             <input type="file" id="importPlanilha" accept=".xlsx, .xls, .csv" style="display: none;" onchange="importarPlanilhaAcolhidos(event)">
             
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 10px 0;">
@@ -374,26 +372,20 @@
 </div>
 
 <script>
-    // =========================================================================================
-    // 🔴 AVISO DE SEGURANÇA: Certifique-se de ativar o RLS (Row Level Security) no Supabase!
-    // Sem RLS ativo, as chaves de API abaixo ficam vulneráveis a manipulações maliciosas.
-    // =========================================================================================
     const { createClient } = supabase;
     const supabaseClient = createClient(
         'https://xyukqrwjiywemscenqka.supabase.co',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dWtxcndqaXl3ZW1zY2VucWthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjYxNTAsImV4cCI6MjA5Njk0MjE1MH0.j6W4AMU_J3XQYm7RFXHJqEQkoHPWZOQfXU03qHUwXxM'
     );
 
-    // Fonte única de verdade para os Horários Fixos da Aplicação
     let horariosAtivos = ["07h", "15h", "19h", "23h"]; 
     
     let registros = [];
     let saidas = [];
-    let registrosMedicacaoDia = []; 
+    let registrosMedicacaoDia = [];
     let horaAtual = "07h";
     let dataAtual = new Date();
     let dataSelecionada = new Date();
-
     const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const diasSemanaNomes = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 
@@ -406,8 +398,117 @@
     }
 
     // ==========================================
-    // MÁSCARA E VALIDAÇÃO ROBUSTA DE CPF
+    // FUNÇÃO CORRIGIDA DE UPLOAD DO EXCEL
     // ==========================================
+    async function importarPlanilhaAcolhidos(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const lblUpload = document.getElementById('lblUploadPlanilha');
+        const textoOriginal = lblUpload.innerHTML;
+        lblUpload.innerHTML = "⏳ A importar...";
+
+        const reader = new FileReader();
+
+        reader.onload = async function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true }); 
+                
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                if (jsonData.length === 0) {
+                    alert("A planilha selecionada está vazia!");
+                    lblUpload.innerHTML = textoOriginal;
+                    return;
+                }
+
+                const registosParaInserir = [];
+
+                for (const row of jsonData) {
+                    const nome = row["nomes"] || row["Nome"] || row["nome"] || "";
+                    const cpf = row["cpf"] || row["CPF"] || "";
+                    const medicamento = row["medicamento"] || row["Medicamento"] || "";
+                    const hora = row["hora"] || row["Hora"] || "07h";
+                    const links = row["links"] || row["Links"] || row["link"] || "";
+                    
+                    let dataPrescricao = row["data_prescricao"] || row["Data de Prescrição"] || null;
+                    let ultimaRetirada = row["ultima_retirada"] || row["Última Retirada"] || null;
+                    const qtdMeses = parseInt(row["qtd_meses"] || row["Qtd. Meses"] || 0, 10);
+
+                    function formatarDataISO(valorData) {
+                        if (!valorData) return null;
+                        if (valorData instanceof Date) {
+                            return valorData.toISOString().split('T')[0];
+                        }
+                        if (typeof valorData === 'string') {
+                            const partes = valorData.split('/');
+                            if (partes.length === 3) {
+                                return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                            }
+                        }
+                        return valorData;
+                    }
+
+                    dataPrescricao = formatarDataISO(dataPrescricao);
+                    ultimaRetirada = formatarDataISO(ultimaRetirada);
+
+                    const diasFaltantesCalc = calcularDiasFaltantes({ 
+                        ultima_retirada: ultimaRetirada, 
+                        qtd_meses: isNaN(qtdMeses) ? null : qtdMeses 
+                    });
+
+                    if (nome && nome.trim() !== "") {
+                        registosParaInserir.push({
+                            nome: nome.trim(),
+                            cpf: cpf.toString().trim(),
+                            medicamento: medicamento.toString().trim(),
+                            hora: hora.toString().trim(),
+                            links: links.toString().trim(),
+                            data_prescricao: dataPrescricao,
+                            ultima_retirada: ultimaRetirada,
+                            qtd_meses: isNaN(qtdMeses) ? null : qtdMeses,
+                            dias_faltantes: diasFaltantesCalc
+                        });
+                    }
+                }
+
+                if (registosParaInserir.length === 0) {
+                    alert("Nenhum registo válido foi encontrado na planilha.");
+                    lblUpload.innerHTML = textoOriginal;
+                    return;
+                }
+
+                const { data: insertData, error } = await supabaseClient
+                    .from('pacientes') 
+                    .insert(registosParaInserir);
+
+                if (error) {
+                    console.error("Erro na API do Supabase:", error);
+                    throw new Error(error.message);
+                }
+
+                alert(`${registosParaInserir.length} acolhidos importados com sucesso!`);
+                lblUpload.innerHTML = textoOriginal;
+                fecharMenuLateral();
+                carregar(); // Recarrega a tela com os novos dados
+
+            } catch (err) {
+                console.error("Erro detalhado na importação:", err);
+                alert("Erro ao importar planilha: " + err.message);
+                lblUpload.innerHTML = textoOriginal;
+            } finally {
+                event.target.value = ""; 
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+    // ==========================================
+
     function aplicarMascaraCPF(campo) {
         let v = campo.value.replace(/\D/g, "");
         v = v.replace(/(\d{3})(\d)/, "$1.$2");
@@ -432,9 +533,6 @@
         return true;
     }
 
-    // ==========================================
-    // MODAL DE CONFIRMAÇÃO CUSTOMIZADO
-    // ==========================================
     function perguntarConfirmacao(titulo, texto, acaoSim) {
         document.getElementById('confirmarTitulo').innerText = titulo;
         document.getElementById('confirmarTexto').innerText = texto;
@@ -445,24 +543,17 @@
         };
     }
     
-    // ==========================================
-    // CÁLCULO DE DIAS FALTANTES CORRIGIDO
-    // ==========================================
     function calcularDiasFaltantes(paciente) {
         if (!paciente.ultima_retirada) return null;
-        
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
         
-        // Evita distorções de fuso horário local na conversão de string ISO
         const dataRetirada = new Date(paciente.ultima_retirada + 'T00:00:00');
         let dataVencimento = new Date(dataRetirada.getTime());
 
         if (paciente.qtd_meses && paciente.qtd_meses > 0) {
-            // Adiciona meses de forma exata baseada em calendário (tratando 28, 30 e 31 dias)
             dataVencimento.setMonth(dataVencimento.getMonth() + parseInt(paciente.qtd_meses));
         } else {
-            // Fallback sem quantidade de meses estipulada
             dataVencimento = dataRetirada;
         }
         
@@ -474,10 +565,16 @@
         const diasFaltantes = calcularDiasFaltantes(paciente);
         const resultado = { nome: paciente.nome, medicamento: paciente.medicamento, dias_faltantes: diasFaltantes, ultima_retirada: paciente.ultima_retirada, data_prescricao: paciente.data_prescricao, qtd_meses: paciente.qtd_meses, status: 'ok', mensagem: '', alerta: false };
         if (resultado.dias_faltantes !== null) {
-            if (resultado.dias_faltantes < 0) { resultado.status = 'critico'; resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
-            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao'; resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
-            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok'; resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
-            else { resultado.status = 'ok'; resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false; }
+            if (resultado.dias_faltantes < 0) { resultado.status = 'critico';
+            resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
+            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao';
+            resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true;
+            } 
+            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok';
+            resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
+            else { resultado.status = 'ok';
+            resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false;
+            }
         }
         return resultado;
     }
@@ -488,10 +585,17 @@
         const dataSaida = new Date(saidaItem.data + 'T00:00:00');
         const diasRestantes = Math.floor((dataSaida - hoje) / (1000 * 60 * 60 * 24));
         let status = 'ok', mensagem = '', alerta = false;
-        if (diasRestantes < 0) { status = 'vencida'; mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true; } 
-        else if (diasRestantes === 0) { status = 'proxima'; mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
-        else if (diasRestantes <= 7) { status = 'proxima'; mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true; } 
-        else { status = 'ok'; mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false; }
+        if (diasRestantes < 0) { status = 'vencida';
+        mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true;
+        } 
+        else if (diasRestantes === 0) { status = 'proxima';
+        mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
+        else if (diasRestantes <= 7) { status = 'proxima';
+        mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true;
+        } 
+        else { status = 'ok';
+        mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false;
+        }
         return { status, mensagem, diasRestantes, alerta };
     }
 
@@ -505,11 +609,11 @@
             pacientes.forEach(p => {
                 const diasFaltantes = calcularDiasFaltantes(p);
                 if (diasFaltantes !== null && diasFaltantes <= 30) {
-                    medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida });
+                     medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida });
                     if (diasFaltantesMinimo === null || diasFaltantes < diasFaltantesMinimo) diasFaltantesMinimo = diasFaltantes;
                 }
             });
-            if (medicamentosRenovacao.length > 0) alertasPorPaciente[nomePaciente] = { medicamentos: medicamentosRenovacao, diasFaltantes: diasFaltantesMinimo };
+             if (medicamentosRenovacao.length > 0) alertasPorPaciente[nomePaciente] = { medicamentos: medicamentosRenovacao, diasFaltantes: diasFaltantesMinimo };
         });
         return alertasPorPaciente;
     }
@@ -572,7 +676,6 @@
         const totalAlertas = alertasEstoque.length + alertasRenovacao.length;
         const badge = document.getElementById('badgeAlertasCount');
         const btnAlertas = document.getElementById('btnAlertas');
-        
         if (badge) {
             if (totalAlertas > 0) { badge.textContent = totalAlertas; badge.style.display = 'inline-block'; } 
             else { badge.style.display = 'none'; }
@@ -608,9 +711,6 @@
 
     function abrirModalAlertas() { abrir('modalAlertas'); document.getElementById('alertasModalBody').innerHTML = buildAlertasHTML(); }
     
-    // ==========================================
-    // CARREGAMENTO DE DADOS (BASE DE DADOS)
-    // ==========================================
     async function carregar() {
         try {
             const respPacientes = await supabaseClient.from('pacientes').select('*');
@@ -632,7 +732,6 @@
         } catch (err) { console.error("Erro na comunicação com o Supabase:", err); }
     }
 
-    // Centraliza a criação do select do Modal vindo do Array global de tempos ativos
     function popularSelectHorariosFixo() {
         const select = document.getElementById('inpHora');
         if(select) {
@@ -660,13 +759,9 @@
 
     function filtrar(hora) { horaAtual = hora; renderizarHorarios(); renderizar(); }
 
-    // ==========================================
-    // CHECKLIST DE ASSINATURA DA MEDICAÇÃO
-    // ==========================================
     async function toggleMedicacao(pacienteId) {
         const hoje = new Date().toISOString().split('T')[0];
         const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
-        
         if (existente && existente.status === true) {
             perguntarConfirmacao(
                 "Inverter Registo", 
@@ -689,9 +784,6 @@
         }
     }
 
-    // ==========================================
-    // FILTROS & EMISSÃO DE RELATÓRIO GERAL
-    // ==========================================
     function abrirModalRelatorioGeral() {
         const select = document.getElementById('relatorioPacienteSelect');
         const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
@@ -713,11 +805,9 @@
         const dataIn = document.getElementById('relatorioDataInicio').value;
         const dataFim = document.getElementById('relatorioDataFim').value;
         if(!pacId) return alert("Selecione um paciente ou a opção de Todos!");
-
         const btn = document.getElementById('btnBuscarRelatorio');
         btn.disabled = true;
         btn.innerText = "A pesquisar...";
-
         let query = supabaseClient.from('registro_medicacao').select('*').order('data', { ascending: false }).order('horario', { ascending: true });
         if (pacId !== 'todos') query = query.eq('paciente_id', pacId);
         if (dataIn) query = query.gte('data', dataIn);
@@ -777,9 +867,6 @@
         html2pdf().set({ margin: 10, filename: `Relatorio_${nomePaciente}.pdf`, html2canvas: { scale: 2, backgroundColor: '#121824' }, jsPDF: { format: 'a4', orientation: 'portrait' } }).from(divPdf).save();
     }
 
-    // ==========================================
-    // RENDERIZAR PAINEL PRINCIPAL (COM SUPORTE MULTI-MEDS VIA UI)
-    // ==========================================
     function renderizar() {
         const termo = document.getElementById('searchInput').value.toLowerCase();
         const lista = document.getElementById('lista-registros');
@@ -787,14 +874,12 @@
         
         let filtrados = registros.filter(r => termo !== "" ? (r.nome || "").toLowerCase().includes(termo) : r.hora === horaAtual);
         filtrados.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' }));
-        
         lista.innerHTML = filtrados.map(r => {
             const diasFaltantes = calcularDiasFaltantes(r);
             const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
             const medHoje = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horaAtual);
             const isChecked = medHoje && medHoje.status === true;
             
-            // Separa os medicamentos por vírgula na visualização de cartões
             const listaMeds = (r.medicamento || 'Sem medicação definida').split(',');
             const blocoMedicamentosHtml = `<div class="med-tag-list">` + listaMeds.map(med => `<div class="med-tag-item">💊 ${med.trim()}</div>`).join('') + `</div>`;
 
@@ -818,24 +903,34 @@
         }).join('') || `<p style='text-align:center; color:#64748b; padding:20px;'>Nenhum acolhido encontrado.</p>`;
     }
 
-    function formatarDataBr(dataStr) { if (!dataStr) return 'N/A'; const data = new Date(dataStr + 'T00:00:00'); return data.toLocaleDateString('pt-PT'); }
-    function extrairIdDrive(input) { if (!input) return ""; const match = input.match(/folders\/([a-zA-Z0-9-_]+)/); return match ? match[1] : input.trim(); }
+    function formatarDataBr(dataStr) { if (!dataStr) return 'N/A';
+    const data = new Date(dataStr + 'T00:00:00'); return data.toLocaleDateString('pt-PT'); }
+    function extrairIdDrive(input) { if (!input) return "";
+    const match = input.match(/folders\/([a-zA-Z0-9-_]+)/); return match ? match[1] : input.trim();
+    }
     
     window.prepararEdicaoSaida = function(id) { 
-        const item = saidas.find(s => String(s.id) === String(id)); if (!item) return; abrirModalNovaSaida();
+        const item = saidas.find(s => String(s.id) === String(id));
+        if (!item) return; abrirModalNovaSaida();
         document.getElementById('modalSaidaTitulo').innerText = "Editar Renovação/Saída"; document.getElementById('editSaidaId').value = String(item.id); document.getElementById('saidaNomeSelect').value = item.nome || ""; document.getElementById('saidaLinks').value = item.links || ""; document.getElementById('saidaData').value = item.data || ""; 
     };
     
     window.salvarSaida = async function() { 
-        const id = document.getElementById('editSaidaId').value; const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value; if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados!");
-        const btn = document.getElementById('btnSalvarSaida'); btn.disabled = true; btn.innerText = "A guardar...";
+        const id = document.getElementById('editSaidaId').value;
+        const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value;
+        if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados!");
+        const btn = document.getElementById('btnSalvarSaida');
+        btn.disabled = true; btn.innerText = "A guardar...";
         const dados = { nome, links, data }; 
         
         let erro = null;
-        if (id) { const idTratado = isNaN(id) ? id : Number(id); const res = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); erro = res.error; } 
-        else { const res = await supabaseClient.from('calendario').insert([dados]); erro = res.error; } 
+        if (id) { const idTratado = isNaN(id) ? id : Number(id); const res = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); erro = res.error;
+        } 
+        else { const res = await supabaseClient.from('calendario').insert([dados]); erro = res.error;
+        } 
         
-        btn.disabled = false; btn.innerText = "Salvar Agendamento";
+        btn.disabled = false;
+        btn.innerText = "Salvar Agendamento";
         if (!erro) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + erro.message);
     };
     
@@ -848,15 +943,24 @@
     };
     
     function abrirCadastroNovos() { 
-        document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = ""; document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = ""; document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; abrir('modalCadastro'); 
+        document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = "";
+        document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = "";
+        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; abrir('modalCadastro');
     }
     
     function prepararEdicao(id) { 
-        const item = registros.find(r => r.id === id); if (!item) return; document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || ""; document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || ""; document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ? diasCalc : ""; abrir('modalCadastro'); 
+        const item = registros.find(r => r.id === id);
+        if (!item) return; document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
+        document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
+        document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
+        diasCalc : ""; abrir('modalCadastro'); 
     }
     
     async function salvar() { 
-        const id = document.getElementById('editId').value; const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value; const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null; const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
+        const id = document.getElementById('editId').value;
+        const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value;
+        const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
+        const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
         
         if (!nome) return alert("Por favor, preencha o nome!");
         if (cpf && !validarCPF(cpf)) return alert("O CPF introduzido não é válido! Por favor corrija.");
@@ -867,10 +971,11 @@
 
         const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses });
         const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc };
-        
         let erro = null;
-        if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error; } 
-        else { const res = await supabaseClient.from('pacientes').insert([dados]); erro = res.error; } 
+        if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error;
+        } 
+        else { const res = await supabaseClient.from('pacientes').insert([dados]); erro = res.error;
+        } 
         
         btn.disabled = false;
         btn.innerText = "Guardar";
@@ -886,57 +991,85 @@
     }
     
     function abrirModalNovaSaida() { 
-        document.getElementById('modalSaidaTitulo').innerText = "Agendar Renovação/Saída"; document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = ''; const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
-        if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido registado"; select.appendChild(opt); } 
-        else { nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); }); } 
+        document.getElementById('modalSaidaTitulo').innerText = "Agendar Renovação/Saída";
+        document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = '';
+        const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
+        if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido registado";
+        select.appendChild(opt); } 
+        else { nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); });
+        } 
         abrir('modalNovaSaida');
     }
     
-    function abrirGerenciadorReceitas() { document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas(); }
+    function abrirGerenciadorReceitas() { document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas();
+    }
     
     function gerarListaAcolhidosReceitas() { 
-        const container = document.getElementById('listaNomesReceitas'); const termo = document.getElementById('searchReceitasInput').value.toLowerCase();
-        if(registros.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum acolhido.</p>"; return; } 
+        const container = document.getElementById('listaNomesReceitas');
+        const termo = document.getElementById('searchReceitasInput').value.toLowerCase();
+        if(registros.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum acolhido.</p>"; return;
+        } 
         const nomesUnicos = [...new Set(registros.map(p => p.nome))];
         let nomesFiltrados = nomesUnicos.filter(nome => nome.toLowerCase().includes(termo)).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
-        if(nomesFiltrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum resultado.</p>"; return; } 
+        if(nomesFiltrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum resultado.</p>"; return;
+        } 
         container.innerHTML = nomesFiltrados.map(nome => { const id = registros.find(r => r.nome === nome)?.id || 0; return `<div class="card-paciente-link" id="rec-card-${id}" onclick="selecionarAcolhidoParaDrive(${id}, '${nome.replace(/'/g, "\\'")}')"><span>👤 ${nome}</span><span style="font-size: 11px; color: var(--cor-azul);">Ver Pasta ➔</span></div>`; }).join('');
     }
     
     function selecionarAcolhidoParaDrive(id, nomeAcolhido) { 
-        document.querySelectorAll('.card-paciente-link').forEach(c => c.classList.remove('selecionado')); const card = document.getElementById(`rec-card-${id}`); if(card) card.classList.add('selecionado');
-        const item = registros.find(r => r.id === id); if(!item) return; document.getElementById('nomeAcolhidoTitulo').innerText = `Acolhido: ${nomeAcolhido}`; const iframe = document.getElementById('driveIframe');
-        const evento = saidas.filter(s => s.nome === nomeAcolhido && s.links).pop(); const linkFinal = (evento && evento.links) ? evento.links : item.links;
-        const idPasta = linkFinal ? extrairIdDrive(linkFinal) : "1kGWG5rLmVBET55jxG9kPxGw2GWZv5PGf"; iframe.src = `https://drive.google.com/embeddedfolderview?id=${idPasta}&hl=pt-BR#grid`; 
+        document.querySelectorAll('.card-paciente-link').forEach(c => c.classList.remove('selecionado'));
+        const card = document.getElementById(`rec-card-${id}`); if(card) card.classList.add('selecionado');
+        const item = registros.find(r => r.id === id); if(!item) return; document.getElementById('nomeAcolhidoTitulo').innerText = `Acolhido: ${nomeAcolhido}`;
+        const iframe = document.getElementById('driveIframe');
+        const evento = saidas.filter(s => s.nome === nomeAcolhido && s.links).pop();
+        const linkFinal = (evento && evento.links) ? evento.links : item.links;
+        const idPasta = linkFinal ? extrairIdDrive(linkFinal) : "1kGWG5rLmVBET55jxG9kPxGw2GWZv5PGf";
+        iframe.src = `https://drive.google.com/embeddedfolderview?id=${idPasta}&hl=pt-BR#grid`; 
     }
     
-    function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia(); }
-    function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario(); }
-    function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia(); }
+    function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia();
+    }
+    function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
+    }
+    function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia();
+    }
     
     function gerarCalendario() { 
-        const ano = dataAtual.getFullYear(); const mes = dataAtual.getMonth(); document.getElementById('calMesAno').innerText = `${mesesNomes[mes].substring(0,3)}. de ${ano}`;
-        const prim = new Date(ano, mes, 1).getDay(); const ult = new Date(ano, mes + 1, 0).getDate();
-        const ultAnt = new Date(ano, mes, 0).getDate(); const grade = document.getElementById('calGradeDias'); if (!grade) return; grade.innerHTML = '';
-        for (let i = prim; i > 0; i--) { const div = document.createElement('div'); div.className = 'cal-dia outro-mes'; div.innerText = ultAnt - i + 1; grade.appendChild(div); } 
+        const ano = dataAtual.getFullYear();
+        const mes = dataAtual.getMonth(); document.getElementById('calMesAno').innerText = `${mesesNomes[mes].substring(0,3)}. de ${ano}`;
+        const prim = new Date(ano, mes, 1).getDay();
+        const ult = new Date(ano, mes + 1, 0).getDate();
+        const ultAnt = new Date(ano, mes, 0).getDate(); const grade = document.getElementById('calGradeDias');
+        if (!grade) return; grade.innerHTML = '';
+        for (let i = prim; i > 0; i--) { const div = document.createElement('div');
+        div.className = 'cal-dia outro-mes'; div.innerText = ultAnt - i + 1; grade.appendChild(div);
+        } 
         for (let dia = 1; dia <= ult; dia++) { 
-            const div = document.createElement('div'); div.className = 'cal-dia'; div.innerText = dia; const dIso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+            const div = document.createElement('div');
+            div.className = 'cal-dia'; div.innerText = dia; const dIso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
             if(dataSelecionada.getDate() === dia && dataSelecionada.getMonth() === mes && dataSelecionada.getFullYear() === ano) div.classList.add('selecionado');
-            if (saidas.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador'; div.appendChild(m); } 
-            div.onclick = () => selecionarDia(ano, mes, dia); grade.appendChild(div); 
+            if (saidas.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador'; div.appendChild(m);
+            } 
+            div.onclick = () => selecionarDia(ano, mes, dia);
+            grade.appendChild(div); 
         } 
     }
     
     function renderizarPacientesDoDia() { 
-        const dia = String(dataSelecionada.getDate()).padStart(2, '0'); const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0'); const ano = dataSelecionada.getFullYear(); const dIso = `${ano}-${mes}-${dia}`;
+        const dia = String(dataSelecionada.getDate()).padStart(2, '0');
+        const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0'); const ano = dataSelecionada.getFullYear(); const dIso = `${ano}-${mes}-${dia}`;
         document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return;
-        const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>"; return; } 
+        const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>";
+        return; } 
         lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
     }
     
-    function abrir(id) { document.getElementById(id).style.display = 'flex'; }
-    function fechar(id) { document.getElementById(id).style.display = 'none'; if (id === 'modalNovaSaida') document.getElementById('editSaidaId').value = ""; }
-    function abrirGoogle(med) { if(med && med !== "undefined") window.open('https://www.google.com/search?q=bula+'+med, '_blank'); }
+    function abrir(id) { document.getElementById(id).style.display = 'flex';
+    }
+    function fechar(id) { document.getElementById(id).style.display = 'none'; if (id === 'modalNovaSaida') document.getElementById('editSaidaId').value = "";
+    }
+    function abrirGoogle(med) { if(med && med !== "undefined") window.open('https://www.google.com/search?q=bula+'+med, '_blank');
+    }
 
     function abrirMenuLateral() {
         const sidebar = document.getElementById('sidebar');
