@@ -424,7 +424,7 @@
     let dataSelecionada = new Date();
     const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const diasSemanaNomes = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-
+    
     function obterDataAtualLocal() {
         const data = new Date();
         const ano = data.getFullYear();
@@ -501,10 +501,16 @@
         const diasFaltantes = calcularDiasFaltantes(paciente);
         const resultado = { nome: paciente.nome, medicamento: paciente.medicamento, dias_faltantes: diasFaltantes, ultima_retirada: paciente.ultima_retirada, data_prescricao: paciente.data_prescricao, qtd_meses: paciente.qtd_meses, status: 'ok', mensagem: '', alerta: false };
         if (resultado.dias_faltantes !== null) {
-            if (resultado.dias_faltantes < 0) { resultado.status = 'critico'; resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
-            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao'; resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
-            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok'; resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
-            else { resultado.status = 'ok'; resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false; }
+            if (resultado.dias_faltantes < 0) { resultado.status = 'critico';
+            resultado.mensagem = `Verificar Medicação ou Receita`; resultado.alerta = true; } 
+            else if (resultado.dias_faltantes <= 5) { resultado.status = 'atencao';
+            resultado.mensagem = `⚠️ Estoque Crítico: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = true;
+            } 
+            else if (resultado.dias_faltantes <= 30) { resultado.status = 'ok';
+            resultado.mensagem = `⏰ Faltam: ${resultado.dias_faltantes} dias`; resultado.alerta = true; } 
+            else { resultado.status = 'ok';
+            resultado.mensagem = `✓ Estoque Abundante: Faltam ${resultado.dias_faltantes} dias`; resultado.alerta = false;
+            }
         }
         return resultado;
     }
@@ -515,10 +521,17 @@
         const dataSaida = new Date(saidaItem.data + 'T00:00:00');
         const diasRestantes = Math.floor((dataSaida - hoje) / (1000 * 60 * 60 * 24));
         let status = 'ok', mensagem = '', alerta = false;
-        if (diasRestantes < 0) { status = 'vencida'; mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true; } 
-        else if (diasRestantes === 0) { status = 'proxima'; mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
-        else if (diasRestantes <= 7) { status = 'proxima'; mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true; } 
-        else { status = 'ok'; mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false; }
+        if (diasRestantes < 0) { status = 'vencida';
+        mensagem = `❌ VENCIDA (${Math.abs(diasRestantes)} dias atrás)`; alerta = true;
+        } 
+        else if (diasRestantes === 0) { status = 'proxima';
+        mensagem = `🔴 VENCE HOJE!`; alerta = true; } 
+        else if (diasRestantes <= 7) { status = 'proxima';
+        mensagem = `🟠 Vence em ${diasRestantes} dias`; alerta = true;
+        } 
+        else { status = 'ok';
+        mensagem = `✓ Vence em ${diasRestantes} dias`; alerta = false;
+        }
         return { status, mensagem, diasRestantes, alerta };
     }
 
@@ -532,7 +545,7 @@
             pacientes.forEach(p => {
                 const diasFaltantes = calcularDiasFaltantes(p);
                 if (diasFaltantes !== null && diasFaltantes <= 30) {
-                    medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida });
+                     medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida });
                     if (diasFaltantesMinimo === null || diasFaltantes < diasFaltantesMinimo) diasFaltantesMinimo = diasFaltantes;
                 }
             });
@@ -600,15 +613,19 @@
         const badge = document.getElementById('badgeAlertasCount');
         const btnAlertas = document.getElementById('btnAlertas');
         if (badge) {
-            if (totalAlertas > 0) { badge.textContent = totalAlertas; badge.style.display = 'inline-block'; } 
-            else { badge.style.display = 'none'; }
+            if (totalAlertas > 0) { badge.textContent = totalAlertas;
+            badge.style.display = 'inline-block'; } 
+            else { badge.style.display = 'none';
+            }
         }
         if (btnAlertas) btnAlertas.classList.toggle('alerta-ativo', totalAlertas > 0);
         if (totalAlertas === 0) return `<p style='color:#22c55e; text-align:center; font-size:13px; padding:30px 0;'>✅ Nenhum alerta de momento!</p>`;
 
         let html = '';
-        if (alertasEstoque.length > 0) { html += `<div class="alertas-secao-titulo">💊 Estoque de Medicamentos</div><div class="alertas-grid">`; alertasEstoque.forEach(a => { html += buildCardEstoque(a); }); html += `</div>`; }
-        if (alertasRenovacao.length > 0) { html += `<div class="alertas-secao-titulo">📋 Renovações Agendadas</div><div class="alertas-grid">`; alertasRenovacao.forEach(a => { html += buildCardRenovacao(a); }); html += `</div>`; }
+        if (alertasEstoque.length > 0) { html += `<div class="alertas-secao-titulo">💊 Estoque de Medicamentos</div><div class="alertas-grid">`; alertasEstoque.forEach(a => { html += buildCardEstoque(a); });
+        html += `</div>`; }
+        if (alertasRenovacao.length > 0) { html += `<div class="alertas-secao-titulo">📋 Renovações Agendadas</div><div class="alertas-grid">`;
+        alertasRenovacao.forEach(a => { html += buildCardRenovacao(a); }); html += `</div>`; }
         return html;
     }
 
@@ -658,12 +675,15 @@
         } catch (err) { console.error("Erro na comunicação com o Supabase:", err); }
     }
 
-    // Centraliza a criação do select do Modal vindo do Array global de tempos ativos
     function popularSelectHorariosFixo() {
-        const select = document.getElementById('inpHora');
-        if(select) {
-            select.innerHTML = horariosAtivos.map(h => `<option value="${h}">${h}</option>`).join('');
-        }
+        const select = document.getElementById('relatorioPacienteSelect');
+        const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
+        
+        select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
+            nomesUnicos.map(n => {
+                const idPaciente = registros.find(r => r.nome === n).id;
+                return `<option value="${idPaciente}">${n}</option>`;
+            }).join('');
     }
 
     function renderizarHorarios() {
@@ -693,7 +713,8 @@
         const hoje = new Date().toISOString().split('T')[0];
         const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
         try {
-            if (existente && existente.status === true) {
+            // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
+            if (existente && (existente.status === true || existente.status === 'true')) {
                 perguntarConfirmacao(
                     "Inverter Registo", 
                     "Este medicamento já foi marcado como TOMADO.\n\nDeseja realmente anular esta confirmação?", 
@@ -770,14 +791,20 @@
         container.innerHTML = data.map(item => {
             const paciente = registros.find(r => r.id == item.paciente_id);
             const nomePac = paciente ? paciente.nome : 'Acolhido Eliminado';
+            const medicamentosPac = paciente ? paciente.medicamento : '—';
+            
+            // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
+            const isTomado = item.status === true || item.status === 'true';
+            
             return `
             <div class="relatorio-item" style="align-items: flex-start;">
-                <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; flex-direction:column; gap:4px; flex: 1;">
                     <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
                     ${pacId === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
+                    <small style="color:#e2e8f0; font-style: italic; background:#1e293b; padding:4px 8px; border-radius:6px; margin-top:3px; display:inline-block; width: fit-content;">💊 Mrems: ${medicamentosPac}</small>
                 </div>
-                <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content;">
-                    ${item.status ? '✅ TOMADO' : '❌ PENDENTE'}
+                <span style="font-weight: bold; background: ${isTomado ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isTomado ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content; white-space: nowrap;">
+                    ${isTomado ? '✅ TOMADO' : '❌ PENDENTE'}
                 </span>
             </div>`
         }).join('');
@@ -793,14 +820,20 @@
         window.dadosRelatorioAtual.forEach(item => {
             const paciente = registros.find(r => r.id == item.paciente_id);
             const nomePac = paciente ? paciente.nome : 'Acolhido Eliminado';
+            const medicamentosPac = paciente ? paciente.medicamento : '—';
+            
+            // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
+            const isTomado = item.status === true || item.status === 'true';
+            
             linhasHtml += `
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
-                <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; flex-direction:column; gap:4px; flex: 1;">
                     <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
                     ${buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : ''}
+                    <small style="color:#cbd5e1; font-style: italic; margin-top: 2px;">💊 Meds: ${medicamentosPac}</small>
                 </div>
-                <span style="font-weight: bold; background: ${item.status ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${item.status ? '#4ade80' : '#f87171'}; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
-                    ${item.status ? 'TOMADO' : 'PENDENTE'}
+                <span style="font-weight: bold; background: ${isTomado ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isTomado ? '#4ade80' : '#f87171'}; padding: 4px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap;">
+                    ${isTomado ? 'TOMADO' : 'PENDENTE'}
                 </span>
             </div>`;
         });
@@ -825,7 +858,9 @@
             const diasFaltantes = calcularDiasFaltantes(r);
             const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
             const medHoje = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horaAtual);
-            const isChecked = medHoje && medHoje.status === true;
+            
+            // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
+            const isChecked = medHoje && (medHoje.status === true || medHoje.status === 'true');
             
             // Separa os medicamentos por vírgula na visualização de cartões
             const listaMeds = (r.medicamento || 'Sem medicação definida').split(',');
@@ -851,8 +886,11 @@
         }).join('') || `<p style='text-align:center; color:#64748b; padding:20px;'>Nenhum acolhido encontrado.</p>`;
     }
 
-    function formatarDataBr(dataStr) { if (!dataStr) return 'N/A'; const data = new Date(dataStr + 'T00:00:00'); return data.toLocaleDateString('pt-PT'); }
-    function extrairIdDrive(input) { if (!input) return ""; const match = input.match(/folders\/([a-zA-Z0-9-_]+)/); return match ? match[1] : input.trim(); }
+    function formatarDataBr(dataStr) { if (!dataStr) return 'N/A';
+        const data = new Date(dataStr + 'T00:00:00'); return data.toLocaleDateString('pt-PT'); }
+    function extrairIdDrive(input) { if (!input) return "";
+        const match = input.match(/folders\/([a-zA-Z0-9-_]+)/); return match ? match[1] : input.trim();
+    }
     
     window.prepararEdicaoSaida = function(id) { 
         const item = saidas.find(s => String(s.id) === String(id));
@@ -869,13 +907,16 @@
         const dados = { nome, links, data }; 
         
         let erro = null;
-        if (id) { const idTratado = isNaN(id) ? id : Number(id); const res = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); erro = res.error; } 
-        else { const res = await supabaseClient.from('calendario').insert([dados]); erro = res.error; } 
+        if (id) { const idTratado = isNaN(id) ? id : Number(id); const res = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); erro = res.error;
+        } 
+        else { const res = await supabaseClient.from('calendario').insert([dados]); erro = res.error;
+        } 
         
         btn.disabled = false;
         btn.innerText = "Salvar Agendamento";
         if (!erro) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + erro.message);
     };
+    
     window.excluirSaida = async function(id, nome) { 
         perguntarConfirmacao("Remover Saída", `Deseja remover o agendamento de "${nome}"?`, async () => {
             const idTratado = isNaN(id) ? id : Number(id);
@@ -894,7 +935,8 @@
         const item = registros.find(r => r.id === id);
         if (!item) return; document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
         document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
-        document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ? diasCalc : ""; abrir('modalCadastro'); 
+        document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
+        diasCalc : ""; abrir('modalCadastro'); 
     }
     
     async function salvar() { 
@@ -913,8 +955,10 @@
         const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses });
         const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc };
         let erro = null;
-        if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error; } 
-        else { const res = await supabaseClient.from('pacientes').insert([dados]); erro = res.error; } 
+        if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error;
+        } 
+        else { const res = await supabaseClient.from('pacientes').insert([dados]); erro = res.error;
+        } 
         
         btn.disabled = false;
         btn.innerText = "Guardar";
@@ -933,20 +977,25 @@
         document.getElementById('modalSaidaTitulo').innerText = "Agendar Renovação/Saída";
         document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = '';
         const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
-        if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido registado"; select.appendChild(opt); } 
-        else { nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); }); } 
+        if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido registado";
+        select.appendChild(opt); } 
+        else { nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); });
+        } 
         abrir('modalNovaSaida');
     }
     
-    function abrirGerenciadorReceitas() { document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas(); }
+    function abrirGerenciadorReceitas() { document.getElementById('searchReceitasInput').value = ""; abrir('modalReceitas'); gerarListaAcolhidosReceitas(); gerarAlertas();
+    }
     
     function gerarListaAcolhidosReceitas() { 
         const container = document.getElementById('listaNomesReceitas');
         const termo = document.getElementById('searchReceitasInput').value.toLowerCase();
-        if(registros.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum acolhido.</p>"; return; } 
+        if(registros.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum acolhido.</p>"; return;
+        } 
         const nomesUnicos = [...new Set(registros.map(p => p.nome))];
         let nomesFiltrados = nomesUnicos.filter(nome => nome.toLowerCase().includes(termo)).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
-        if(nomesFiltrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum resultado.</p>"; return; } 
+        if(nomesFiltrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum resultado.</p>"; return;
+        } 
         container.innerHTML = nomesFiltrados.map(nome => { const id = registros.find(r => r.nome === nome)?.id || 0; return `<div class="card-paciente-link" id="rec-card-${id}" onclick="selecionarAcolhidoParaDrive(${id}, '${nome.replace(/'/g, "\\'")}')"><span>👤 ${nome}</span><span style="font-size: 11px; color: var(--cor-azul);">Ver Pasta ➔</span></div>`; }).join('');
     }
     
@@ -961,9 +1010,12 @@
         iframe.src = `https://drive.google.com/embeddedfolderview?id=${idPasta}&hl=pt-BR#grid`; 
     }
     
-    function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia(); }
-    function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario(); }
-    function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia(); }
+    function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia();
+    }
+    function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
+    }
+    function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia();
+    }
     
     function gerarCalendario() { 
         const ano = dataAtual.getFullYear();
@@ -972,12 +1024,15 @@
         const ult = new Date(ano, mes + 1, 0).getDate();
         const ultAnt = new Date(ano, mes, 0).getDate(); const grade = document.getElementById('calGradeDias');
         if (!grade) return; grade.innerHTML = '';
-        for (let i = prim; i > 0; i--) { const div = document.createElement('div'); div.className = 'cal-dia outro-mes'; div.innerText = ultAnt - i + 1; grade.appendChild(div); } 
+        for (let i = prim; i > 0; i--) { const div = document.createElement('div');
+        div.className = 'cal-dia outro-mes'; div.innerText = ultAnt - i + 1; grade.appendChild(div);
+        } 
         for (let dia = 1; dia <= ult; dia++) { 
             const div = document.createElement('div');
             div.className = 'cal-dia'; div.innerText = dia; const dIso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
             if(dataSelecionada.getDate() === dia && dataSelecionada.getMonth() === mes && dataSelecionada.getFullYear() === ano) div.classList.add('selecionado');
-            if (saidas.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador'; div.appendChild(m); } 
+            if (saidas.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador'; div.appendChild(m);
+            } 
             div.onclick = () => selecionarDia(ano, mes, dia);
             grade.appendChild(div); 
         } 
@@ -987,13 +1042,17 @@
         const dia = String(dataSelecionada.getDate()).padStart(2, '0');
         const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0'); const ano = dataSelecionada.getFullYear(); const dIso = `${ano}-${mes}-${dia}`;
         document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return;
-        const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>"; return; } 
+        const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>";
+        return; } 
         lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
     }
     
-    function abrir(id) { document.getElementById(id).style.display = 'flex'; }
-    function fechar(id) { document.getElementById(id).style.display = 'none'; if (id === 'modalNovaSaida') document.getElementById('editSaidaId').value = ""; }
-    function abrirGoogle(med) { if(med && med !== "undefined") window.open('https://www.google.com/search?q=bula+'+med, '_blank'); }
+    function abrir(id) { document.getElementById(id).style.display = 'flex';
+    }
+    function fechar(id) { document.getElementById(id).style.display = 'none'; if (id === 'modalNovaSaida') document.getElementById('editSaidaId').value = "";
+    }
+    function abrirGoogle(med) { if(med && med !== "undefined") window.open('https://www.google.com/search?q=bula+'+med, '_blank');
+    }
 
     function abrirMenuLateral() {
         const sidebar = document.getElementById('sidebar');
