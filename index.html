@@ -1084,7 +1084,28 @@
     // ==========================================
     // IMPORTAÇÃO DE EXCEL (PLANILHA)
     // ==========================================
-   async function importarPlanilhaAcolhidos(event) {
+   // Função auxiliar para converter datas do Excel para o formato do Supabase (YYYY-MM-DD)
+function formatarDataParaBanco(dataExcel) {
+    if (!dataExcel) return null;
+
+    // Se o Excel enviou a data como um número serial
+    if (typeof dataExcel === 'number') {
+        const dataJS = new Date(Math.round((dataExcel - 25569) * 86400 * 1000));
+        return dataJS.toISOString().split('T')[0];
+    }
+
+    // Se o Excel enviou como texto (DD/MM/YYYY)
+    if (typeof dataExcel === 'string' && dataExcel.includes('/')) {
+        const partes = dataExcel.split('/');
+        if (partes.length === 3) {
+            return `${partes[2]}-${partes[1]}-${partes[0]}`; // Retorna YYYY-MM-DD
+        }
+    }
+
+    return null; 
+}
+
+async function importarPlanilhaAcolhidos(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -1099,20 +1120,21 @@
             let erros = 0;
             
             for (let row of json) {
-                // Tratamento robusto para garantir que aceita variações de maiúsculas/minúsculas, plurais e espaços
                 const dados = {
                     nome: row.nomes || row.Nomes || row.nome || row.Nome || "",
                     cpf: row.cpf || row.CPF || null,
-                    data_acolhimento: row.data_de_acolhimento || row["data de acolhimento"] || null,
+                    // Usando a função conversora nas colunas de data!
+                    data_acolhimento: formatarDataParaBanco(row.data_de_acolhimento || row["data de acolhimento"]),
                     hora: row.hora || row.Hora || "07h",
                     links: row.links || row.Links || "",
                     medicamento: row.medicamento || row.Medicamentos || "",
-                    data_prescricao: row.data_prescricao || row["data prescricao"] || null,
-                    ultima_retirada: row.ultima_retirada || row["ultima retirada"] || null,
+                    data_prescricao: formatarDataParaBanco(row.data_prescricao || row["data prescricao"]),
+                    ultima_retirada: formatarDataParaBanco(row.ultima_retirada || row["ultima retirada"]),
                     qtd_meses: row.qtd_meses ? parseInt(row.qtd_meses) : null,
                     dias_faltantes: row.dias_faltantes || null,
                     observacao: row.observacao || row.Observacao || null,
-                    receita_valida: row.receita_valida || null,
+                    // Se a receita válida for uma data, usamos a conversão aqui também:
+                    receita_valida: formatarDataParaBanco(row.receita_valida) || row.receita_valida || null,
                     tempo_duracao_medicacao: row.tempo_duracao_medicacao || null,
                     local_renovar: row.LocalRenovar || row["Local Renovar"] || row.local_renovar || null
                 };
@@ -1123,19 +1145,19 @@
                     inseridos++;
                 } else {
                     erros++;
-                    console.error(`Erro ao inserir o paciente ${dados.nome}:`, error.message);
+                    console.error(`Erro ao inserir paciente ${dados.nome}:`, error.message);
                 }
             }
 
             if (erros > 0) {
-                alert(`Importação concluída com ressalvas: ${inseridos} registros adicionados, mas ${erros} falharam. Pressione F12 e olhe a aba "Console" para ver o motivo das falhas.`);
+                alert(`Atenção: ${inseridos} registros foram adicionados, mas ${erros} falharam. Aperte F12 e olhe a aba Console.`);
             } else {
-                alert(`Importação finalizada com sucesso! ${inseridos} registros adicionados.`);
+                alert(`Sucesso! ${inseridos} registros adicionados da planilha.`);
             }
             
             carregar(); 
         } catch (err) {
-            console.error("Erro fatal ao processar o Excel:", err);
+            console.error("Erro fatal:", err);
             alert("Erro ao processar. Verifique se o seu Excel está formatado corretamente.");
         }
     };
