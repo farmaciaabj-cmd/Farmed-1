@@ -1084,52 +1084,63 @@
     // ==========================================
     // IMPORTAÇÃO DE EXCEL (PLANILHA)
     // ==========================================
-    async function importarPlanilhaAcolhidos(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+   async function importarPlanilhaAcolhidos(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-                let inseridos = 0;
+            let inseridos = 0;
+            let erros = 0;
+            
+            for (let row of json) {
+                // Tratamento robusto para garantir que aceita variações de maiúsculas/minúsculas, plurais e espaços
+                const dados = {
+                    nome: row.nomes || row.Nomes || row.nome || row.Nome || "",
+                    cpf: row.cpf || row.CPF || null,
+                    data_acolhimento: row.data_de_acolhimento || row["data de acolhimento"] || null,
+                    hora: row.hora || row.Hora || "07h",
+                    links: row.links || row.Links || "",
+                    medicamento: row.medicamento || row.Medicamentos || "",
+                    data_prescricao: row.data_prescricao || row["data prescricao"] || null,
+                    ultima_retirada: row.ultima_retirada || row["ultima retirada"] || null,
+                    qtd_meses: row.qtd_meses ? parseInt(row.qtd_meses) : null,
+                    dias_faltantes: row.dias_faltantes || null,
+                    observacao: row.observacao || row.Observacao || null,
+                    receita_valida: row.receita_valida || null,
+                    tempo_duracao_medicacao: row.tempo_duracao_medicacao || null,
+                    local_renovar: row.LocalRenovar || row["Local Renovar"] || row.local_renovar || null
+                };
+
+                const { error } = await supabaseClient.from('pacientes').insert([dados]);
                 
-                for (let row of json) {
-                    // O código abaixo tenta pegar os dados independente de como o cabeçalho veio
-                    // Estamos a usar os nomes exatos que você me enviou
-                    const dados = {
-                        nome: row.nome || row.Nome || "",
-                        cpf: row.cpf || row.CPF || null,
-                        data_acolhimento: row.data_de_acolhimento || null,
-                        hora: row.hora || "07h",
-                        links: row.links || "",
-                        medicamento: row.medicamento || "",
-                        data_prescricao: row.data_prescricao || null,
-                        ultima_retirada: row.ultima_retirada || null,
-                        qtd_meses: row.qtd_meses ? parseInt(row.qtd_meses) : null,
-                        dias_faltantes: row.dias_faltantes || null,
-                        observacao: row.observacao || null,
-                        receita_valida: row.receita_valida || null,
-                        tempo_duracao_medicacao: row.tempo_duracao_medicacao || null,
-                        local_renovar: row.LocalRenovar || null
-                    };
-
-                    const { error } = await supabaseClient.from('pacientes').insert([dados]);
-                    if (!error) inseridos++;
+                if (!error) {
+                    inseridos++;
+                } else {
+                    erros++;
+                    console.error(`Erro ao inserir o paciente ${dados.nome}:`, error.message);
                 }
-
-                alert(`Importação finalizada! ${inseridos} registros adicionados.`);
-                carregar(); 
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao processar. Verifique se o seu Excel tem os cabeçalhos exatamente como você me passou.");
             }
-        };
-        reader.readAsArrayBuffer(file);
-    }
+
+            if (erros > 0) {
+                alert(`Importação concluída com ressalvas: ${inseridos} registros adicionados, mas ${erros} falharam. Pressione F12 e olhe a aba "Console" para ver o motivo das falhas.`);
+            } else {
+                alert(`Importação finalizada com sucesso! ${inseridos} registros adicionados.`);
+            }
+            
+            carregar(); 
+        } catch (err) {
+            console.error("Erro fatal ao processar o Excel:", err);
+            alert("Erro ao processar. Verifique se o seu Excel está formatado corretamente.");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
 </script>
 </body>
 </html>
