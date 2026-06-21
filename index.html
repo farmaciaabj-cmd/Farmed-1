@@ -136,13 +136,12 @@
         .alertas-secao-titulo::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
         .badge-count-alerta { display: inline-block; background: #f97316; color: white; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
 
-        /* NOVO CSS DO TOGGLE SWITCH - IDÊNTICO À IMAGEM */
         .switch {
             position: relative;
             display: inline-block;
             width: 50px;
             height: 26px;
-            background-color: #ced4da; /* Cor OFF neutra */
+            background-color: #ced4da;
             border-radius: 13px;
             cursor: pointer;
             transition: background-color 0.4s;
@@ -150,7 +149,7 @@
         }
 
         .switch.checked {
-            background-color: #007bff; /* Cor azul ON idêntica à imagem */
+            background-color: #007bff;
         }
 
         .switch::after {
@@ -378,6 +377,8 @@
         <input type="text" id="saidaLinks" placeholder="https://drive.google.com/...">
         <label>Data da Renovação/Saída:</label>
         <input type="date" id="saidaData">
+        <label>Informações / Observações:</label>
+        <input type="text" id="saidaInformacoes" placeholder="Digite detalhes da saída ou renovação...">
         <button id="btnSalvarSaida" onclick="window.salvarSaida()" style="background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px;">Salvar Agendamento</button>
         <button onclick="fechar('modalNovaSaida')" style="width:100%; border:none; background:none; color:var(--texto-s); margin-top:10px; cursor:pointer; font-weight:600;">Voltar</button>
     </div>
@@ -661,7 +662,13 @@
 
             const respSaidas = await supabaseClient.from('calendario').select('*');
             if (respSaidas.data) { 
-                saidas = respSaidas.data.map(item => ({ id: item.id || item.Id || item.ID, nome: item.nome || item.Nome || "", links: item.links || item.Links || "", data: item.data || item.Data || "" }));
+                saidas = respSaidas.data.map(item => ({ 
+                    id: item.id || item.Id || item.ID, 
+                    nome: item.nome || item.Nome || "", 
+                    links: item.links || item.Links || "", 
+                    data: item.data || item.Data || "",
+                    informacoes: item.informacoes || item.Informacoes || "" 
+                }));
             }
 
             const hoje = obterDataAtualLocal();
@@ -895,16 +902,16 @@
     window.prepararEdicaoSaida = function(id) { 
         const item = saidas.find(s => String(s.id) === String(id));
         if (!item) return; abrirModalNovaSaida();
-        document.getElementById('modalSaidaTitulo').innerText = "Editar Renovação/Saída"; document.getElementById('editSaidaId').value = String(item.id); document.getElementById('saidaNomeSelect').value = item.nome || ""; document.getElementById('saidaLinks').value = item.links || ""; document.getElementById('saidaData').value = item.data || ""; 
+        document.getElementById('modalSaidaTitulo').innerText = "Editar Renovação/Saída"; document.getElementById('editSaidaId').value = String(item.id); document.getElementById('saidaNomeSelect').value = item.nome || ""; document.getElementById('saidaLinks').value = item.links || ""; document.getElementById('saidaData').value = item.data || ""; document.getElementById('saidaInformacoes').value = item.informacoes || "";
     };
     
     window.salvarSaida = async function() { 
         const id = document.getElementById('editSaidaId').value;
-        const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value;
-        if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados!");
+        const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value; const informacoes = document.getElementById('saidaInformacoes').value;
+        if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados obrigatórios!");
         const btn = document.getElementById('btnSalvarSaida');
         btn.disabled = true; btn.innerText = "A guardar...";
-        const dados = { nome, links, data }; 
+        const dados = { nome, links, data, informacoes }; 
         
         let erro = null;
         if (id) { const idTratado = isNaN(id) ? id : Number(id); const res = await supabaseClient.from('calendario').update(dados).eq('id', idTratado); erro = res.error;
@@ -975,7 +982,7 @@
     
     function abrirModalNovaSaida() { 
         document.getElementById('modalSaidaTitulo').innerText = "Agendar Renovação/Saída";
-        document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = '';
+        document.getElementById('editSaidaId').value = ""; document.getElementById('saidaLinks').value = ""; document.getElementById('saidaData').value = ""; document.getElementById('saidaInformacoes').value = ""; const select = document.getElementById('saidaNomeSelect'); select.innerHTML = '';
         const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
         if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido registado";
         select.appendChild(opt); } 
@@ -1044,7 +1051,7 @@
         document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return;
         const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>";
         return; } 
-        lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
+        lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.informacoes ? `<p style="color: var(--cor-azul); font-size: 13px; margin-bottom: 8px;"><strong>Info:</strong> ${s.informacoes}</p>` : ''}${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
     }
     
     function abrir(id) { document.getElementById(id).style.display = 'flex';
