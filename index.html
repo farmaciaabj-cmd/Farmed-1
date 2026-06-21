@@ -1088,81 +1088,44 @@
         const file = event.target.files[0];
         if (!file) return;
 
-        // Mostra um aviso ao utilizador para não fechar a página
-        document.getElementById('lista-registros').innerHTML = "<p style='text-align:center; color:var(--cor-azul); padding:20px; font-weight:bold;'>A importar dados do Excel, por favor aguarde... ⏳</p>";
-        fecharMenuLateral();
-
         const reader = new FileReader();
         reader.onload = async function(e) {
             try {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                // Converte a aba do Excel para um Array de Objetos JSON
-                const json = XLSX.utils.sheet_to_json(worksheet);
-
-                if (json.length === 0) {
-                    alert("A planilha parece estar vazia!");
-                    carregar();
-                    return;
-                }
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
                 let inseridos = 0;
-                let erros = 0;
-
-                // Percorre cada linha do Excel e tenta inserir no Supabase
+                
                 for (let row of json) {
-                    // Mapeia as colunas (aceita várias formas de escrever o cabeçalho no Excel)
-                    const nome = row.Nome || row.nome || row.NOME;
-                    if (!nome) continue; // Se não tiver nome, ignora a linha
-
-                    const cpf = row.CPF || row.cpf || null;
-                    const medicamento = row.Medicamento || row.medicamento || row.Medicamentos || null;
-                    const hora = row.Hora || row.hora || row.Horário || row.horario || "07h";
-                    const driveRaw = row.Drive || row.drive || row.Links || row.links || "";
-                    const links = extrairIdDrive(driveRaw);
-                    
-                    // Tratamento de datas vindo do Excel pode variar, idealmente no formato AAAA-MM-DD
-                    const data_prescricao = row['Data Prescrição'] || row.data_prescricao || null;
-                    const ultima_retirada = row['Última Retirada'] || row.ultima_retirada || null;
-                    const qtd_meses = row['Qtd Meses'] || row.qtd_meses || null;
-                    
-                    const dias_faltantes = calcularDiasFaltantes({ ultima_retirada, qtd_meses });
-
+                    // O código abaixo tenta pegar os dados independente de como o cabeçalho veio
+                    // Estamos a usar os nomes exatos que você me enviou
                     const dados = {
-                        nome: String(nome).trim(),
-                        cpf: cpf ? String(cpf).trim() : null,
-                        medicamento: medicamento ? String(medicamento).trim() : null,
-                        hora: String(hora).trim(),
-                        links,
-                        data_prescricao,
-                        ultima_retirada,
-                        qtd_meses: qtd_meses ? parseInt(qtd_meses) : null,
-                        dias_faltantes
+                        nome: row.nome || row.Nome || "",
+                        cpf: row.cpf || row.CPF || null,
+                        data_acolhimento: row.data_de_acolhimento || null,
+                        hora: row.hora || "07h",
+                        links: row.links || "",
+                        medicamento: row.medicamento || "",
+                        data_prescricao: row.data_prescricao || null,
+                        ultima_retirada: row.ultima_retirada || null,
+                        qtd_meses: row.qtd_meses ? parseInt(row.qtd_meses) : null,
+                        dias_faltantes: row.dias_faltantes || null,
+                        observacao: row.observacao || null,
+                        receita_valida: row.receita_valida || null,
+                        tempo_duracao_medicacao: row.tempo_duracao_medicacao || null,
+                        local_renovar: row.LocalRenovar || null
                     };
 
                     const { error } = await supabaseClient.from('pacientes').insert([dados]);
-                    
-                    if (error) {
-                        console.error("Erro ao inserir:", row, error);
-                        erros++;
-                    } else {
-                        inseridos++;
-                    }
+                    if (!error) inseridos++;
                 }
 
-                alert(`Importação concluída!\n✅ Sucesso: ${inseridos} acolhidos\n❌ Erros: ${erros}`);
-                carregar(); // Recarrega a tela para mostrar os novos dados
-
+                alert(`Importação finalizada! ${inseridos} registros adicionados.`);
+                carregar(); 
             } catch (err) {
-                console.error("Erro ao processar planilha:", err);
-                alert("Erro ao ler o ficheiro Excel. Verifique se o formato está correto.");
-                carregar();
-            } finally {
-                // Reseta o input para permitir importar o mesmo ficheiro novamente se necessário
-                event.target.value = ''; 
+                console.error(err);
+                alert("Erro ao processar. Verifique se o seu Excel tem os cabeçalhos exatamente como você me passou.");
             }
         };
         reader.readAsArrayBuffer(file);
