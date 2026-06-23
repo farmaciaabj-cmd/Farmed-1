@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -1120,7 +1121,7 @@ async function importarPlanilhaAcolhidos(event) {
     reader.onload = async function(e) {
         try {
             const data = new Uint8Array(e.target.result);
-            // ATENÇÃO: cellDates: true força o leitor a capturar as datas nativas do Excel
+            // cellDates: true converte seriais de data do Excel em objetos Date do JS
             const workbook = XLSX.read(data, {type: 'array', cellDates: true});
             const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
@@ -1134,21 +1135,46 @@ async function importarPlanilhaAcolhidos(event) {
                 // Se for uma linha vazia ou sem nome, pula para a próxima sem estourar erro
                 if (!nomePaciente || String(nomePaciente).trim() === "") continue;
 
+                // dias_faltantes: pode vir como número inteiro real (ex: 11, 23)
+                // ou como serial de data do Excel (ex: 46194) — filtra seriais altos
+                const diasFaltantesRaw = row.dias_faltantes;
+                let diasFaltantes = null;
+                if (diasFaltantesRaw !== null && diasFaltantesRaw !== undefined && diasFaltantesRaw !== "") {
+                    const num = parseInt(diasFaltantesRaw);
+                    // Seriais de data do Excel para datas próximas ficam acima de 40000
+                    // Dias faltantes reais são sempre números pequenos (< 1000)
+                    diasFaltantes = (!isNaN(num) && num < 1000) ? num : null;
+                }
+
+                // tempo_duracao_medicacao: no Supabase é text; na planilha pode vir como
+                // serial de data (ex: 46244) ou como texto (ex: "60"). Converte para string limpa.
+                const tempoDuracaoRaw = row.tempo_duracao_medicacao;
+                let tempoDuracao = null;
+                if (tempoDuracaoRaw instanceof Date) {
+                    tempoDuracao = formatarDataParaBanco(tempoDuracaoRaw);
+                } else if (tempoDuracaoRaw !== null && tempoDuracaoRaw !== undefined && tempoDuracaoRaw !== "") {
+                    tempoDuracao = String(tempoDuracaoRaw).trim();
+                }
+
+                // receita_valida: coluna date no Supabase — converte corretamente
+                const receitaValidaConvertida = formatarDataParaBanco(row.receita_valida);
+
                 const dados = {
                     nome: String(nomePaciente).trim(),
                     cpf: row.cpf || row.CPF || null,
-                    data_acolhimento: formatarDataParaBanco(row.data_de_acolhimento || row["data de acolhimento"]),
-                    hora: row.hora || row.Hora || "07h",
-                    links: row.links || row.Links || "",
-                    medicamento: row.medicamento || row.Medicamentos || "",
+                    data_acolhimento: formatarDataParaBanco(row.data_de_acolhimento || row["data de acolhimento"] || row.data_acolhimento),
+                    hora: row.hora || row.Hora || null,
+                    links: row.links || row.Links || null,
+                    medicamento: row.medicamento || row.Medicamentos || null,
                     data_prescricao: formatarDataParaBanco(row.data_prescricao || row["data prescricao"]),
                     ultima_retirada: formatarDataParaBanco(row.ultima_retirada || row["ultima retirada"]),
                     qtd_meses: row.qtd_meses ? parseInt(row.qtd_meses) : null,
-                    dias_faltantes: row.dias_faltantes || null,
+                    dias_faltantes: diasFaltantes,
                     observacao: row.observacao || row.Observacao || null,
-                    receita_valida: formatarDataParaBanco(row.receita_valida) || row.receita_valida || null,
-                    tempo_duracao_medicacao: row.tempo_duracao_medicacao || null,
-                    local_renovar: row.LocalRenovar || row["Local Renovar"] || row.local_renovar || null
+                    receita_valida: receitaValidaConvertida || null,
+                    tempo_duracao_medicacao: tempoDuracao,
+                    // Coluna "local" no Supabase — planilha usa "Local" (L maiúsculo)
+                    local: row.Local || row.local || row.LOCAL || null
                 };
 
                 const { error } = await supabaseClient.from('pacientes').insert([dados]);
@@ -1157,12 +1183,12 @@ async function importarPlanilhaAcolhidos(event) {
                     inseridos++;
                 } else {
                     erros++;
-                    console.error(`Erro ao inserir o paciente ${dados.nome}:`, error.message, error.details);
+                    console.error(`Erro ao inserir ${dados.nome}:`, error.message, error.details, dados);
                 }
             }
 
             if (erros > 0) {
-                alert(`Importação concluída com ressalvas: ${inseridos} registros adicionados, mas ${erros} falharam.\n\nPor favor, pressione a tecla F12 no seu teclado, vá para a aba "Console" e veja a mensagem em vermelho para saber qual coluna/registro gerou a rejeição.`);
+                alert(`Importação concluída com ressalvas: ${inseridos} registros adicionados, mas ${erros} falharam.\n\nPressione F12 → aba "Console" para ver os detalhes do erro em vermelho.`);
             } else {
                 alert(`Importação finalizada com sucesso! ${inseridos} registros adicionados.`);
             }
