@@ -675,6 +675,23 @@
             const hoje = obterDataAtualLocal();
             const respMed = await supabaseClient.from('registro_medicacao').select('*').eq('data', hoje);
             if(respMed.data) registrosMedicacaoDia = respMed.data;
+
+            // Carrega horários extras salvos no Supabase
+            try {
+                const { data: configHorarios } = await supabaseClient
+                    .from('configuracoes')
+                    .select('valor')
+                    .eq('chave', 'horarios_ativos')
+                    .single();
+                if (configHorarios && configHorarios.valor) {
+                    const salvos = JSON.parse(configHorarios.valor);
+                    // Mescla fixos + salvos sem duplicatas
+                    const fixos = ["07h", "15h", "19h", "23h"];
+                    const todos = [...new Set([...fixos, ...salvos])];
+                    todos.sort((a, b) => parseInt(a) - parseInt(b));
+                    horariosAtivos = todos;
+                }
+            } catch (_) { /* tabela ainda não existe ou sem registro: usa padrão */ }
             
             popularSelectHorariosFixo();
             renderizarHorarios();
@@ -694,9 +711,17 @@
             }).join('');
     }
 
+    const HORARIOS_FIXOS = ["07h", "15h", "19h", "23h"];
+
     function renderizarHorarios() {
         const container = document.getElementById('timeSelectorContainer');
-        container.innerHTML = horariosAtivos.map(h => `<button class="time-btn ${horaAtual === h ? 'active' : ''}" onclick="filtrar('${h}')">${h}</button>`).join('') + `
+        container.innerHTML = horariosAtivos.map(h => {
+            const isExtra = !HORARIOS_FIXOS.includes(h);
+            const btnRemover = isExtra
+                ? `<span onclick="removerHorario('${h}')" title="Remover horário" style="margin-left:3px; cursor:pointer; color:#f87171; font-size:14px; font-weight:bold; line-height:1;">✕</span>`
+                : '';
+            return `<button class="time-btn ${horaAtual === h ? 'active' : ''}" onclick="filtrar('${h}')" style="display:inline-flex; align-items:center; gap:4px;">${h}${btnRemover}</button>`;
+        }).join('') + `
             <div style="display:flex; gap:10px; margin-left:auto; align-items:center;">
                 <button class="btn-plus" style="width: 38px; height: 38px;" onclick="adicionarNovoHorario()" title="Adicionar Horário Extra">+</button>
                 <button class="btn-calendario-header" onclick="abrirModalRelatorioGeral()" title="Relatório de Medicamentos">📅 Relatório</button>
@@ -704,12 +729,68 @@
         `;
     }
 
-    function adicionarNovoHorario() {
+    async function adicionarNovoHorario() {
         const novo = prompt("Introduza o novo horário desejado (ex: 13h):");
-        if (novo && novo.trim() !== "") {
-            const h = novo.trim();
-            if (!horariosAtivos.includes(h)) { horariosAtivos.push(h); horariosAtivos.sort((a,b) => parseInt(a) - parseInt(b)); popularSelectHorariosFixo(); filtrar(h); }
+        if (!novo || novo.trim() === "") return;
+        const h = novo.trim();
+        if (horariosAtivos.includes(h)) { alert("Este horário já existe!"); return; }
+
+        horariosAtivos.push(h);
+        horariosAtivos.sort((a, b) => parseInt(a) - parseInt(b));
+
+        // Salva no Supabase para persistir após recarregar a página
+        try {
+            const { data: existente } = await supabaseClient
+                .from("configuracoes")
+                .select("id")
+                .eq("chave", "horarios_ativos")
+                .single();
+
+            if (existente) {
+                await supabaseClient
+                    .from("configuracoes")
+                    .update({ valor: JSON.stringify(horariosAtivos) })
+                    .eq("chave", "horarios_ativos");
+            } else {
+                await supabaseClient
+                    .from("configuracoes")
+                    .insert([{ chave: "horarios_ativos", valor: JSON.stringify(horariosAtivos) }]);
+            }
+        } catch (err) {
+            console.warn("Não foi possível salvar o horário no Supabase:", err);
         }
+
+        popularSelectHorariosFixo();
+        filtrar(h);
+    }
+
+    async function removerHorario(h) {
+        if (["07h", "15h", "19h", "23h"].includes(h)) { alert("Não é possível remover os horários fixos."); return; }
+        if (!confirm(`Remover o horário "${h}"?`)) return;
+
+        horariosAtivos = horariosAtivos.filter(x => x !== h);
+
+        try {
+            const { data: existente } = await supabaseClient
+                .from("configuracoes")
+                .select("id")
+                .eq("chave", "horarios_ativos")
+                .single();
+
+            if (existente) {
+                await supabaseClient
+                    .from("configuracoes")
+                    .update({ valor: JSON.stringify(horariosAtivos) })
+                    .eq("chave", "horarios_ativos");
+            }
+        } catch (err) {
+            console.warn("Não foi possível atualizar horários no Supabase:", err);
+        }
+
+        if (horaAtual === h) horaAtual = horariosAtivos[0] || "07h";
+        popularSelectHorariosFixo();
+        renderizarHorarios();
+        renderizar();
     }
 
     function filtrar(hora) { horaAtual = hora; renderizarHorarios(); renderizar(); }
