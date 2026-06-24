@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -288,6 +291,9 @@
         <label>Dias Faltantes <span style="color: #22c55e;">(Calculado Automaticamente)</span></label>
         <input type="number" id="inpDiasFaltantes" placeholder="Preenchido automaticamente" disabled>
         <div class="info-calculo">ℹ️ Cálculo preciso baseado no calendário real + meses de validade.</div>
+
+        <label>Observação</label>
+        <textarea id="inpObservacao" rows="3" placeholder="Ex: Acolhido com restrição alimentar, alergias, informações relevantes..." style="resize: vertical; font-family: inherit;"></textarea>
         
         <button id="btnSalvarCadastro" onclick="salvar()" style="width:100%; padding:14px; background:linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; margin-top:10px;">Guardar</button>
         <button onclick="fechar('modalCadastro')" style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">Cancelar</button>
@@ -992,6 +998,7 @@
                         <strong>${r.nome} ${termo !== "" ? `<span style="font-size:12px; color:var(--cor-azul);">(${r.hora})</span>` : ''}</strong>
                         ${r.cpf ? `<br><small style="color: var(--cor-azul); font-weight: 600;">CPF: ${r.cpf}</small>` : ''}
                         ${blocoMedicamentosHtml}
+                        ${r.observacao ? `<div style="margin-top:6px; background:#1a2744; border-left:3px solid #475569; border-radius:0 8px 8px 0; padding:6px 10px; font-size:12px; color:#94a3b8; font-style:italic; line-height:1.4;">💬 ${r.observacao}</div>` : ''}
                         ${diasFaltantes !== null ? `<small style="${statusAlerta} font-weight: bold; margin-top:6px; display:inline-block;">${diasFaltantes < 0 ? '❌ Sem Estoque / Renovação Necessária' : (diasFaltantes <= 30 ? '⏰ Faltam: ' + diasFaltantes + ' dias' : '')}</small>` : ''}
                     </div>
                 </div>
@@ -1091,7 +1098,7 @@
         popularSelectHorariosFixo();
         document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = "";
         document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = "";
-        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; abrir('modalCadastro');
+        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; abrir('modalCadastro');
     }
     
     function prepararEdicao(id) { 
@@ -1099,7 +1106,7 @@
         if (!item) return; popularSelectHorariosFixo(); document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
         document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
         document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
-        diasCalc : ""; abrir('modalCadastro'); 
+        diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; abrir('modalCadastro'); 
     }
     
     async function salvar() { 
@@ -1107,6 +1114,7 @@
         const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value;
         const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
         const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
+        const observacao = document.getElementById('inpObservacao').value.trim() || null;
         
         if (!nome) return alert("Por favor, preencha o nome!");
         if (cpf && !validarCPF(cpf)) return alert("O CPF introduzido não é válido! Por favor corrija.");
@@ -1116,7 +1124,7 @@
         btn.innerText = "A guardar...";
 
         const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses });
-        const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc };
+        const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc, observacao };
         let erro = null;
         if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error;
         } 
