@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -709,6 +711,15 @@
                 const idPaciente = registros.find(r => r.nome === n).id;
                 return `<option value="${idPaciente}">${n}</option>`;
             }).join('');
+
+        // Popula o select de "Horário Fixo" do modal de Cadastro/Edição
+        // (esse select ficava vazio porque nada o preenchia antes)
+        const selectHora = document.getElementById('inpHora');
+        if (selectHora) {
+            const valorAtual = selectHora.value;
+            selectHora.innerHTML = horariosAtivos.map(h => `<option value="${h}">${h}</option>`).join('');
+            if (valorAtual && horariosAtivos.includes(valorAtual)) selectHora.value = valorAtual;
+        }
     }
 
     const HORARIOS_FIXOS = ["07h", "15h", "19h", "23h"];
@@ -1015,6 +1026,7 @@
     };
     
     function abrirCadastroNovos() { 
+        popularSelectHorariosFixo();
         document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = "";
         document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = "";
         document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; abrir('modalCadastro');
@@ -1022,7 +1034,7 @@
     
     function prepararEdicao(id) { 
         const item = registros.find(r => r.id === id);
-        if (!item) return; document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
+        if (!item) return; popularSelectHorariosFixo(); document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
         document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
         document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
         diasCalc : ""; abrir('modalCadastro'); 
