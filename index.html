@@ -61,8 +61,8 @@
         .modal-content { background: var(--card-bg); padding: 30px; border-radius: 24px; width: 90%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); border: 1px solid var(--borda); max-height: 90vh; overflow-y: auto; margin: auto; }
         .modal-content h2 { margin-bottom: 15px; font-weight: 700; font-size: 22px; letter-spacing: -0.5px; }
         .modal-content label { font-size: 12px; color: var(--texto-s); font-weight: 600; text-transform: uppercase; }
-        .modal-content input, .modal-content select { width: 100%; margin: 8px 0 14px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in); }
-        .modal-content input:focus, .modal-content select:focus { border-color: var(--cor-azul); }
+        .modal-content input, .modal-content select, .modal-content textarea { width: 100%; margin: 8px 0 14px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in); }
+        .modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus { border-color: var(--cor-azul); }
         .modal-content input[type="number"]:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .modal-grande { max-width: 950px; width: 95%; height: 85vh; display: flex; flex-direction: column; }
@@ -90,9 +90,14 @@
         .drive-frame-container iframe { width: 100%; height: 100%; border: none; }
         
         .card-saida-paciente { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: var(--shadow-out); border-left: 5px solid #22c55e; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; }
+        .card-saida-paciente.realizado { border-left-color: #475569; opacity: 0.65; }
         .card-saida-conteudo { flex: 1; }
         .card-saida-paciente h4 { color: #fff; margin-bottom: 5px; font-size: 15px; }
         .card-saida-paciente p { font-size: 13px; color: var(--texto-s); margin-bottom: 8px; }
+        .check-realizado-card { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texto-s); margin-top: 4px; cursor: pointer; user-select: none; }
+        .check-realizado-card input { width: 17px; height: 17px; accent-color: #22c55e; cursor: pointer; margin: 0; }
+        .badge-realizado { display: inline-block; font-size: 11px; font-weight: bold; color: #4ade80; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); padding: 2px 8px; border-radius: 6px; margin-bottom: 6px; }
+        .info-realizado { color: #4ade80 !important; font-size: 13px; margin-bottom: 8px; }
         .link-drive { display: inline-block; background: #0f3652; color: #38bdf8; text-decoration: none; font-size: 12px; padding: 6px 12px; border-radius: 8px; font-weight: bold; border: 1px solid rgba(56,189,248,0.2); }
         
         .btn-plus { background: var(--cor-azul); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-out); transition: all 0.1s ease; }
@@ -367,6 +372,20 @@
     </div>
 </div>
 
+<div id="modalConfirmarRealizado" class="modal" style="z-index: 110000;">
+    <div class="modal-content" style="max-width: 420px;">
+        <h3 style="margin-bottom: 5px; font-weight: 700;">✅ Confirmar Realização</h3>
+        <p id="confirmarRealizadoNome" style="color: var(--texto-s); font-size: 14px; margin-bottom: 15px;"></p>
+        <input type="hidden" id="confirmarRealizadoId">
+        <label>Informações sobre a realização:</label>
+        <textarea id="confirmarRealizadoInfo" rows="3" placeholder="Ex: Receita retirada e entregue ao acolhido em 24/06..." style="resize: vertical; font-family: inherit;"></textarea>
+        <div style="display: flex; gap: 12px; margin-top: 18px;">
+            <button onclick="window.confirmarRealizacaoSaida()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Confirmar</button>
+            <button onclick="fechar('modalConfirmarRealizado')" style="flex: 1; padding: 12px; background: #151f32; color: var(--texto-s); border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <div id="modalNovaSaida" class="modal">
     <div class="modal-content" style="border: 1px solid var(--cor-azul); z-index: 100000;">
         <h2 id="modalSaidaTitulo">Agendar Renovação/Saída</h2>
@@ -608,7 +627,7 @@
 
     function buildAlertasHTML() {
         const alertasPacientes = agruparAlertasPorPaciente();
-        const alertasRenovacao = saidas.map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
+        const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
         const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes, alerta: true })).sort((a, b) => (a.dias_faltantes || 0) - (b.dias_faltantes || 0));
         const totalAlertas = alertasEstoque.length + alertasRenovacao.length;
         const badge = document.getElementById('badgeAlertasCount');
@@ -634,7 +653,7 @@
         const container = document.getElementById('listaAlertas');
         if (container) {
             const alertasPacientes = agruparAlertasPorPaciente();
-            const alertasRenovacao = saidas.map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
+            const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
             const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes })).sort((a, b) => (a.dias_faltantes || 0) - (b.dias_faltantes || 0));
             if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) {
                 container.innerHTML = `<p style='color:#22c55e; text-align:center; font-size:12px; padding:15px;'>✓ Nenhum alerta!</p>`;
@@ -667,7 +686,9 @@
                     nome: item.nome || item.Nome || "", 
                     links: item.links || item.Links || "", 
                     data: item.data || item.Data || "",
-                    informacoes: item.informacoes || item.Informacoes || "" 
+                    informacoes: item.informacoes || item.Informacoes || "",
+                    realizado: item.realizado === true || item.Realizado === true,
+                    info_realizado: item.info_realizado || item.Info_realizado || ""
                 }));
             }
 
@@ -1013,6 +1034,50 @@
         btn.innerText = "Salvar Agendamento";
         if (!erro) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + erro.message);
     };
+
+    // Checkbox marcado no card: abre modal pedindo a informação da confirmação antes de salvar.
+    // Checkbox desmarcado: reverte "realizado" direto, sem precisar de input.
+    window.onToggleRealizadoSaida = function(id, marcado) {
+        const item = saidas.find(s => String(s.id) === String(id));
+        if (!item) return;
+        if (marcado) {
+            document.getElementById('confirmarRealizadoId').value = String(item.id);
+            document.getElementById('confirmarRealizadoNome').innerText = `Acolhido: ${item.nome}`;
+            document.getElementById('confirmarRealizadoInfo').value = "";
+            abrir('modalConfirmarRealizado');
+            setTimeout(() => document.getElementById('confirmarRealizadoInfo').focus(), 100);
+        } else {
+            window.salvarStatusRealizadoSaida(item.id, false, "");
+        }
+    };
+
+    window.confirmarRealizacaoSaida = async function() {
+        const id = document.getElementById('confirmarRealizadoId').value;
+        const info = document.getElementById('confirmarRealizadoInfo').value.trim();
+        if (!info) return alert("Descreva brevemente como foi realizado o agendamento.");
+        fechar('modalConfirmarRealizado');
+        await window.salvarStatusRealizadoSaida(id, true, info);
+    };
+
+    // Atualiza o status "realizado" + a informação de confirmação no Supabase.
+    // Ao marcar como realizado, o item deixa de entrar no filtro de Alertas de Renovação automaticamente.
+    window.salvarStatusRealizadoSaida = async function(id, realizado, info_realizado) {
+        const idTratado = isNaN(id) ? id : Number(id);
+        const item = saidas.find(s => String(s.id) === String(id));
+        const anterior = item ? { realizado: item.realizado, info_realizado: item.info_realizado } : null;
+        if (item) { item.realizado = realizado; item.info_realizado = info_realizado; }
+        renderizarPacientesDoDia();
+        gerarAlertas();
+        const { error } = await supabaseClient.from('calendario').update({ realizado, info_realizado }).eq('id', idTratado);
+        if (error) {
+            if (item && anterior) { item.realizado = anterior.realizado; item.info_realizado = anterior.info_realizado; }
+            renderizarPacientesDoDia();
+            gerarAlertas();
+            alert("Erro ao atualizar: " + error.message);
+        } else {
+            carregar();
+        }
+    };
     
     window.excluirSaida = async function(id, nome) { 
         perguntarConfirmacao("Remover Saída", `Deseja remover o agendamento de "${nome}"?`, async () => {
@@ -1142,7 +1207,7 @@
         document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return;
         const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>";
         return; } 
-        lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente"><div class="card-saida-conteudo"><h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.informacoes ? `<p style="color: var(--cor-azul); font-size: 13px; margin-bottom: 8px;"><strong>Info:</strong> ${s.informacoes}</p>` : ''}${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}</div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
+        lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente ${s.realizado ? 'realizado' : ''}"><div class="card-saida-conteudo">${s.realizado ? '<span class="badge-realizado">✅ Realizado</span>' : ''}<h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.informacoes ? `<p style="color: var(--cor-azul); font-size: 13px; margin-bottom: 8px;"><strong>Info:</strong> ${s.informacoes}</p>` : ''}${s.realizado && s.info_realizado ? `<p class="info-realizado"><strong>✅ Confirmação:</strong> ${s.info_realizado}</p>` : ''}${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}<label class="check-realizado-card" onclick="event.stopPropagation()"><input type="checkbox" ${s.realizado ? 'checked' : ''} onchange="window.onToggleRealizadoSaida('${s.id}', this.checked)"> ${s.realizado ? 'Desmarcar como realizado' : 'Marcar como realizado'}</label></div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
     }
     
     function abrir(id) { document.getElementById(id).style.display = 'flex';
