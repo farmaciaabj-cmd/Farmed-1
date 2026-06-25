@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -940,29 +941,32 @@
         const container = document.getElementById('conteudoRelatorioGeral');
         if (error) { container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`; return; }
 
-        // Universo de acolhidos a considerar
         let pacientesAlvo = pacId === 'todos' ? registros.slice() : registros.filter(r => String(r.id) === String(pacId));
-        // Cada acolhido tem um único horário fixo (r.hora). Se há filtro de horário, só entram os
-        // acolhidos cujo horário fixo é exatamente esse (senão eles simplesmente não têm dose nesse horário).
-        if (horarioFiltro) pacientesAlvo = pacientesAlvo.filter(p => p.hora === horarioFiltro);
-        pacientesAlvo = pacientesAlvo.filter(p => !!p.hora);
+        if (horarioFiltro && pacId === 'todos') pacientesAlvo = pacientesAlvo.filter(p => p.hora === horarioFiltro);
+        if (pacId === 'todos') pacientesAlvo = pacientesAlvo.filter(p => !!p.hora);
 
         const datasIntervalo = gerarIntervaloDatas(dataIn, dataFim);
 
-        // Monta o universo completo: para cada acolhido e cada dia do período, no horário fixo dele,
-        // verifica se existe registo de "tomado". Se não existir, é uma pendência (ausência de marcação).
         const universoCompleto = [];
         pacientesAlvo.forEach(pac => {
             datasIntervalo.forEach(dataDia => {
-                // Não gera pendência para dias anteriores ao início da prescrição (se informado)
                 if (pac.data_prescricao && dataDia < pac.data_prescricao) return;
-                const horarioDose = pac.hora;
-                const real = (registosTomados || []).find(rm => String(rm.paciente_id) === String(pac.id) && rm.data === dataDia && rm.horario === horarioDose && (rm.status === true || rm.status === 'true'));
-                if (real) {
-                    universoCompleto.push(real);
+                let horariosVerificar;
+                if (horarioFiltro) {
+                    horariosVerificar = [horarioFiltro];
+                } else if (pacId !== 'todos') {
+                    horariosVerificar = horariosAtivos.slice();
                 } else {
-                    universoCompleto.push({ paciente_id: pac.id, data: dataDia, horario: horarioDose, status: false, _semRegisto: true });
+                    horariosVerificar = pac.hora ? [pac.hora] : [];
                 }
+                horariosVerificar.forEach(horarioDose => {
+                    const real = (registosTomados || []).find(rm => String(rm.paciente_id) === String(pac.id) && rm.data === dataDia && rm.horario === horarioDose && (rm.status === true || rm.status === 'true'));
+                    if (real) {
+                        universoCompleto.push(real);
+                    } else {
+                        universoCompleto.push({ paciente_id: pac.id, data: dataDia, horario: horarioDose, status: false, _semRegisto: true });
+                    }
+                });
             });
         });
 
@@ -977,7 +981,9 @@
         container.innerHTML = data.map(item => {
             const paciente = registros.find(r => r.id == item.paciente_id);
             const nomePac = paciente ? paciente.nome : 'Acolhido Eliminado';
-            const medicamentosPac = paciente ? paciente.medicamento : '—';
+            const ehHorarioFixo = paciente && paciente.hora === item.horario;
+            const temRegistroReal = !item._semRegisto;
+            const medicamentosPac = (ehHorarioFixo || temRegistroReal) ? (paciente ? paciente.medicamento : '—') : null;
             
             // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
             const isTomado = item.status === true || item.status === 'true';
@@ -987,7 +993,7 @@
                 <div style="display:flex; flex-direction:column; gap:4px; flex: 1;">
                     <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
                     ${pacId === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
-                    <small style="color:#e2e8f0; font-style: italic; background:#1e293b; padding:4px 8px; border-radius:6px; margin-top:3px; display:inline-block; width: fit-content;">💊 Mrems: ${medicamentosPac}</small>
+                    ${medicamentosPac ? `<small style="color:#e2e8f0; font-style: italic; background:#1e293b; padding:4px 8px; border-radius:6px; margin-top:3px; display:inline-block; width: fit-content;">💊 ${medicamentosPac}</small>` : ''}
                 </div>
                 <span style="font-weight: bold; background: ${isTomado ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isTomado ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content; white-space: nowrap;">
                     ${isTomado ? '✅ TOMADO' : '❌ PENDENTE'}
@@ -1069,111 +1075,44 @@
             ? `<p style="text-align:center;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">✓ Nenhuma pendência de medicação registada no período consultado.</p>`
             : montarTabela(porAcolhidoPendentes, 'NÃO TOMADO', '#fee2e2', '#b91c1c', '#fca5a5');
 
-        const htmlConteudo = `
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-            <meta charset="UTF-8">
-            <title>Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}</title>
-            <style>
-                * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; padding: 32px; font-size: 13px; }
-                h1 { font-size: 16px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-                h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 14px; margin-top: 28px; }
-                p { font-size: 13px; color: #475569; margin-bottom: 20px; line-height: 1.7; }
-                table { width: 100%; border-collapse: collapse; margin-top: 10px; page-break-inside: auto; }
-                thead tr { background: #1e3a5f; color: white; }
-                th { padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
-                td { padding: 9px 12px; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
-                tr { page-break-inside: avoid; }
-                .cabecalho { border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; margin-bottom: 28px; }
-                .cabecalho-titulo { font-size: 22px; font-weight: 800; color: #1e3a5f; letter-spacing: -0.5px; }
-                .cabecalho-sub { font-size: 11px; color: #64748b; margin-top: 4px; letter-spacing: 0.5px; }
-                .cards { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
-                .card { flex: 1; min-width: 100px; border-radius: 10px; padding: 14px 18px; }
-                .card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; }
-                .card-val { font-size: 22px; font-weight: 800; margin-top: 4px; }
-                .card-periodo { background: #f1f5f9; border-left: 4px solid #1e3a5f; min-width: 140px; }
-                .card-periodo .card-label { color: #64748b; }
-                .card-periodo .card-val { font-size: 13px; font-weight: 700; color: #1e293b; }
-                .card-tomados { background: #dcfce7; border-left: 4px solid #16a34a; }
-                .card-tomados .card-label { color: #166534; }
-                .card-tomados .card-val { color: #16a34a; }
-                .card-pendentes { background: #fee2e2; border-left: 4px solid #dc2626; }
-                .card-pendentes .card-label { color: #991b1b; }
-                .card-pendentes .card-val { color: #dc2626; }
-                .card-acolhidos { background: #fff7ed; border-left: 4px solid #ea580c; }
-                .card-acolhidos .card-label { color: #9a3412; }
-                .card-acolhidos .card-val { color: #ea580c; }
-                .h2-tomados { color: #166534; }
-                .h2-pendentes { color: #b91c1c; }
-                .badge-tomado { background: #dcfce7; color: #166534; font-weight: 700; font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid #86efac; }
-                .badge-pendente { background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid #fca5a5; }
-                .rodape { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 11px; color: #94a3b8; line-height: 1.6; }
-                .tr-par { background: #f8fafc; }
-                @media print {
-                    body { padding: 20px; }
-                    .cards { display: table; width: 100%; }
-                    .card { display: table-cell; }
-                    @page { margin: 15mm; size: A4; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="cabecalho">
-                <div class="cabecalho-titulo">FARMED</div>
-                <div class="cabecalho-sub">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
-            </div>
-            <h1>Relatório de Medicação — Tomados e Não Tomados</h1>
-            <p>O presente relatório descreve, para o período e horário indicados, as ocorrências em que os acolhidos <strong>realizaram</strong> e em que <strong>não realizaram</strong> a toma de medicação, conforme registo no sistema de gestão Farmed.</p>
-            <div class="cards">
-                <div class="card card-periodo">
-                    <div class="card-label">Período</div>
-                    <div class="card-val">${dataIniLabel} — ${dataFimLabel}</div>
-                </div>
-                <div class="card card-periodo">
-                    <div class="card-label">Horário</div>
-                    <div class="card-val">${horarioLabel}</div>
-                </div>
-                <div class="card card-tomados">
-                    <div class="card-label">Tomados</div>
-                    <div class="card-val">${totalTomados}</div>
-                </div>
-                <div class="card card-pendentes">
-                    <div class="card-label">Pendências</div>
-                    <div class="card-val">${totalPendentes}</div>
-                </div>
-                <div class="card card-acolhidos">
-                    <div class="card-label">Acolhidos</div>
-                    <div class="card-val">${totalAcolhidos}</div>
-                </div>
-            </div>
-            <h2 class="h2-tomados">✅ Medicação Administrada (Tomados)</h2>
-            ${conteudoTabelaTomados}
-            <h2 class="h2-pendentes" style="margin-top:32px;">❌ Medicação Não Administrada (Pendências)</h2>
-            ${conteudoTabelaPendentes}
-            <div class="rodape">
-                <p>Este relatório foi gerado automaticamente pelo sistema Farmed e tem caráter informativo e de controlo interno.</p>
-                <p>Em caso de dúvidas, contacte o responsável pela gestão de saúde da instituição.</p>
-            </div>
-            <script>
-                window.onload = function() {
-                    window.print();
-                    window.onafterprint = function() { window.close(); };
-                };
-            <\/script>
-        </body>
-        </html>`;
-
-        const blob = new Blob([htmlConteudo], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const janela = window.open(url, '_blank', 'width=900,height=700');
-        if (!janela) {
-            alert("O navegador bloqueou a janela popup. Por favor, permita popups para este site e tente novamente.");
-            URL.revokeObjectURL(url);
-            return;
-        }
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}</title>
+        <style>
+            *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:32px;font-size:13px}
+            h1{font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;margin-bottom:8px}
+            h2{font-size:12px;font-weight:700;text-transform:uppercase;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:14px;margin-top:28px}
+            p{font-size:13px;color:#475569;margin-bottom:20px;line-height:1.7}
+            table{width:100%;border-collapse:collapse;margin-top:10px}thead tr{background:#1e3a5f;color:white}
+            th{padding:10px 12px;text-align:left;font-size:12px;font-weight:700}td{padding:9px 12px;font-size:13px;border-bottom:1px solid #e2e8f0}tr{page-break-inside:avoid}
+            .cards{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}.card{flex:1;min-width:100px;border-radius:10px;padding:14px 18px}
+            .rodape{margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6}
+            @media print{@page{margin:15mm;size:A4}}
+        </style></head><body>
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px">
+            <div style="font-size:22px;font-weight:800;color:#1e3a5f">FARMED</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
+        </div>
+        <h1>Relatório de Medicação — Tomados e Não Tomados</h1>
+        <p>O presente relatório descreve as ocorrências em que os acolhidos <strong>realizaram</strong> e em que <strong>não realizaram</strong> a toma de medicação.</p>
+        <div class="cards">
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f;min-width:140px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Período</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${dataIniLabel} — ${dataFimLabel}</div></div>
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Horário</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${horarioLabel}</div></div>
+            <div class="card" style="background:#dcfce7;border-left:4px solid #16a34a"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#166534">Tomados</div><div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:4px">${totalTomados}</div></div>
+            <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Pendências</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${totalPendentes}</div></div>
+            <div class="card" style="background:#fff7ed;border-left:4px solid #ea580c"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9a3412">Acolhidos</div><div style="font-size:22px;font-weight:800;color:#ea580c;margin-top:4px">${totalAcolhidos}</div></div>
+        </div>
+        <h2 style="color:#166534">Medicação Administrada (Tomados)</h2>
+        ${conteudoTabelaTomados}
+        <h2 style="color:#b91c1c;margin-top:32px">Medicação Não Administrada (Pendências)</h2>
+        ${conteudoTabelaPendentes}
+        <div class="rodape"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
+        <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
+        </body></html>`;
+        const _blob = new Blob([_htmlPdf], {type:'text/html;charset=utf-8'});
+        const _url = URL.createObjectURL(_blob);
+        const _jan = window.open(_url, '_blank', 'width=900,height=700');
+        if (!_jan) { alert("Permita popups e tente novamente."); URL.revokeObjectURL(_url); return; }
+        setTimeout(() => URL.revokeObjectURL(_url), 60000);
     }
 
 
