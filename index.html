@@ -1125,32 +1125,53 @@
 
         </div>`;
 
-        document.body.appendChild(divPdf);
-
-        html2pdf().set({
-
-            margin: [10,10,10,10],
-
-            filename: `Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}.pdf`,
-
-            html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollX: 0, scrollY: 0, windowWidth: document.documentElement.scrollWidth, windowHeight: document.documentElement.scrollHeight },
-
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-
-            pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
-
-        }).from(divPdf).save().then(() => {
-
-            document.body.removeChild(divPdf);
-
-        }).catch(() => {
-
-            if (divPdf.parentNode) document.body.removeChild(divPdf);
-
-        });
-
-    }
+        // =================================================================
+        // CORREÇÃO: Força o texto a ficar escuro no fundo branco do PDF
+        // =================================================================
+        divPdf.style.color = '#1e293b'; 
+        divPdf.style.backgroundColor = '#ffffff';
         
+        // Injeta uma regra de estilo temporária para garantir que nenhuma tag interna use texto claro
+        const estiloPdf = document.createElement('style');
+        estiloPdf.innerHTML = `
+            div, table, tr, td, th, h1, h2, h3, h4, p, span, strong, small {
+                color: #1e293b !important;
+                border-color: #cbd5e1 !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+                color: #0f172a !important;
+                font-weight: bold !important;
+            }
+            table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+        `;
+        divPdf.appendChild(estiloPdf);
+        // =================================================================
+
+        document.body.appendChild(divPdf);
+        html2pdf().set({
+            margin: [10,10,10,10],
+            filename: `Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}.pdf`,
+            html2canvas: { 
+                scale: 2, 
+                backgroundColor: '#ffffff', 
+                useCORS: true, 
+                scrollX: 0, 
+                scrollY: 0, 
+                windowWidth: document.documentElement.scrollWidth, 
+                windowHeight: document.documentElement.scrollHeight 
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
+        }).from(divPdf).save().then(() => {
+            document.body.removeChild(divPdf);
+        }).catch(() => {
+            if (divPdf.parentNode) document.body.removeChild(divPdf);
+        });
+    }        
            function renderizar() {
         const termo = document.getElementById('searchInput').value.toLowerCase();
         const lista = document.getElementById('lista-registros');
