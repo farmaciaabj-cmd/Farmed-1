@@ -411,6 +411,11 @@
         <h3>Relatório de Medicamentos Tomados</h3>
         <div class="relatorio-filtros">
             <select id="relatorioPacienteSelect"></select>
+            <select id="relatorioHorarioSelect" title="Filtrar por Horário">
+                <option value="">🕐 Todos os Horários</option>
+            </select>
+        </div>
+        <div class="relatorio-filtros" style="margin-top: -10px;">
             <input type="date" id="relatorioDataInicio" title="Data Inicial">
             <input type="date" id="relatorioDataFim" title="Data Final">
         </div>
@@ -882,32 +887,92 @@
         document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>';
         document.getElementById('relatorioDataInicio').value = "";
         document.getElementById('relatorioDataFim').value = "";
+        const horSelect = document.getElementById('relatorioHorarioSelect');
+        if (horSelect) horSelect.innerHTML = '<option value="">🕐 Todos os Horários</option>' + horariosAtivos.map(h => `<option value="${h}">${h}</option>`).join('');
         
         abrir('modalRelatorioGeral');
     }
 
+    // Gera um array de strings "YYYY-MM-DD" entre duas datas (inclusive)
+    function gerarIntervaloDatas(inicio, fim) {
+        const datas = [];
+        let atual = new Date(inicio + 'T00:00:00');
+        const ultima = new Date(fim + 'T00:00:00');
+        while (atual <= ultima) {
+            const ano = atual.getFullYear();
+            const mes = String(atual.getMonth() + 1).padStart(2, '0');
+            const dia = String(atual.getDate()).padStart(2, '0');
+            datas.push(`${ano}-${mes}-${dia}`);
+            atual.setDate(atual.getDate() + 1);
+        }
+        return datas;
+    }
+
     async function buscarRelatorioGeral() {
         const pacId = document.getElementById('relatorioPacienteSelect').value;
-        const dataIn = document.getElementById('relatorioDataInicio').value;
-        const dataFim = document.getElementById('relatorioDataFim').value;
+        let dataIn = document.getElementById('relatorioDataInicio').value;
+        let dataFim = document.getElementById('relatorioDataFim').value;
+        const horarioFiltro = (document.getElementById('relatorioHorarioSelect') || {}).value || '';
         if(!pacId) return alert("Selecione um paciente ou a opção de Todos!");
         const btn = document.getElementById('btnBuscarRelatorio');
         btn.disabled = true;
         btn.innerText = "A pesquisar...";
-        let query = supabaseClient.from('registro_medicacao').select('*').order('data', { ascending: false }).order('horario', { ascending: true });
+
+        // IMPORTANTE: quando o acolhido não é marcado no checklist, NENHUM registo é gravado no banco
+        // (toggleMedicacao só grava status:true ao marcar, e APAGA a linha ao desmarcar).
+        // Por isso, "não tomado" não pode ser detetado filtrando status=false — esse valor nunca existe.
+        // A pendência é detetada pela AUSÊNCIA de registo "tomado" para o acolhido/data/horário esperado.
+
+        // Sem filtro de data: assume-se apenas o dia de hoje (mesmo período mostrado no painel principal)
+        if (!dataIn && !dataFim) { dataIn = obterDataAtualLocal(); dataFim = dataIn; }
+        else if (dataIn && !dataFim) { dataFim = dataIn; }
+        else if (!dataIn && dataFim) { dataIn = dataFim; }
+
+        let query = supabaseClient.from('registro_medicacao').select('*').gte('data', dataIn).lte('data', dataFim);
         if (pacId !== 'todos') query = query.eq('paciente_id', pacId);
-        if (dataIn) query = query.gte('data', dataIn);
-        if (dataFim) query = query.lte('data', dataFim);
-        
-        const { data, error } = await query;
-        window.dadosRelatorioAtual = data;
-        
+        if (horarioFiltro) query = query.eq('horario', horarioFiltro);
+
+        const { data: registosTomados, error } = await query;
+
         btn.disabled = false;
         btn.innerText = "🔍 Buscar Relatório";
 
         const container = document.getElementById('conteudoRelatorioGeral');
         if (error) { container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`; return; }
-        if (!data || data.length === 0) { container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum registo encontrado.</p>`; return; }
+
+        // Universo de acolhidos a considerar
+        let pacientesAlvo = pacId === 'todos' ? registros.slice() : registros.filter(r => String(r.id) === String(pacId));
+        // Cada acolhido tem um único horário fixo (r.hora). Se há filtro de horário, só entram os
+        // acolhidos cujo horário fixo é exatamente esse (senão eles simplesmente não têm dose nesse horário).
+        if (horarioFiltro) pacientesAlvo = pacientesAlvo.filter(p => p.hora === horarioFiltro);
+        pacientesAlvo = pacientesAlvo.filter(p => !!p.hora);
+
+        const datasIntervalo = gerarIntervaloDatas(dataIn, dataFim);
+
+        // Monta o universo completo: para cada acolhido e cada dia do período, no horário fixo dele,
+        // verifica se existe registo de "tomado". Se não existir, é uma pendência (ausência de marcação).
+        const universoCompleto = [];
+        pacientesAlvo.forEach(pac => {
+            datasIntervalo.forEach(dataDia => {
+                // Não gera pendência para dias anteriores ao início da prescrição (se informado)
+                if (pac.data_prescricao && dataDia < pac.data_prescricao) return;
+                const horarioDose = pac.hora;
+                const real = (registosTomados || []).find(rm => String(rm.paciente_id) === String(pac.id) && rm.data === dataDia && rm.horario === horarioDose && (rm.status === true || rm.status === 'true'));
+                if (real) {
+                    universoCompleto.push(real);
+                } else {
+                    universoCompleto.push({ paciente_id: pac.id, data: dataDia, horario: horarioDose, status: false, _semRegisto: true });
+                }
+            });
+        });
+
+        universoCompleto.sort((a, b) => b.data.localeCompare(a.data) || a.horario.localeCompare(b.horario));
+
+        const data = universoCompleto;
+        window.dadosRelatorioAtual = data;
+        window.relatorioFiltros = { pacId, horarioFiltro, dataIn, dataFim };
+
+        if (!data || data.length === 0) { container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum acolhido com horário fixo definido para este filtro.</p>`; return; }
 
         container.innerHTML = data.map(item => {
             const paciente = registros.find(r => r.id == item.paciente_id);
@@ -933,41 +998,146 @@
 
     async function exportarRelatorio() {
         if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) return alert("Efetue uma procura primeiro!");
-        const select = document.getElementById('relatorioPacienteSelect');
-        const nomePaciente = select.options[select.selectedIndex].text.replace('👤 ', '').replace('👥 ', '');
-        const buscandoTodos = select.value === 'todos' || select.value === '';
-        
-        let linhasHtml = '';
-        window.dadosRelatorioAtual.forEach(item => {
-            const paciente = registros.find(r => r.id == item.paciente_id);
-            const nomePac = paciente ? paciente.nome : 'Acolhido Eliminado';
-            const medicamentosPac = paciente ? paciente.medicamento : '—';
-            
-            // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
-            const isTomado = item.status === true || item.status === 'true';
-            
-            linhasHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding: 12px 0; font-size: 14px;">
-                <div style="display:flex; flex-direction:column; gap:4px; flex: 1;">
-                    <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                    ${buscandoTodos ? `<small style="color:#009cd9; font-weight:bold;">👤 ${nomePac}</small>` : ''}
-                    <small style="color:#cbd5e1; font-style: italic; margin-top: 2px;">💊 Meds: ${medicamentosPac}</small>
-                </div>
-                <span style="font-weight: bold; background: ${isTomado ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isTomado ? '#4ade80' : '#f87171'}; padding: 4px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap;">
-                    ${isTomado ? 'TOMADO' : 'PENDENTE'}
-                </span>
-            </div>`;
-        });
+
+        const filtros = window.relatorioFiltros || {};
+        const horarioLabel = filtros.horarioFiltro ? filtros.horarioFiltro : 'Todos';
+        const dataIniLabel = filtros.dataIn ? formatarDataBr(filtros.dataIn) : '—';
+        const dataFimLabel = filtros.dataFim ? formatarDataBr(filtros.dataFim) : '—';
+
+        const tomados = window.dadosRelatorioAtual.filter(item => (item.status === true || item.status === 'true'));
+        const pendentes = window.dadosRelatorioAtual.filter(item => !(item.status === true || item.status === 'true'));
+
+        const hoje = new Date();
+        const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        const horaEmissao = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        // Agrupa um conjunto de itens (tomados ou pendentes) por acolhido
+        function agruparPorAcolhido(lista) {
+            const porAcolhido = {};
+            lista.forEach(item => {
+                const pac = registros.find(r => r.id == item.paciente_id);
+                const nome = pac ? pac.nome : 'Acolhido N/D';
+                const meds = pac ? (pac.medicamento || 'Não informado') : 'Não informado';
+                if (!porAcolhido[nome]) porAcolhido[nome] = { medicamentos: meds, ocorrencias: [] };
+                porAcolhido[nome].ocorrencias.push({ data: item.data, horario: item.horario });
+            });
+            return porAcolhido;
+        }
+
+        // Monta as linhas de uma tabela a partir do agrupamento, com a cor/rótulo de situação indicados
+        function montarTabela(porAcolhido, situacaoLabel, situacaoBg, situacaoCor, situacaoBorda) {
+            let linhas = '';
+            let contador = 1;
+            Object.entries(porAcolhido).sort((a,b) => a[0].localeCompare(b[0],'pt')).forEach(([nome, info]) => {
+                info.ocorrencias.sort((a,b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario)).forEach(oc => {
+                    const bg = contador % 2 === 0 ? 'background:#f8fafc;' : '';
+                    linhas += `<tr style="border-bottom:1px solid #e2e8f0;${bg}">
+                        <td style="padding:9px 12px;font-size:13px;color:#334155;">${contador++}</td>
+                        <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#1e293b;">${nome}</td>
+                        <td style="padding:9px 12px;font-size:13px;color:#334155;">${formatarDataBr(oc.data)}</td>
+                        <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${oc.horario}</td>
+                        <td style="padding:9px 12px;font-size:12px;color:#64748b;font-style:italic;">${info.medicamentos}</td>
+                        <td style="padding:9px 12px;text-align:center;"><span style="background:${situacaoBg};color:${situacaoCor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${situacaoBorda};">${situacaoLabel}</span></td>
+                    </tr>`;
+                });
+            });
+            return `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <thead><tr style="background:#1e3a5f;color:white;">
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">#</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">ACOLHIDO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">DATA</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">HORÁRIO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">MEDICAMENTO(S)</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">SITUAÇÃO</th>
+                </tr></thead>
+                <tbody>${linhas}</tbody>
+            </table>`;
+        }
+
+        const porAcolhidoTomados = agruparPorAcolhido(tomados);
+        const porAcolhidoPendentes = agruparPorAcolhido(pendentes);
+
+        const totalTomados = tomados.length;
+        const totalPendentes = pendentes.length;
+        const totalAcolhidos = new Set([...Object.keys(porAcolhidoTomados), ...Object.keys(porAcolhidoPendentes)]).size;
+
+        const conteudoTabelaTomados = totalTomados === 0
+            ? `<p style="text-align:center;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">Nenhuma toma de medicação registada no período consultado.</p>`
+            : montarTabela(porAcolhidoTomados, 'TOMADO', '#dcfce7', '#166534', '#86efac');
+
+        const conteudoTabelaPendentes = totalPendentes === 0
+            ? `<p style="text-align:center;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">✓ Nenhuma pendência de medicação registada no período consultado.</p>`
+            : montarTabela(porAcolhidoPendentes, 'NÃO TOMADO', '#fee2e2', '#b91c1c', '#fca5a5');
 
         const divPdf = document.createElement('div');
-        divPdf.style.padding = '30px'; divPdf.style.background = '#121824'; divPdf.style.color = '#f8fafc'; divPdf.style.fontFamily = "sans-serif";
-        divPdf.innerHTML = `<h2 style="color: #009cd9; border-bottom: 2px solid #334155; padding-bottom: 10px;">Relatório - ${nomePaciente}</h2><br><div style="background: #1e293b; border-radius: 12px; padding: 15px;">${linhasHtml}</div>`;
-        html2pdf().set({ margin: 10, filename: `Relatorio_${nomePaciente}.pdf`, html2canvas: { scale: 2, backgroundColor: '#121824' }, jsPDF: { format: 'a4', orientation: 'portrait' } }).from(divPdf).save();
+        // Largura fixa (proporcional a uma A4) para o html2canvas calcular o layout corretamente.
+        // IMPORTANTE: NÃO usar "left: -9999px" (fora do viewport) — em várias versões do html2canvas
+        // isso faz a captura vir em branco, pois a biblioteca recorta a área visível da tela.
+        // A técnica correta é manter o elemento nas coordenadas (0,0) e escondê-lo com z-index
+        // negativo, ficando atrás de todo o resto da página (mas ainda "capturável").
+        divPdf.style.cssText = 'position:fixed; top:0; left:0; z-index:-99999; width:780px; padding:40px; background:#ffffff; color:#1e293b; font-family:Arial,sans-serif;';
+        divPdf.innerHTML = `
+        <style>
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            h2 { page-break-after: avoid; }
+        </style>`;
+        divPdf.innerHTML += `
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px;">
+            <div style="font-size:22px;font-weight:800;color:#1e3a5f;letter-spacing:-0.5px;">FARMED</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;letter-spacing:0.5px;">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
+        </div>
+        <h1 style="font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Relatório de Medicação — Tomados e Não Tomados</h1>
+        <p style="font-size:13px;color:#475569;margin-bottom:24px;line-height:1.7;">
+            O presente relatório descreve, para o período e horário indicados, as ocorrências em que os acolhidos 
+            <strong>realizaram</strong> e em que <strong>não realizaram</strong> a toma de medicação, conforme registo no sistema de gestão Farmed.
+        </p>
+        <div style="display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap;page-break-inside:avoid;">
+            <div style="flex:1;min-width:120px;background:#f1f5f9;border-radius:10px;padding:14px 18px;border-left:4px solid #1e3a5f;">
+                <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;">Período</div>
+                <div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px;">${dataIniLabel} — ${dataFimLabel}</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:#f1f5f9;border-radius:10px;padding:14px 18px;border-left:4px solid #1e3a5f;">
+                <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;">Horário</div>
+                <div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px;">${horarioLabel}</div>
+            </div>
+            <div style="flex:1;min-width:100px;background:#dcfce7;border-radius:10px;padding:14px 18px;border-left:4px solid #16a34a;">
+                <div style="font-size:10px;color:#166534;font-weight:700;text-transform:uppercase;">Tomados</div>
+                <div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:2px;">${totalTomados}</div>
+            </div>
+            <div style="flex:1;min-width:100px;background:#fee2e2;border-radius:10px;padding:14px 18px;border-left:4px solid #dc2626;">
+                <div style="font-size:10px;color:#991b1b;font-weight:700;text-transform:uppercase;">Pendências</div>
+                <div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:2px;">${totalPendentes}</div>
+            </div>
+            <div style="flex:1;min-width:100px;background:#fff7ed;border-radius:10px;padding:14px 18px;border-left:4px solid #ea580c;">
+                <div style="font-size:10px;color:#9a3412;font-weight:700;text-transform:uppercase;">Acolhidos</div>
+                <div style="font-size:22px;font-weight:800;color:#ea580c;margin-top:2px;">${totalAcolhidos}</div>
+            </div>
+        </div>
+        <h2 style="font-size:12px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.8px;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:14px;">✅ Medicação Administrada (Tomados)</h2>
+        ${conteudoTabelaTomados}
+        <h2 style="font-size:12px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:0.8px;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:14px;margin-top:32px;page-break-before:always;">❌ Medicação Não Administrada (Pendências)</h2>
+        ${conteudoTabelaPendentes}
+        <div style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6;">
+            <p>Este relatório foi gerado automaticamente pelo sistema Farmed e tem caráter informativo e de controlo interno.</p>
+            <p>Em caso de dúvidas, contacte o responsável pela gestão de saúde da instituição.</p>
+        </div>`;
+
+        document.body.appendChild(divPdf);
+        html2pdf().set({
+            margin: [10,10,10,10],
+            filename: `Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}.pdf`,
+            html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollX: 0, scrollY: 0, windowWidth: document.documentElement.scrollWidth, windowHeight: document.documentElement.scrollHeight },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
+        }).from(divPdf).save().then(() => {
+            document.body.removeChild(divPdf);
+        }).catch(() => {
+            if (divPdf.parentNode) document.body.removeChild(divPdf);
+        });
     }
 
-    // ==========================================
-    // RENDERIZAR PAINEL PRINCIPAL (COM SUPORTE MULTI-MEDS VIA UI)
-    // ==========================================
+
     function renderizar() {
         const termo = document.getElementById('searchInput').value.toLowerCase();
         const lista = document.getElementById('lista-registros');
