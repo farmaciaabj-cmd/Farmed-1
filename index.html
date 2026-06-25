@@ -1123,35 +1123,41 @@
             <p>Em caso de dúvidas, contacte o responsável pela gestão de saúde da instituição.</p>
         </div>`;
 
-        </div>`;
+        document.body.appendChild(divPdf);
 
-         document.body.appendChild(divPdf);
+        // CORREÇÃO DO PDF EM BRANCO:
+        // O botão "Exportar Relatório em PDF" fica dentro do próprio modal (#modalRelatorioGeral),
+        // que tem z-index 9999 e um fundo escuro semitransparente com "backdrop-filter: blur".
+        // Esse overlay cobre toda a tela e fica VISUALMENTE ACIMA do divPdf (que usa z-index:-99999
+        // de propósito, para não usar a técnica antiga de "left:-9999px" que também gera PDF em branco
+        // em algumas versões do html2canvas). Resultado: ao capturar a tela, o html2canvas desenha
+        // o overlay escuro/borrado por cima do conteúdo do relatório, e o PDF sai em branco/escuro.
+        // A correção é esconder temporariamente qualquer modal aberto (.modal com display != none)
+        // antes de gerar o PDF, e devolvê-lo ao estado original depois (sucesso ou erro).
+        const modaisAbertos = Array.from(document.querySelectorAll('.modal')).filter(m => getComputedStyle(m).display !== 'none');
+        modaisAbertos.forEach(m => { m.dataset._displayOriginal = m.style.display || ''; m.style.display = 'none'; });
+
+        function restaurarModais() {
+            modaisAbertos.forEach(m => { m.style.display = m.dataset._displayOriginal || 'flex'; delete m.dataset._displayOriginal; });
+        }
 
         html2pdf().set({
-
             margin: [10,10,10,10],
-
             filename: `Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}.pdf`,
-
             html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollX: 0, scrollY: 0, windowWidth: document.documentElement.scrollWidth, windowHeight: document.documentElement.scrollHeight },
-
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-
             pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
-
         }).from(divPdf).save().then(() => {
-
             document.body.removeChild(divPdf);
-
+            restaurarModais();
         }).catch(() => {
-
             if (divPdf.parentNode) document.body.removeChild(divPdf);
-
+            restaurarModais();
         });
+    }
 
-    } 
 
-        function renderizar() {
+    function renderizar() {
         const termo = document.getElementById('searchInput').value.toLowerCase();
         const lista = document.getElementById('lista-registros');
         if (!lista) return;
