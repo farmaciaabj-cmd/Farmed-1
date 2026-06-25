@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -1070,72 +1069,111 @@
             ? `<p style="text-align:center;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">✓ Nenhuma pendência de medicação registada no período consultado.</p>`
             : montarTabela(porAcolhidoPendentes, 'NÃO TOMADO', '#fee2e2', '#b91c1c', '#fca5a5');
 
-        const divPdf = document.createElement('div');
-        // Largura fixa (proporcional a uma A4) para o html2canvas calcular o layout corretamente.
-        // IMPORTANTE: NÃO usar "left: -9999px" (fora do viewport) — em várias versões do html2canvas
-        // isso faz a captura vir em branco, pois a biblioteca recorta a área visível da tela.
-        // A técnica correta é manter o elemento nas coordenadas (0,0) e escondê-lo com z-index
-        // negativo, ficando atrás de todo o resto da página (mas ainda "capturável").
-        divPdf.style.cssText = 'position:fixed; top:0; left:0; z-index:99999; width:780px; padding:40px; background:#ffffff; color:#1e293b; font-family:Arial,sans-serif; opacity:0; pointer-events:none;';
-        divPdf.innerHTML = `
-        <style>
-            table { page-break-inside: auto; }
-            tr { page-break-inside: avoid; page-break-after: auto; }
-            h2 { page-break-after: avoid; }
-        </style>`;
-        divPdf.innerHTML += `
-        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px;">
-            <div style="font-size:22px;font-weight:800;color:#1e3a5f;letter-spacing:-0.5px;">FARMED</div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px;letter-spacing:0.5px;">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
-        </div>
-        <h1 style="font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Relatório de Medicação — Tomados e Não Tomados</h1>
-        <p style="font-size:13px;color:#475569;margin-bottom:24px;line-height:1.7;">
-            O presente relatório descreve, para o período e horário indicados, as ocorrências em que os acolhidos 
-            <strong>realizaram</strong> e em que <strong>não realizaram</strong> a toma de medicação, conforme registo no sistema de gestão Farmed.
-        </p>
-        <div style="display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap;page-break-inside:avoid;">
-            <div style="flex:1;min-width:120px;background:#f1f5f9;border-radius:10px;padding:14px 18px;border-left:4px solid #1e3a5f;">
-                <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;">Período</div>
-                <div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px;">${dataIniLabel} — ${dataFimLabel}</div>
+        const htmlConteudo = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}</title>
+            <style>
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; padding: 32px; font-size: 13px; }
+                h1 { font-size: 16px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+                h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 14px; margin-top: 28px; }
+                p { font-size: 13px; color: #475569; margin-bottom: 20px; line-height: 1.7; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; page-break-inside: auto; }
+                thead tr { background: #1e3a5f; color: white; }
+                th { padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
+                td { padding: 9px 12px; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
+                tr { page-break-inside: avoid; }
+                .cabecalho { border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; margin-bottom: 28px; }
+                .cabecalho-titulo { font-size: 22px; font-weight: 800; color: #1e3a5f; letter-spacing: -0.5px; }
+                .cabecalho-sub { font-size: 11px; color: #64748b; margin-top: 4px; letter-spacing: 0.5px; }
+                .cards { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+                .card { flex: 1; min-width: 100px; border-radius: 10px; padding: 14px 18px; }
+                .card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; }
+                .card-val { font-size: 22px; font-weight: 800; margin-top: 4px; }
+                .card-periodo { background: #f1f5f9; border-left: 4px solid #1e3a5f; min-width: 140px; }
+                .card-periodo .card-label { color: #64748b; }
+                .card-periodo .card-val { font-size: 13px; font-weight: 700; color: #1e293b; }
+                .card-tomados { background: #dcfce7; border-left: 4px solid #16a34a; }
+                .card-tomados .card-label { color: #166534; }
+                .card-tomados .card-val { color: #16a34a; }
+                .card-pendentes { background: #fee2e2; border-left: 4px solid #dc2626; }
+                .card-pendentes .card-label { color: #991b1b; }
+                .card-pendentes .card-val { color: #dc2626; }
+                .card-acolhidos { background: #fff7ed; border-left: 4px solid #ea580c; }
+                .card-acolhidos .card-label { color: #9a3412; }
+                .card-acolhidos .card-val { color: #ea580c; }
+                .h2-tomados { color: #166534; }
+                .h2-pendentes { color: #b91c1c; }
+                .badge-tomado { background: #dcfce7; color: #166534; font-weight: 700; font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid #86efac; }
+                .badge-pendente { background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid #fca5a5; }
+                .rodape { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 11px; color: #94a3b8; line-height: 1.6; }
+                .tr-par { background: #f8fafc; }
+                @media print {
+                    body { padding: 20px; }
+                    .cards { display: table; width: 100%; }
+                    .card { display: table-cell; }
+                    @page { margin: 15mm; size: A4; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="cabecalho">
+                <div class="cabecalho-titulo">FARMED</div>
+                <div class="cabecalho-sub">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
             </div>
-            <div style="flex:1;min-width:120px;background:#f1f5f9;border-radius:10px;padding:14px 18px;border-left:4px solid #1e3a5f;">
-                <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;">Horário</div>
-                <div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px;">${horarioLabel}</div>
+            <h1>Relatório de Medicação — Tomados e Não Tomados</h1>
+            <p>O presente relatório descreve, para o período e horário indicados, as ocorrências em que os acolhidos <strong>realizaram</strong> e em que <strong>não realizaram</strong> a toma de medicação, conforme registo no sistema de gestão Farmed.</p>
+            <div class="cards">
+                <div class="card card-periodo">
+                    <div class="card-label">Período</div>
+                    <div class="card-val">${dataIniLabel} — ${dataFimLabel}</div>
+                </div>
+                <div class="card card-periodo">
+                    <div class="card-label">Horário</div>
+                    <div class="card-val">${horarioLabel}</div>
+                </div>
+                <div class="card card-tomados">
+                    <div class="card-label">Tomados</div>
+                    <div class="card-val">${totalTomados}</div>
+                </div>
+                <div class="card card-pendentes">
+                    <div class="card-label">Pendências</div>
+                    <div class="card-val">${totalPendentes}</div>
+                </div>
+                <div class="card card-acolhidos">
+                    <div class="card-label">Acolhidos</div>
+                    <div class="card-val">${totalAcolhidos}</div>
+                </div>
             </div>
-            <div style="flex:1;min-width:100px;background:#dcfce7;border-radius:10px;padding:14px 18px;border-left:4px solid #16a34a;">
-                <div style="font-size:10px;color:#166534;font-weight:700;text-transform:uppercase;">Tomados</div>
-                <div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:2px;">${totalTomados}</div>
+            <h2 class="h2-tomados">✅ Medicação Administrada (Tomados)</h2>
+            ${conteudoTabelaTomados}
+            <h2 class="h2-pendentes" style="margin-top:32px;">❌ Medicação Não Administrada (Pendências)</h2>
+            ${conteudoTabelaPendentes}
+            <div class="rodape">
+                <p>Este relatório foi gerado automaticamente pelo sistema Farmed e tem caráter informativo e de controlo interno.</p>
+                <p>Em caso de dúvidas, contacte o responsável pela gestão de saúde da instituição.</p>
             </div>
-            <div style="flex:1;min-width:100px;background:#fee2e2;border-radius:10px;padding:14px 18px;border-left:4px solid #dc2626;">
-                <div style="font-size:10px;color:#991b1b;font-weight:700;text-transform:uppercase;">Pendências</div>
-                <div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:2px;">${totalPendentes}</div>
-            </div>
-            <div style="flex:1;min-width:100px;background:#fff7ed;border-radius:10px;padding:14px 18px;border-left:4px solid #ea580c;">
-                <div style="font-size:10px;color:#9a3412;font-weight:700;text-transform:uppercase;">Acolhidos</div>
-                <div style="font-size:22px;font-weight:800;color:#ea580c;margin-top:2px;">${totalAcolhidos}</div>
-            </div>
-        </div>
-        <h2 style="font-size:12px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.8px;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:14px;">✅ Medicação Administrada (Tomados)</h2>
-        ${conteudoTabelaTomados}
-        <h2 style="font-size:12px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:0.8px;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:14px;margin-top:32px;page-break-before:always;">❌ Medicação Não Administrada (Pendências)</h2>
-        ${conteudoTabelaPendentes}
-        <div style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6;">
-            <p>Este relatório foi gerado automaticamente pelo sistema Farmed e tem caráter informativo e de controlo interno.</p>
-            <p>Em caso de dúvidas, contacte o responsável pela gestão de saúde da instituição.</p>
-        </div>`;
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() { window.close(); };
+                };
+            <\/script>
+        </body>
+        </html>`;
 
-        document.body.appendChild(divPdf);
-        html2pdf().set({
-            margin: [10,10,10,10],
-            filename: `Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}.pdf`,
-            html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 780, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
-        }).from(divPdf).save().then(() => {
-            document.body.removeChild(divPdf);
-        }).catch(() => {
-            if (divPdf.parentNode) document.body.removeChild(divPdf);
-        });
+        const blob = new Blob([htmlConteudo], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const janela = window.open(url, '_blank', 'width=900,height=700');
+        if (!janela) {
+            alert("O navegador bloqueou a janela popup. Por favor, permita popups para este site e tente novamente.");
+            URL.revokeObjectURL(url);
+            return;
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
 
 
