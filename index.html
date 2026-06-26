@@ -733,10 +733,7 @@
         const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
         
         select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
-            nomesUnicos.map(n => {
-                const idPaciente = registros.find(r => r.nome === n).id;
-                return `<option value="${idPaciente}">${n}</option>`;
-            }).join('');
+            nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
 
         // Popula o select de "Horário Fixo" do modal de Cadastro/Edição
         // (esse select ficava vazio porque nada o preenchia antes)
@@ -880,10 +877,7 @@
         const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
         
         select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
-            nomesUnicos.map(n => {
-                const idPaciente = registros.find(r => r.nome === n).id;
-                return `<option value="${idPaciente}">${n}</option>`;
-            }).join('');
+            nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
         document.getElementById('conteudoRelatorioGeral').innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:10px;">Preencha os filtros e clique em Buscar</p>';
         document.getElementById('relatorioDataInicio').value = "";
         document.getElementById('relatorioDataFim').value = "";
@@ -909,11 +903,11 @@
     }
 
     async function buscarRelatorioGeral() {
-        const pacId = document.getElementById('relatorioPacienteSelect').value;
+        const pacSelecionado = document.getElementById('relatorioPacienteSelect').value;
         let dataIn = document.getElementById('relatorioDataInicio').value;
         let dataFim = document.getElementById('relatorioDataFim').value;
         const horarioFiltro = (document.getElementById('relatorioHorarioSelect') || {}).value || '';
-        if(!pacId) return alert("Selecione um paciente ou a opção de Todos!");
+        if(!pacSelecionado) return alert("Selecione um paciente ou a opção de Todos!");
         const btn = document.getElementById('btnBuscarRelatorio');
         btn.disabled = true;
         btn.innerText = "A pesquisar...";
@@ -921,7 +915,12 @@
         // IMPORTANTE: quando o acolhido não é marcado no checklist, NENHUM registo é gravado no banco
         // (toggleMedicacao só grava status:true ao marcar, e APAGA a linha ao desmarcar).
         // Por isso, "não tomado" não pode ser detetado filtrando status=false — esse valor nunca existe.
-        // A pendência é detetada pela AUSÊNCIA de registo "tomado" para o acolhido/data/horário esperado.
+        // A pendência é detetada pela AUSÊNCIA de registo "tomado" para a linha/remédio/data/horário esperado.
+
+        // NOTA: cada linha da tabela "pacientes" representa, na prática, 1 remédio com 1 horário
+        // (o mesmo nome se repete em várias linhas quando a pessoa toma vários remédios).
+        // O filtro "pacSelecionado" guarda o NOME (ou "todos"), nunca mais o id de uma única linha,
+        // para que TODAS as linhas/remédios daquela pessoa sejam consideradas.
 
         // Sem filtro de data: assume-se apenas o dia de hoje (mesmo período mostrado no painel principal)
         if (!dataIn && !dataFim) { dataIn = obterDataAtualLocal(); dataFim = dataIn; }
@@ -929,7 +928,6 @@
         else if (!dataIn && dataFim) { dataIn = dataFim; }
 
         let query = supabaseClient.from('registro_medicacao').select('*').gte('data', dataIn).lte('data', dataFim);
-        if (pacId !== 'todos') query = query.eq('paciente_id', pacId);
         if (horarioFiltro) query = query.eq('horario', horarioFiltro);
 
         const { data: registosTomados, error } = await query;
@@ -940,48 +938,39 @@
         const container = document.getElementById('conteudoRelatorioGeral');
         if (error) { container.innerHTML = `<p style="color:#ef4444; padding:10px;">Erro: ${error.message}</p>`; return; }
 
-        let pacientesAlvo = pacId === 'todos' ? registros.slice() : registros.filter(r => String(r.id) === String(pacId));
-        if (horarioFiltro && pacId === 'todos') pacientesAlvo = pacientesAlvo.filter(p => p.hora === horarioFiltro);
-        if (pacId === 'todos') pacientesAlvo = pacientesAlvo.filter(p => !!p.hora);
+        // Linhas-alvo: cada linha = 1 remédio + 1 horário de uma pessoa
+        let linhasAlvo = pacSelecionado === 'todos' ? registros.slice() : registros.filter(r => r.nome === pacSelecionado);
+        linhasAlvo = linhasAlvo.filter(r => !!r.hora);
+        if (horarioFiltro) linhasAlvo = linhasAlvo.filter(r => r.hora === horarioFiltro);
 
         const datasIntervalo = gerarIntervaloDatas(dataIn, dataFim);
 
         const universoCompleto = [];
-        pacientesAlvo.forEach(pac => {
+        linhasAlvo.forEach(linha => {
             datasIntervalo.forEach(dataDia => {
-                if (pac.data_prescricao && dataDia < pac.data_prescricao) return;
-                let horariosVerificar;
-                if (horarioFiltro) {
-                    horariosVerificar = [horarioFiltro];
-                } else if (pacId !== 'todos') {
-                    horariosVerificar = horariosAtivos.slice();
+                if (linha.data_prescricao && dataDia < linha.data_prescricao) return;
+                const real = (registosTomados || []).find(rm => String(rm.paciente_id) === String(linha.id) && rm.data === dataDia && rm.horario === linha.hora && (rm.status === true || rm.status === 'true'));
+                if (real) {
+                    universoCompleto.push({ ...real, _linhaPaciente: linha });
                 } else {
-                    horariosVerificar = pac.hora ? [pac.hora] : [];
+                    universoCompleto.push({ paciente_id: linha.id, data: dataDia, horario: linha.hora, status: false, _semRegisto: true, _linhaPaciente: linha });
                 }
-                horariosVerificar.forEach(horarioDose => {
-                    const real = (registosTomados || []).find(rm => String(rm.paciente_id) === String(pac.id) && rm.data === dataDia && rm.horario === horarioDose && (rm.status === true || rm.status === 'true'));
-                    if (real) {
-                        universoCompleto.push(real);
-                    } else {
-                        universoCompleto.push({ paciente_id: pac.id, data: dataDia, horario: horarioDose, status: false, _semRegisto: true });
-                    }
-                });
             });
         });
 
-        universoCompleto.sort((a, b) => b.data.localeCompare(a.data) || a.horario.localeCompare(b.horario));
+        universoCompleto.sort((a, b) => b.data.localeCompare(a.data) || a.horario.localeCompare(b.horario) || (a._linhaPaciente.medicamento || '').localeCompare(b._linhaPaciente.medicamento || ''));
 
         const data = universoCompleto;
         window.dadosRelatorioAtual = data;
-        window.relatorioFiltros = { pacId, horarioFiltro, dataIn, dataFim };
+        window.relatorioFiltros = { pacSelecionado, horarioFiltro, dataIn, dataFim };
 
         if (!data || data.length === 0) { container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:10px;">Nenhum acolhido com horário fixo definido para este filtro.</p>`; return; }
 
         container.innerHTML = data.map(item => {
-            const paciente = registros.find(r => r.id == item.paciente_id);
-            const nomePac = paciente ? paciente.nome : 'Acolhido Eliminado';
-            const medicamentosPac = paciente ? paciente.medicamento : null;
-            
+            const linha = item._linhaPaciente;
+            const nomePac = linha ? linha.nome : 'Acolhido Eliminado';
+            const medicamentoLinha = linha ? linha.medicamento : null;
+
             // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
             const isTomado = item.status === true || item.status === 'true';
             
@@ -989,8 +978,8 @@
             <div class="relatorio-item" style="align-items: flex-start;">
                 <div style="display:flex; flex-direction:column; gap:4px; flex: 1;">
                     <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
-                    ${pacId === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
-                    ${medicamentosPac ? `<small style="color:#e2e8f0; font-style: italic; background:#1e293b; padding:4px 8px; border-radius:6px; margin-top:3px; display:inline-block; width: fit-content;">💊 ${medicamentosPac}</small>` : ''}
+                    ${pacSelecionado === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
+                    ${medicamentoLinha ? `<small style="color:#e2e8f0; font-style: italic; background:#1e293b; padding:4px 8px; border-radius:6px; margin-top:3px; display:inline-block; width: fit-content;">💊 ${medicamentoLinha}</small>` : ''}
                 </div>
                 <span style="font-weight: bold; background: ${isTomado ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isTomado ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content; white-space: nowrap;">
                     ${isTomado ? '✅ TOMADO' : '❌ PENDENTE'}
@@ -1020,9 +1009,9 @@
             lista.forEach(item => {
                 const pac = registros.find(r => r.id == item.paciente_id);
                 const nome = pac ? pac.nome : 'Acolhido N/D';
-                const meds = pac ? (pac.medicamento || 'Não informado') : 'Não informado';
-                if (!porAcolhido[nome]) porAcolhido[nome] = { medicamentos: meds, ocorrencias: [] };
-                porAcolhido[nome].ocorrencias.push({ data: item.data, horario: item.horario });
+                const med = pac ? (pac.medicamento || 'Não informado') : 'Não informado';
+                if (!porAcolhido[nome]) porAcolhido[nome] = { ocorrencias: [] };
+                porAcolhido[nome].ocorrencias.push({ data: item.data, horario: item.horario, medicamento: med });
             });
             return porAcolhido;
         }
@@ -1039,7 +1028,7 @@
                         <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#1e293b;">${nome}</td>
                         <td style="padding:9px 12px;font-size:13px;color:#334155;">${formatarDataBr(oc.data)}</td>
                         <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${oc.horario}</td>
-                        <td style="padding:9px 12px;font-size:12px;color:#64748b;font-style:italic;">${info.medicamentos}</td>
+                        <td style="padding:9px 12px;font-size:12px;color:#64748b;font-style:italic;">${oc.medicamento}</td>
                         <td style="padding:9px 12px;text-align:center;"><span style="background:${situacaoBg};color:${situacaoCor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${situacaoBorda};">${situacaoLabel}</span></td>
                     </tr>`;
                 });
