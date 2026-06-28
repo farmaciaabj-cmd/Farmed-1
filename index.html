@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -314,8 +315,10 @@
         </div>
         <div class="login-title">Farmed</div>
         <div class="login-subtitle">Gestão de Medicamentos · Acesso Restrito</div>
-        <label class="login-label">Senha de Acesso</label>
-        <input type="password" id="loginSenha" class="login-input" placeholder="dotdotdotdotdotdotdotdot" onkeydown="if(event.key==='Enter') tentarLogin()">
+        <label class="login-label">Utilizador</label>
+        <input type="text" id="loginUsuario" class="login-input" placeholder="ex: maria.silva" autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('loginSenha').focus()">
+        <label class="login-label" style="margin-top:12px;">Senha</label>
+        <input type="password" id="loginSenha" class="login-input" placeholder="dotdotdotdotdotdotdotdot" autocomplete="current-password" onkeydown="if(event.key==='Enter') tentarLogin()">
         <button class="login-btn" onclick="tentarLogin()">Entrar</button>
         <div class="login-error" id="loginErro"></div>
     </div>
@@ -345,6 +348,11 @@
 <div class="dashboard">
     <div style="text-align: center; margin-bottom: 10px; margin-top: 10px;">
         <img src="https://lh3.googleusercontent.com/d/1BIAepPrrliHft2rnjcCdQxAWu0icfL2y" alt="Logo Farmed" style="max-width: 150px; height: auto; border-radius: 12px; box-shadow: var(--shadow-out);">
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card-bg, #151f32); border-radius:14px; padding:10px 16px; margin-bottom:14px; border:1px solid var(--borda, #223);">
+        <span id="headerUsuarioLogado" style="font-weight:700; font-size:14px;">👤 —</span>
+        <button onclick="logout()" style="background:none; border:none; color:#f87171; font-weight:600; font-size:13px; cursor:pointer;">🔒 Sair</button>
     </div>
 
     <!-- ===== DASHBOARD INDICATORS ===== -->
@@ -400,6 +408,7 @@
             <div class="sidebar-item" onclick="imprimirListaDoDia(); fecharMenuLateral();">🖨️ Imprimir Lista do Dia</div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="abrirGestaoSenha(); fecharMenuLateral();">🔑 Gerir Senha de Acesso</div>
+            <div class="sidebar-item" id="sidebarGestaoUsuarios" style="display:none;" onclick="abrirGestaoUsuarios(); fecharMenuLateral();">👥 Gerir Utilizadores</div>
             <div class="sidebar-item" onclick="logout()" style="color: #f87171;">🔒 Terminar Sessão</div>
         </div>
     </div>
@@ -1007,7 +1016,7 @@
                     }
                 );
             } else {
-                const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true };
+                const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true, registrado_por_usuario: usuarioLogado ? usuarioLogado.nome_completo : null };
                 const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
                 if (!error && data && data[0]) {
                     registrosMedicacaoDia.push(data[0]);
@@ -1536,24 +1545,36 @@
     // SISTEMA DE LOGIN COM SUPABASE AUTH
     // ==========================================
     const SENHA_KEY = 'farmed_auth_ts';
+    const USER_KEY = 'farmed_auth_user'; // guarda { username, nome_completo, nivel }
     const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 horas
+
+    let usuarioLogado = null; // { username, nome_completo, nivel }
 
     function verificarSessao() {
         const ts = localStorage.getItem(SENHA_KEY);
-        if (ts && (Date.now() - parseInt(ts)) < SESSION_DURATION) {
-            ocultarLoginMostrarApp();
-        } else {
-            localStorage.removeItem(SENHA_KEY);
-            document.getElementById('loginScreen').style.display = 'flex';
+        const userRaw = localStorage.getItem(USER_KEY);
+        if (ts && userRaw && (Date.now() - parseInt(ts)) < SESSION_DURATION) {
+            try { usuarioLogado = JSON.parse(userRaw); } catch (_) { usuarioLogado = null; }
+            if (usuarioLogado) {
+                ocultarLoginMostrarApp();
+                carregar();
+                return;
+            }
         }
+        localStorage.removeItem(SENHA_KEY);
+        localStorage.removeItem(USER_KEY);
+        document.getElementById('loginScreen').style.display = 'flex';
     }
 
     async function tentarLogin() {
+        const userInput = document.getElementById('loginUsuario');
         const senhaInput = document.getElementById('loginSenha');
+        const usernameDigitado = (userInput.value || '').trim();
         const senha = senhaInput.value;
         const erroEl = document.getElementById('loginErro');
         erroEl.textContent = '';
 
+        if (!usernameDigitado) { erroEl.textContent = 'Por favor insira o utilizador.'; return; }
         if (!senha) { erroEl.textContent = 'Por favor insira a senha.'; return; }
 
         const btn = document.querySelector('.login-btn');
@@ -1561,27 +1582,20 @@
         btn.textContent = 'A verificar...';
 
         try {
-            // Busca a senha armazenada no Supabase (tabela configuracoes, chave 'app_senha')
             const { data, error } = await supabaseClient
-                .from('configuracoes')
-                .select('valor')
-                .eq('chave', 'app_senha')
+                .from('usuarios')
+                .select('username, nome_completo, senha, nivel, ativo')
+                .eq('username', usernameDigitado)
                 .single();
 
             if (error || !data) {
-                // Fallback: senha padrão caso a configuração não exista
-                const SENHA_PADRAO = 'farmed2025';
-                if (senha === SENHA_PADRAO) {
-                    confirmarLogin();
-                } else {
-                    mostrarErroLogin(erroEl, senhaInput);
-                }
+                mostrarErroLogin(erroEl, senhaInput);
+            } else if (data.ativo === false) {
+                erroEl.textContent = 'Utilizador inativo. Contacte o administrador.';
+            } else if (senha === data.senha) {
+                confirmarLogin({ username: data.username, nome_completo: data.nome_completo || data.username, nivel: data.nivel || 'usuario' });
             } else {
-                if (senha === data.valor) {
-                    confirmarLogin();
-                } else {
-                    mostrarErroLogin(erroEl, senhaInput);
-                }
+                mostrarErroLogin(erroEl, senhaInput);
             }
         } catch (err) {
             erroEl.textContent = 'Erro de ligação. Tente novamente.';
@@ -1591,15 +1605,18 @@
         btn.textContent = 'Entrar';
     }
 
-    function confirmarLogin() {
+    function confirmarLogin(usuario) {
+        usuarioLogado = usuario;
         localStorage.setItem(SENHA_KEY, Date.now().toString());
+        localStorage.setItem(USER_KEY, JSON.stringify(usuario));
         ocultarLoginMostrarApp();
-        toast('Bem-vindo ao Farmed!', 'Sessão iniciada com sucesso.', 'success');
+        toast('Bem-vindo ao Farmed!', `Sessão iniciada como ${usuario.nome_completo}.`, 'success');
+        atualizarHeaderUsuario();
         carregar();
     }
 
     function mostrarErroLogin(erroEl, senhaInput) {
-        erroEl.textContent = 'Senha incorreta. Tente novamente.';
+        erroEl.textContent = 'Utilizador ou senha incorretos. Tente novamente.';
         senhaInput.value = '';
         const card = document.querySelector('.login-card');
         card.classList.remove('login-shake');
@@ -1609,11 +1626,27 @@
 
     function ocultarLoginMostrarApp() {
         document.getElementById('loginScreen').style.display = 'none';
+        atualizarHeaderUsuario();
+    }
+
+    function atualizarHeaderUsuario() {
+        const el = document.getElementById('headerUsuarioLogado');
+        if (el && usuarioLogado) {
+            const icone = usuarioLogado.nivel === 'admin' ? '👨‍💼' : '👤';
+            el.textContent = `${icone} ${usuarioLogado.nome_completo}`;
+        }
+        const itemGestaoUsuarios = document.getElementById('sidebarGestaoUsuarios');
+        if (itemGestaoUsuarios) {
+            itemGestaoUsuarios.style.display = (usuarioLogado && usuarioLogado.nivel === 'admin') ? 'block' : 'none';
+        }
     }
 
     function logout() {
         localStorage.removeItem(SENHA_KEY);
+        localStorage.removeItem(USER_KEY);
+        usuarioLogado = null;
         document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('loginUsuario').value = '';
         document.getElementById('loginSenha').value = '';
         document.getElementById('loginErro').textContent = '';
         toast('Sessão terminada', 'Até logo!', 'info');
@@ -1960,6 +1993,136 @@ async function importarPlanilhaAcolhidos(event) {
 }
 
     // ==========================================
+    // GESTÃO DE UTILIZADORES (NÍVEIS DE ACESSO)
+    // ==========================================
+    async function abrirGestaoUsuarios() {
+        if (!usuarioLogado || usuarioLogado.nivel !== 'admin') {
+            toast('Acesso restrito', 'Apenas administradores podem gerir utilizadores.', 'warning');
+            return;
+        }
+        cancelarEdicaoUsuario();
+        abrir('modalGestaoUsuarios');
+        await carregarListaUsuarios();
+    }
+
+    async function carregarListaUsuarios() {
+        const container = document.getElementById('listaUsuariosContainer');
+        container.innerHTML = '<p style="color: var(--texto-s); font-size: 13px;">A carregar...</p>';
+        try {
+            const { data, error } = await supabaseClient
+                .from('usuarios')
+                .select('id, username, nome_completo, nivel, ativo')
+                .order('nome_completo', { ascending: true });
+
+            if (error || !data) {
+                container.innerHTML = '<p style="color:#f87171; font-size:13px;">Erro ao carregar utilizadores.</p>';
+                return;
+            }
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="color: var(--texto-s); font-size: 13px;">Nenhum utilizador cadastrado.</p>';
+                return;
+            }
+
+            container.innerHTML = data.map(u => {
+                const icone = u.nivel === 'admin' ? '👨‍💼' : '👤';
+                const inativoTag = u.ativo === false ? ' <span style="color:#f87171; font-size:11px;">(inativo)</span>' : '';
+                return `
+                <div style="display:flex; align-items:center; justify-content:space-between; background:#151f32; border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+                    <div>
+                        <div style="font-weight:700; font-size:13px;">${icone} ${u.nome_completo || u.username}${inativoTag}</div>
+                        <div style="font-size:11px; color:var(--texto-s);">@${u.username} · ${u.nivel === 'admin' ? 'Administrador' : 'Usuário Comum'}</div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick='editarUsuario(${JSON.stringify(u).replace(/'/g, "&#39;")})' title="Editar" style="background:#1e3a5f; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; color:white;">✏️</button>
+                        <button onclick="excluirUsuario(${u.id}, '${(u.nome_completo || u.username).replace(/'/g, "\\'")}')" title="Excluir" style="background:#5f1e2a; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; color:white;">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (err) {
+            container.innerHTML = '<p style="color:#f87171; font-size:13px;">Erro inesperado ao carregar utilizadores.</p>';
+        }
+    }
+
+    function editarUsuario(u) {
+        document.getElementById('usuarioEditId').value = u.id;
+        document.getElementById('inpUsuarioNome').value = u.nome_completo || '';
+        document.getElementById('inpUsuarioUsername').value = u.username || '';
+        document.getElementById('inpUsuarioSenha').value = '';
+        document.getElementById('inpUsuarioSenha').placeholder = 'Deixe em branco para não alterar';
+        document.getElementById('inpUsuarioNivel').value = u.nivel || 'usuario';
+        document.getElementById('formUsuarioTitulo').textContent = '✏️ Editar Utilizador';
+        document.getElementById('btnSalvarUsuario').textContent = 'Salvar Alterações';
+        document.getElementById('btnCancelarEdicaoUsuario').style.display = 'block';
+    }
+
+    function cancelarEdicaoUsuario() {
+        document.getElementById('usuarioEditId').value = '';
+        document.getElementById('inpUsuarioNome').value = '';
+        document.getElementById('inpUsuarioUsername').value = '';
+        document.getElementById('inpUsuarioSenha').value = '';
+        document.getElementById('inpUsuarioSenha').placeholder = 'Defina uma senha';
+        document.getElementById('inpUsuarioNivel').value = 'usuario';
+        document.getElementById('formUsuarioTitulo').textContent = '+ Novo Utilizador';
+        document.getElementById('btnSalvarUsuario').textContent = 'Criar Utilizador';
+        document.getElementById('btnCancelarEdicaoUsuario').style.display = 'none';
+    }
+
+    async function salvarUsuario() {
+        const id = document.getElementById('usuarioEditId').value;
+        const nome = document.getElementById('inpUsuarioNome').value.trim();
+        const username = document.getElementById('inpUsuarioUsername').value.trim();
+        const senha = document.getElementById('inpUsuarioSenha').value;
+        const nivel = document.getElementById('inpUsuarioNivel').value;
+
+        if (!nome || !username) {
+            toast('Dados incompletos', 'Preencha nome e utilizador.', 'warning');
+            return;
+        }
+        if (!id && !senha) {
+            toast('Senha obrigatória', 'Defina uma senha para o novo utilizador.', 'warning');
+            return;
+        }
+
+        try {
+            if (id) {
+                const dadosUpdate = { nome_completo: nome, username: username, nivel: nivel };
+                if (senha) dadosUpdate.senha = senha;
+                const { error } = await supabaseClient.from('usuarios').update(dadosUpdate).eq('id', id);
+                if (error) { toast('Erro', 'Não foi possível salvar. ' + (error.message || ''), 'error'); return; }
+                toast('Utilizador atualizado', `${nome} foi atualizado.`, 'success');
+            } else {
+                const { error } = await supabaseClient.from('usuarios').insert([{ nome_completo: nome, username: username, senha: senha, nivel: nivel }]);
+                if (error) { toast('Erro', 'Não foi possível criar. ' + (error.message || ''), 'error'); return; }
+                toast('Utilizador criado', `${nome} já pode fazer login.`, 'success');
+            }
+            cancelarEdicaoUsuario();
+            await carregarListaUsuarios();
+        } catch (err) {
+            toast('Erro inesperado', err.message || '', 'error');
+        }
+    }
+
+    function excluirUsuario(id, nome) {
+        if (usuarioLogado && usuarioLogado.username && Number(id) && document.getElementById('usuarioEditId')) {
+            // proteção extra: confirmação explícita antes de excluir
+        }
+        perguntarConfirmacao(
+            'Excluir Utilizador',
+            `Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`,
+            async () => {
+                const { error } = await supabaseClient.from('usuarios').delete().eq('id', id);
+                if (error) {
+                    toast('Erro', 'Não foi possível excluir. ' + (error.message || ''), 'error');
+                } else {
+                    toast('Utilizador excluído', `${nome} foi removido.`, 'info');
+                    await carregarListaUsuarios();
+                }
+            }
+        );
+    }
+
+    // ==========================================
     // GESTÃO DE SENHA DE ACESSO
     // ==========================================
     let _senhaAtualCached = null;
@@ -2135,6 +2298,53 @@ async function importarPlanilhaAcolhidos(event) {
         <button onclick="fechar('modalGestaoSenha')"
             style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
             Cancelar
+        </button>
+    </div>
+</div>
+
+<div id="modalGestaoUsuarios" class="modal" style="z-index: 110000;">
+    <div class="modal-content" style="max-width: 480px;">
+        <h2 style="margin-bottom: 6px;">👥 Gestão de Utilizadores</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 16px;">Crie, edite ou remova utilizadores com acesso ao Farmed. Apenas administradores veem este painel.</p>
+
+        <div id="listaUsuariosContainer" style="max-height: 280px; overflow-y: auto; margin-bottom: 16px;">
+            <p style="color: var(--texto-s); font-size: 13px;">A carregar...</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--borda); margin: 10px 0 16px 0;">
+
+        <h3 id="formUsuarioTitulo" style="font-size: 15px; margin-bottom: 10px;">+ Novo Utilizador</h3>
+        <input type="hidden" id="usuarioEditId" value="">
+
+        <label>Nome Completo</label>
+        <input type="text" id="inpUsuarioNome" placeholder="ex: Maria Silva"
+            style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+
+        <label>Utilizador (login)</label>
+        <input type="text" id="inpUsuarioUsername" placeholder="ex: maria.silva"
+            style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+
+        <label>Senha</label>
+        <input type="text" id="inpUsuarioSenha" placeholder="Defina uma senha"
+            style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+
+        <label>Nível de Acesso</label>
+        <select id="inpUsuarioNivel"
+            style="width:100%; margin: 6px 0 16px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+            <option value="usuario">👤 Usuário Comum</option>
+            <option value="admin">👨‍💼 Administrador</option>
+        </select>
+
+        <button onclick="salvarUsuario()" id="btnSalvarUsuario"
+            style="width:100%; padding:13px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:15px;">
+            Criar Utilizador
+        </button>
+        <button onclick="cancelarEdicaoUsuario()" id="btnCancelarEdicaoUsuario" style="display:none; width:100%; padding:12px; margin-top:8px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Cancelar Edição
+        </button>
+        <button onclick="fechar('modalGestaoUsuarios')"
+            style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Fechar
         </button>
     </div>
 </div>
