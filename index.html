@@ -918,6 +918,7 @@
         }).join('') + `
             <div style="display:flex; gap:10px; margin-left:auto; align-items:center;">
                 <button class="btn-plus" style="width: 38px; height: 38px;" onclick="adicionarNovoHorario()" title="Adicionar Horário Extra">+</button>
+                <button class="btn-plus" style="width: auto; padding: 0 12px; height: 38px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap;" onclick="marcarTodosHorario()" title="Marcar todos como tomado neste horário">✅ Todos</button>
                 <button class="btn-calendario-header" onclick="abrirModalRelatorioGeral()" title="Relatório de Medicamentos">📅 Relatório</button>
             </div>
         `;
@@ -1029,6 +1030,64 @@
             console.error("ERRO INESPERADO:", error);
             toast("Erro inesperado", "Verifique o console do navegador (F12) para detalhes.", "error");
         }
+    }
+
+    // ==========================================
+    // MARCAR TODOS DO HORÁRIO ATUAL
+    // ==========================================
+    async function marcarTodosHorario() {
+        const hoje = obterDataAtualLocal();
+        // Filtra apenas os registos do horário atual (sem busca por texto)
+        const filtrados = registros.filter(r => r.hora === horaAtual);
+        if (filtrados.length === 0) {
+            toast("Aviso", "Nenhum acolhido neste horário.", "warning");
+            return;
+        }
+
+        // Identifica quais ainda NÃO foram marcados
+        const pendentes = filtrados.filter(r => {
+            const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horaAtual);
+            return !(existente && (existente.status === true || existente.status === 'true'));
+        });
+
+        if (pendentes.length === 0) {
+            toast("Informação", "Todos os acolhidos deste horário já foram marcados como tomado.", "info");
+            return;
+        }
+
+        perguntarConfirmacao(
+            "Marcar Todos",
+            `Deseja marcar ${pendentes.length} acolhido(s) do horário "${horaAtual}" como TOMADO?`,
+            async () => {
+                try {
+                    const novosRegistros = pendentes.map(r => ({
+                        paciente_id: r.id,
+                        data: hoje,
+                        horario: horaAtual,
+                        status: true,
+                        registrado_por_usuario: usuarioLogado ? usuarioLogado.nome_completo : null
+                    }));
+
+                    const { data, error } = await supabaseClient
+                        .from('registro_medicacao')
+                        .insert(novosRegistros)
+                        .select();
+
+                    if (!error && data) {
+                        registrosMedicacaoDia.push(...data);
+                        renderizar();
+                        atualizarDashboard();
+                        toast("Sucesso", `${data.length} acolhido(s) marcados como tomado no horário ${horaAtual}!`, "success");
+                    } else {
+                        console.error("ERRO AO MARCAR TODOS:", error);
+                        toast("Erro", "Falha ao salvar as marcações. Verifique o console (F12).", "error");
+                    }
+                } catch (err) {
+                    console.error("ERRO INESPERADO:", err);
+                    toast("Erro inesperado", "Verifique o console do navegador (F12).", "error");
+                }
+            }
+        );
     }
 
     // ==========================================
@@ -1247,20 +1306,25 @@
             <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Horário</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${horarioLabel}</div></div>
             <div class="card" style="background:#dcfce7;border-left:4px solid #16a34a"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#166534">Tomados</div><div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:4px">${totalTomados}</div></div>
             <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Pendências</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${totalPendentes}</div></div>
-            <div class="card" style="background:#fff7ed;border-left:4px solid #ea580c"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9a3412">Acolhidos</div><div style="font-size:22px;font-weight:800;color:#ea580c;margin-top:4px">${totalAcolhidos}</div></div>
         </div>
         <h2 style="color:#166534">Medicação Administrada (Tomados)</h2>
         ${conteudoTabelaTomados}
         <h2 style="color:#b91c1c;margin-top:32px">Medicação Não Administrada (Pendências)</h2>
         ${conteudoTabelaPendentes}
         <div class="rodape"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
-        <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
+        <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
         </body></html>`;
         const _blob = new Blob([_htmlPdf], {type:'text/html;charset=utf-8'});
         const _url = URL.createObjectURL(_blob);
-        const _jan = window.open(_url, '_blank', 'width=900,height=700');
-        if (!_jan) { toast("Popups bloqueados", "Permita popups neste site e tente novamente.", "warning"); URL.revokeObjectURL(_url); return; }
-        setTimeout(() => URL.revokeObjectURL(_url), 60000);
+        const _nomeArquivo = `Relatorio_Medicacao_${new Date().toISOString().slice(0,10)}.html`;
+        const _a = document.createElement('a');
+        _a.href = _url;
+        _a.download = _nomeArquivo;
+        document.body.appendChild(_a);
+        _a.click();
+        document.body.removeChild(_a);
+        setTimeout(() => URL.revokeObjectURL(_url), 10000);
+        toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar \u2192 Guardar como PDF'.", "success");
     }
 
 
@@ -1846,7 +1910,7 @@
                 </div>`;
         });
 
-        const total = medAtivos.length;
+        const totalAcolhidos = new Set(medAtivos.map(r => r.nome)).size;
         const htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
         <title>Lista de Medicamentos — ${hoje}</title>
         <style>
@@ -1858,17 +1922,23 @@
         </style></head>
         <body>
             <h1>Lista de Medicamentos — ${diaFormatado}</h1>
-            <div class="subtitulo">Emitido às ${horaEmissao} · Total: ${total} registo(s)</div>
+            <div class="subtitulo">Emitido às ${horaEmissao} · Total: ${totalAcolhidos} acolhido(s)</div>
             ${tabelasHtml || '<p style="color: #888; text-align: center; padding: 40px;">Nenhum medicamento registado para hoje.</p>'}
             <div class="rodape">Gerado automaticamente pelo sistema Farmed.</div>
-            <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
+            <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1a5276;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
         </body></html>`;
 
         const blob = new Blob([htmlPdf], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const jan = window.open(url, '_blank', 'width=900,height=700');
-        if (!jan) { toast('Popups bloqueados', 'Permita popups neste site e tente novamente.', 'warning'); URL.revokeObjectURL(url); return; }
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        const nomeArquivo = `Lista_Medicamentos_${hoje}.html`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        toast("Lista gerada", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar \u2192 Guardar como PDF'.", "success");
     }
     // ==========================================
     // IMPORTAÇÃO DE EXCEL (PLANILHA)
