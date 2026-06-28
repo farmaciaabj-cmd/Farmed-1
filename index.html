@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -217,7 +216,7 @@
         .card-saida-paciente { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: var(--shadow-out); border-left: 5px solid #22c55e; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; }
         .card-saida-paciente.realizado { border-left-color: #475569; opacity: 0.65; }
         .card-saida-conteudo { flex: 1; }
-        .card-saida-paciente h4 { color: #fff; margin-bottom: 5px; font-size: 15px; }
+        .card-saida-paciente h4 { color: var(--texto-p); margin-bottom: 5px; font-size: 15px; }
         .card-saida-paciente p { font-size: 13px; color: var(--texto-s); margin-bottom: 8px; }
         .check-realizado-card { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texto-s); margin-top: 4px; cursor: pointer; user-select: none; }
         .check-realizado-card input { width: 17px; height: 17px; accent-color: #22c55e; cursor: pointer; margin: 0; }
@@ -422,7 +421,7 @@
 
     <div class="top-nav">
         <button class="menu-toggle" onclick="abrirMenuLateral()">&#9776;</button>
-        <input type="text" id="searchInput" class="search-input" placeholder="&#128269; Procurar acolhido..." onkeyup="renderizar()">
+        <input type="text" id="searchInput" class="search-input" placeholder="&#128269; Procurar por acolhido ou medicamento..." onkeyup="renderizar()">
     </div>
 
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="fecharMenuLateral()"></div>
@@ -481,6 +480,9 @@
         
         <label>Data de Prescrição</label>
         <input type="date" id="inpDataPrescricao">
+
+        <label>📋 Validade da Receita</label>
+        <input type="date" id="inpReceitaValida">
         
         <label>Última Retirada (data do início do lote)</label>
         <input type="date" id="inpUltimaRetirada">
@@ -787,7 +789,21 @@
 
     function buildCardEstoque(alerta) {
         return alerta.medicamentos.map(m => {
-            const receitaTag = m.receita_valida === true ? `<span class="alerta-receita-tag valida">✓ Receita Válida</span>` : m.receita_valida === false ? `<span class="alerta-receita-tag invalida">✗ Receita Inválida</span>` : `<span class="alerta-receita-tag nd">— Receita N/D</span>`;
+            let receitaTag;
+            if (m.receita_valida) {
+                const hoje = new Date(); hoje.setHours(0,0,0,0);
+                const validade = new Date(m.receita_valida + 'T00:00:00');
+                const diasRestantes = Math.round((validade - hoje) / 86400000);
+                if (diasRestantes < 0) {
+                    receitaTag = `<span class="alerta-receita-tag invalida">✗ Receita Vencida (${formatarDataBr(m.receita_valida)})</span>`;
+                } else if (diasRestantes <= 30) {
+                    receitaTag = `<span class="alerta-receita-tag atencao" style="background:#713f12;color:#fde68a;">⚠️ Vence em ${diasRestantes}d (${formatarDataBr(m.receita_valida)})</span>`;
+                } else {
+                    receitaTag = `<span class="alerta-receita-tag valida">✓ Receita Válida até ${formatarDataBr(m.receita_valida)}</span>`;
+                }
+            } else {
+                receitaTag = `<span class="alerta-receita-tag nd">— Receita N/D</span>`;
+            }
             const mStatus = m.diasFaltantes < 0 ? 'critico' : (m.diasFaltantes <= 5 ? 'atencao' : 'ok');
             return `
             <div class="alerta-card">
@@ -1470,17 +1486,24 @@
         toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar \u2192 Guardar como PDF'.", "success");
     }
 
-
     function renderizar() {
-        const termo = document.getElementById('searchInput').value.toLowerCase();
+        const termo = document.getElementById('searchInput').value.toLowerCase().trim();
         const lista = document.getElementById('lista-registros');
         if (!lista) return;
-        
-        let filtrados = registros.filter(r => termo !== "" ? (r.nome || "").toLowerCase().includes(termo) : r.hora === horaAtual);
+
+        const buscaAtiva = termo !== "";
+        const buscaNome = buscaAtiva && registros.some(r => (r.nome || "").toLowerCase().includes(termo));
+        const buscaMed  = buscaAtiva && registros.some(r => (r.medicamento || "").toLowerCase().includes(termo));
+
+        let filtrados = registros.filter(r => {
+            if (!buscaAtiva) return r.hora === horaAtual;
+            return (r.nome || "").toLowerCase().includes(termo) || (r.medicamento || "").toLowerCase().includes(termo);
+        });
         filtrados.sort((a, b) => {
             const aTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == a.id && rm.horario === horaAtual && (rm.status === true || rm.status === 'true'));
             const bTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == b.id && rm.horario === horaAtual && (rm.status === true || rm.status === 'true'));
             if (aTomado !== bTomado) return aTomado ? 1 : -1;
+            if (buscaAtiva) return (a.hora || "").localeCompare(b.hora || "");
             return (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' });
         });
         lista.innerHTML = filtrados.map(r => {
@@ -1493,7 +1516,10 @@
             
             // Separa os medicamentos por vírgula na visualização de cartões
             const listaMeds = (r.medicamento || 'Sem medicação definida').split(',');
-            const blocoMedicamentosHtml = `<div class="med-tag-list">` + listaMeds.map(med => `<div class="med-tag-item">💊 ${med.trim()}</div>`).join('') + `</div>`;
+            const blocoMedicamentosHtml = `<div class="med-tag-list">` + listaMeds.map(med => {
+                const destaque = buscaMed && med.toLowerCase().includes(termo) ? `background: rgba(0,156,217,0.18); border-radius: 6px;` : '';
+                return `<div class="med-tag-item" style="${destaque}">💊 ${med.trim()}</div>`;
+            }).join('') + `</div>`;
 
             const registradoPor = medHoje && medHoje.registrado_por_usuario ? medHoje.registrado_por_usuario : null;
             const obsRegistro = medHoje && medHoje.observacao_registro ? medHoje.observacao_registro : null;
@@ -1503,7 +1529,7 @@
                 <div style="flex: 1; display: flex; align-items: flex-start; gap: 15px;">
                     <div class="switch ${isChecked ? 'checked' : ''}" onclick="toggleMedicacao('${r.id}')" title="Marcar como tomado" style="margin-top: 2px;"></div>
                     <div style="flex: 1;">
-                        <strong>${r.nome} ${termo !== "" ? `<span style="font-size:12px; color:var(--cor-azul);">(${r.hora})</span>` : ''}</strong>
+                        <strong>${r.nome} ${buscaAtiva ? `<span style="font-size:12px; color:var(--cor-azul); font-weight:700;">(${r.hora})</span>` : ''}</strong>
                         ${r.cpf ? `<br><small style="color: var(--cor-azul); font-weight: 600;">CPF: ${r.cpf}</small>` : ''}
                         ${blocoMedicamentosHtml}
                         ${r.observacao ? `<div style="margin-top:6px; background:#1a2744; border-left:3px solid #475569; border-radius:0 8px 8px 0; padding:6px 10px; font-size:12px; color:#94a3b8; font-style:italic; line-height:1.4;">💬 ${r.observacao}</div>` : ''}
@@ -1608,7 +1634,7 @@
         popularSelectHorariosFixo();
         document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = "";
         document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = "";
-        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; abrir('modalCadastro');
+        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; document.getElementById('inpReceitaValida').value = ""; abrir('modalCadastro');
     }
     
     function prepararEdicao(id) { 
@@ -1616,7 +1642,7 @@
         if (!item) return; popularSelectHorariosFixo(); document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
         document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
         document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
-        diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; abrir('modalCadastro'); 
+        diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; document.getElementById('inpReceitaValida').value = item.receita_valida || ""; abrir('modalCadastro'); 
     }
     
     async function salvar() { 
@@ -1625,6 +1651,7 @@
         const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
         const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
         const observacao = document.getElementById('inpObservacao').value.trim() || null;
+        const receita_valida = document.getElementById('inpReceitaValida').value || null;
         
         if (!nome) { toast("Campo obrigatório", "Por favor, preencha o nome!", "warning"); return; }
         if (cpf && !validarCPF(cpf)) { toast("CPF inválido", "O CPF introduzido não é válido! Por favor corrija.", "warning"); return; }
@@ -1634,7 +1661,7 @@
         btn.innerText = "A guardar...";
 
         const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses });
-        const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc, observacao };
+        const dados = { nome, cpf, medicamento: med, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc, observacao, receita_valida };
         let erro = null;
         if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error;
         } 
