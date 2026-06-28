@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -18,6 +19,88 @@
             --shadow-in: inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.05);
             --shadow-out: 5px 5px 15px rgba(0,0,0,0.4), -2px -2px 10px rgba(255,255,255,0.05);
         }
+
+        /* ===== TOAST SYSTEM ===== */
+        #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { display: flex; align-items: flex-start; gap: 12px; background: #1e293b; border: 1px solid var(--borda); border-radius: 14px; padding: 14px 18px; min-width: 280px; max-width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: all; transform: translateX(120%); transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.3s ease; opacity: 0; }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.hide { transform: translateX(120%); opacity: 0; }
+        .toast-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .toast-body { flex: 1; }
+        .toast-title { font-weight: 700; font-size: 14px; color: var(--texto-p); margin-bottom: 2px; }
+        .toast-msg { font-size: 13px; color: var(--texto-s); line-height: 1.4; }
+        .toast-close { background: none; border: none; color: var(--texto-s); cursor: pointer; font-size: 18px; padding: 0; line-height: 1; flex-shrink: 0; transition: color 0.2s; }
+        .toast-close:hover { color: white; }
+        .toast-bar { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 0 0 14px 14px; animation: toastBar linear forwards; }
+        .toast { position: relative; overflow: hidden; }
+        .toast.success { border-left: 4px solid #22c55e; }
+        .toast.success .toast-bar { background: #22c55e; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.error .toast-bar { background: #ef4444; }
+        .toast.warning { border-left: 4px solid #f97316; }
+        .toast.warning .toast-bar { background: #f97316; }
+        .toast.info { border-left: 4px solid var(--cor-azul); }
+        .toast.info .toast-bar { background: var(--cor-azul); }
+        @keyframes toastBar { from { width: 100%; } to { width: 0%; } }
+
+        /* ===== LOGIN SCREEN ===== */
+        #loginScreen { position: fixed; inset: 0; background: var(--bg); z-index: 1000000; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .login-card { background: var(--card-bg); border-radius: 28px; padding: 40px 36px; width: 100%; max-width: 400px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 1px solid var(--borda); }
+        .login-logo { text-align: center; margin-bottom: 28px; }
+        .login-logo img { max-width: 120px; border-radius: 12px; box-shadow: var(--shadow-out); }
+        .login-title { text-align: center; font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, var(--cor-azul) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+        .login-subtitle { text-align: center; font-size: 13px; color: var(--texto-s); margin-bottom: 28px; }
+        .login-label { font-size: 12px; color: var(--texto-s); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px; }
+        .login-input { width: 100%; padding: 13px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; font-size: 15px; box-shadow: var(--shadow-in); transition: border-color 0.2s; margin-bottom: 18px; }
+        .login-input:focus { border-color: var(--cor-azul); }
+        .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 700; font-size: 16px; box-shadow: var(--shadow-out); transition: transform 0.1s, opacity 0.2s; margin-top: 6px; }
+        .login-btn:hover { opacity: 0.9; }
+        .login-btn:active { transform: scale(0.98); }
+        .login-error { color: #f87171; font-size: 13px; text-align: center; margin-top: 10px; min-height: 20px; }
+        .login-shake { animation: shake 0.4s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+
+        /* ===== DASHBOARD INDICATORS ===== */
+        .dashboard-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+        .stat-card { background: var(--card-bg); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow-out); border: 1px solid rgba(255,255,255,0.04); position: relative; overflow: hidden; cursor: default; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .stat-card.azul::before { background: linear-gradient(90deg, #009cd9, #00d4ff); }
+        .stat-card.verde::before { background: linear-gradient(90deg, #22c55e, #4ade80); }
+        .stat-card.laranja::before { background: linear-gradient(90deg, #f97316, #fb923c); }
+        .stat-card.vermelho::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .stat-icon { font-size: 22px; margin-bottom: 8px; display: block; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--texto-p); line-height: 1; margin-bottom: 4px; }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--texto-s); text-transform: uppercase; letter-spacing: 0.4px; }
+        @media (max-width: 600px) { .dashboard-stats { grid-template-columns: repeat(2, 1fr); } .stat-value { font-size: 22px; } }
+
+        /* ===== WEEKLY VIEW ===== */
+        .semana-modal-content { background: var(--card-bg); border-radius: 24px; width: 95%; max-width: 980px; max-height: 90vh; overflow-y: auto; padding: 28px; border: 1px solid var(--borda); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); margin: auto; }
+        .semana-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--borda); }
+        .semana-nav { display: flex; align-items: center; gap: 12px; }
+        .semana-nav-btn { background: #151f32; border: 1px solid var(--borda); color: white; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .semana-nav-btn:hover { border-color: var(--cor-azul); color: var(--cor-azul); }
+        .semana-titulo-texto { font-weight: 700; font-size: 15px; color: var(--cor-azul); }
+        .semana-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .semana-col { background: #151f32; border-radius: 14px; padding: 10px 8px; min-height: 120px; }
+        .semana-col-header { text-align: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--borda); }
+        .semana-col-dia-num { font-size: 20px; font-weight: 800; color: var(--texto-p); line-height: 1; }
+        .semana-col-dia-nome { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--texto-s); letter-spacing: 0.5px; margin-top: 2px; }
+        .semana-col.hoje .semana-col-header { position: relative; }
+        .semana-col.hoje .semana-col-dia-num { color: var(--cor-azul); }
+        .semana-med-item { background: var(--card-bg); border-radius: 8px; padding: 6px 8px; margin-bottom: 5px; font-size: 11px; border-left: 3px solid var(--cor-azul); }
+        .semana-med-nome { font-weight: 700; color: var(--texto-p); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .semana-med-hora { color: var(--texto-s); font-size: 10px; margin-top: 1px; }
+        .semana-med-item.tomado { border-left-color: #22c55e; opacity: 0.7; }
+        .semana-med-item.tomado .semana-med-nome { text-decoration: line-through; color: var(--texto-s); }
+        .semana-vazio { text-align: center; color: var(--texto-s); font-size: 11px; padding: 10px 0; }
+        .semana-horario-tag { display: inline-block; background: rgba(0,156,217,0.15); color: var(--cor-azul); font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-bottom: 2px; }
+        .semana-horario-tag.tomado-tag { background: rgba(34,197,94,0.15); color: #22c55e; }
+        @media (max-width: 700px) { .semana-grade { grid-template-columns: repeat(2, 1fr); } }
+
+        /* ===== PRINT PDF ===== */
+        .btn-imprimir { background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); padding: 8px 15px; border-radius: 12px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-out); transition: all 0.2s; font-size: 14px; }
+        .btn-imprimir:hover { background: var(--cor-azul); color: white; }
         
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         
@@ -220,14 +303,77 @@
 </head>
 <body>
    
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toast-container"></div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="https://lh3.googleusercontent.com/d/1BIAepPrrliHft2rnjcCdQxAWu0icfL2y" alt="Logo Farmed">
+        </div>
+        <div class="login-title">Farmed</div>
+        <div class="login-subtitle">Gestão de Medicamentos · Acesso Restrito</div>
+        <label class="login-label">Senha de Acesso</label>
+        <input type="password" id="loginSenha" class="login-input" placeholder="dotdotdotdotdotdotdotdot" onkeydown="if(event.key==='Enter') tentarLogin()">
+        <button class="login-btn" onclick="tentarLogin()">Entrar</button>
+        <div class="login-error" id="loginErro"></div>
+    </div>
+</div>
+
+<!-- ===== MODAL VISUALIZAÇÃO SEMANAL ===== -->
+<div id="modalSemana" class="modal">
+    <div class="semana-modal-content">
+        <div class="semana-header">
+            <div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--texto-p);">Medicamentos da Semana</div>
+                <div style="font-size: 13px; color: var(--texto-s); margin-top: 3px;" id="semanaSubtitulo"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="semana-nav">
+                    <button class="semana-nav-btn" onclick="navegarSemana(-1)">&#8249;</button>
+                    <span class="semana-titulo-texto" id="semanaTitulo"></span>
+                    <button class="semana-nav-btn" onclick="navegarSemana(1)">&#8250;</button>
+                </div>
+                <button onclick="fechar('modalSemana')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+            </div>
+        </div>
+        <div class="semana-grade" id="semanaGrade"></div>
+    </div>
+</div>
+
 <div class="dashboard">
     <div style="text-align: center; margin-bottom: 10px; margin-top: 10px;">
         <img src="https://lh3.googleusercontent.com/d/1BIAepPrrliHft2rnjcCdQxAWu0icfL2y" alt="Logo Farmed" style="max-width: 150px; height: auto; border-radius: 12px; box-shadow: var(--shadow-out);">
     </div>
-    
+
+    <!-- ===== DASHBOARD INDICATORS ===== -->
+    <div class="dashboard-stats" id="dashboardStats">
+        <div class="stat-card azul">
+            <span class="stat-icon">&#128101;</span>
+            <div class="stat-value" id="statTotalAcolhidos">&#8212;</div>
+            <div class="stat-label">Total Acolhidos</div>
+        </div>
+        <div class="stat-card laranja">
+            <span class="stat-icon">&#9200;</span>
+            <div class="stat-value" id="statReceitasVencendo">&#8212;</div>
+            <div class="stat-label">Receitas Vencendo (30d)</div>
+        </div>
+        <div class="stat-card vermelho">
+            <span class="stat-icon">&#10060;</span>
+            <div class="stat-value" id="statReceitasVencidas">&#8212;</div>
+            <div class="stat-label">Receitas Vencidas</div>
+        </div>
+        <div class="stat-card verde">
+            <span class="stat-icon">&#9989;</span>
+            <div class="stat-value" id="statMedHoje">&#8212;</div>
+            <div class="stat-label">Med. Tomados Hoje</div>
+        </div>
+    </div>
+
     <div class="top-nav">
-        <button class="menu-toggle" onclick="abrirMenuLateral()">☰</button>
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Procurar acolhido..." onkeyup="renderizar()">
+        <button class="menu-toggle" onclick="abrirMenuLateral()">&#9776;</button>
+        <input type="text" id="searchInput" class="search-input" placeholder="&#128269; Procurar acolhido..." onkeyup="renderizar()">
     </div>
 
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="fecharMenuLateral()"></div>
@@ -249,6 +395,12 @@
             <div class="sidebar-item" onclick="abrirCalendarioGrande(); fecharMenuLateral();">📅 Agenda / Saídas</div>
             <div class="sidebar-item" onclick="abrirGerenciadorReceitas(); fecharMenuLateral();">📄✍️ Gerir Receitas</div>
             <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></div>
+            <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
+            <div class="sidebar-item" onclick="abrirVistaSemanal(); fecharMenuLateral();">📅 Vista Semanal</div>
+            <div class="sidebar-item" onclick="imprimirListaDoDia(); fecharMenuLateral();">🖨️ Imprimir Lista do Dia</div>
+            <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
+            <div class="sidebar-item" onclick="abrirGestaoSenha(); fecharMenuLateral();">🔑 Gerir Senha de Acesso</div>
+            <div class="sidebar-item" onclick="logout()" style="color: #f87171;">🔒 Terminar Sessão</div>
         </div>
     </div>
 
@@ -725,6 +877,7 @@
             renderizarHorarios();
             renderizar();
             gerarAlertas();
+            atualizarDashboard();
         } catch (err) { console.error("Erro na comunicação com o Supabase:", err); }
     }
 
@@ -767,7 +920,7 @@
         const novo = prompt("Introduza o novo horário desejado (ex: 13h):");
         if (!novo || novo.trim() === "") return;
         const h = novo.trim();
-        if (horariosAtivos.includes(h)) { alert("Este horário já existe!"); return; }
+        if (horariosAtivos.includes(h)) { toast("Horário duplicado", "Este horário já existe!", "warning"); return; }
 
         horariosAtivos.push(h);
         horariosAtivos.sort((a, b) => parseInt(a) - parseInt(b));
@@ -799,7 +952,7 @@
     }
 
     async function removerHorario(h) {
-        if (["07h", "15h", "19h", "23h"].includes(h)) { alert("Não é possível remover os horários fixos."); return; }
+        if (["07h", "15h", "19h", "23h"].includes(h)) { toast("Ação bloqueada", "Não é possível remover os horários fixos.", "warning"); return; }
         if (!confirm(`Remover o horário "${h}"?`)) return;
 
         horariosAtivos = horariosAtivos.filter(x => x !== h);
@@ -846,9 +999,10 @@
                         if (!error) {
                             registrosMedicacaoDia = registrosMedicacaoDia.filter(rm => rm.id !== existente.id);
                             renderizar();
+                            atualizarDashboard();
                         } else {
                             console.error("ERRO AO EXCLUIR REGISTRO:", error);
-                            alert("Falha ao desfazer a marcação no Supabase! Verifique o console (F12).");
+                            toast("Erro", "Falha ao desfazer a marcação. Verifique o console (F12).", "error");
                         }
                     }
                 );
@@ -858,14 +1012,15 @@
                 if (!error && data && data[0]) {
                     registrosMedicacaoDia.push(data[0]);
                     renderizar();
+                    atualizarDashboard();
                 } else {
                     console.error("ERRO AO INSERIR REGISTRO:", error);
-                    alert("Falha ao salvar a marcação no Supabase! Verifique o console (F12).");
+                    toast("Erro", "Falha ao salvar a marcação. Verifique o console (F12).", "error");
                 }
             }
         } catch (error) {
             console.error("ERRO INESPERADO:", error);
-            alert("Um erro inesperado ocorreu. Verifique o console do navegador (F12) para detalhes.");
+            toast("Erro inesperado", "Verifique o console do navegador (F12) para detalhes.", "error");
         }
     }
 
@@ -907,7 +1062,7 @@
         let dataIn = document.getElementById('relatorioDataInicio').value;
         let dataFim = document.getElementById('relatorioDataFim').value;
         const horarioFiltro = (document.getElementById('relatorioHorarioSelect') || {}).value || '';
-        if(!pacSelecionado) return alert("Selecione um paciente ou a opção de Todos!");
+        if(!pacSelecionado) { toast("Atenção", "Selecione um paciente ou a opção de Todos!", "warning"); return; }
         const btn = document.getElementById('btnBuscarRelatorio');
         btn.disabled = true;
         btn.innerText = "A pesquisar...";
@@ -989,7 +1144,7 @@
     }
 
     async function exportarRelatorio() {
-        if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) return alert("Efetue uma procura primeiro!");
+        if (!window.dadosRelatorioAtual || window.dadosRelatorioAtual.length === 0) { toast("Sem dados", "Efetue uma procura primeiro!", "warning"); return; }
 
         const filtros = window.relatorioFiltros || {};
         const horarioLabel = filtros.horarioFiltro ? filtros.horarioFiltro : 'Todos';
@@ -1097,7 +1252,7 @@
         const _blob = new Blob([_htmlPdf], {type:'text/html;charset=utf-8'});
         const _url = URL.createObjectURL(_blob);
         const _jan = window.open(_url, '_blank', 'width=900,height=700');
-        if (!_jan) { alert("Permita popups e tente novamente."); URL.revokeObjectURL(_url); return; }
+        if (!_jan) { toast("Popups bloqueados", "Permita popups neste site e tente novamente.", "warning"); URL.revokeObjectURL(_url); return; }
         setTimeout(() => URL.revokeObjectURL(_url), 60000);
     }
 
@@ -1157,7 +1312,7 @@
     window.salvarSaida = async function() { 
         const id = document.getElementById('editSaidaId').value;
         const nome = document.getElementById('saidaNomeSelect').value; const links = document.getElementById('saidaLinks').value; const data = document.getElementById('saidaData').value; const informacoes = document.getElementById('saidaInformacoes').value;
-        if(!nome || nome === "Nenhum acolhido cadastrado" || !data) return alert("Preencha todos os dados obrigatórios!");
+        if(!nome || nome === "Nenhum acolhido cadastrado" || !data) { toast("Campos obrigatórios", "Preencha todos os dados obrigatórios!", "warning"); return; }
         const btn = document.getElementById('btnSalvarSaida');
         btn.disabled = true; btn.innerText = "A guardar...";
         const dados = { nome, links, data, informacoes }; 
@@ -1170,7 +1325,7 @@
         
         btn.disabled = false;
         btn.innerText = "Salvar Agendamento";
-        if (!erro) { fechar('modalNovaSaida'); carregar(); } else alert("Erro: " + erro.message);
+        if (!erro) { fechar('modalNovaSaida'); carregar(); toast("Guardado", "Agendamento guardado com sucesso.", "success"); } else toast("Erro", erro.message, "error");
     };
 
     // Checkbox marcado no card: abre modal pedindo a informação da confirmação antes de salvar.
@@ -1192,7 +1347,7 @@
     window.confirmarRealizacaoSaida = async function() {
         const id = document.getElementById('confirmarRealizadoId').value;
         const info = document.getElementById('confirmarRealizadoInfo').value.trim();
-        if (!info) return alert("Descreva brevemente como foi realizado o agendamento.");
+        if (!info) { toast("Campo obrigatório", "Descreva brevemente como foi realizado o agendamento.", "warning"); return; }
         fechar('modalConfirmarRealizado');
         await window.salvarStatusRealizadoSaida(id, true, info);
     };
@@ -1211,7 +1366,7 @@
             if (item && anterior) { item.realizado = anterior.realizado; item.info_realizado = anterior.info_realizado; }
             renderizarPacientesDoDia();
             gerarAlertas();
-            alert("Erro ao atualizar: " + error.message);
+            toast("Erro ao atualizar", error.message, "error");
         } else {
             carregar();
         }
@@ -1221,7 +1376,7 @@
         perguntarConfirmacao("Remover Saída", `Deseja remover o agendamento de "${nome}"?`, async () => {
             const idTratado = isNaN(id) ? id : Number(id);
             const { error } = await supabaseClient.from('calendario').delete().eq('id', idTratado);
-            if (!error) carregar(); else alert("Erro: " + error.message);
+            if (!error) { carregar(); toast("Eliminado", "Agendamento removido.", "success"); } else toast("Erro", error.message, "error");
         });
     };
     
@@ -1247,8 +1402,8 @@
         const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
         const observacao = document.getElementById('inpObservacao').value.trim() || null;
         
-        if (!nome) return alert("Por favor, preencha o nome!");
-        if (cpf && !validarCPF(cpf)) return alert("O CPF introduzido não é válido! Por favor corrija.");
+        if (!nome) { toast("Campo obrigatório", "Por favor, preencha o nome!", "warning"); return; }
+        if (cpf && !validarCPF(cpf)) { toast("CPF inválido", "O CPF introduzido não é válido! Por favor corrija.", "warning"); return; }
 
         const btn = document.getElementById('btnSalvarCadastro');
         btn.disabled = true;
@@ -1265,13 +1420,13 @@
         btn.disabled = false;
         btn.innerText = "Guardar";
 
-        if (!erro) { fechar('modalCadastro'); carregar(); } else alert("Erro na gravação: " + erro.message);
+        if (!erro) { fechar('modalCadastro'); carregar(); toast("Guardado", "Registo guardado com sucesso.", "success"); } else toast("Erro na gravação", erro.message, "error");
     }
 
     async function excluirRegistro(id, nome) { 
         perguntarConfirmacao("Excluir Registo", `Tem a certeza que deseja eliminar o cadastro de ${nome} permanentemente do sistema?`, async () => {
             const { error } = await supabaseClient.from('pacientes').delete().eq('id', id);
-            if (!error) carregar(); else alert("Erro ao excluir: " + error.message);
+            if (!error) { carregar(); toast("Eliminado", "Registo eliminado com sucesso.", "success"); } else toast("Erro ao excluir", error.message, "error");
         });
     }
     
@@ -1373,9 +1528,317 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        carregar();
+        verificarSessao();
         document.querySelectorAll('.modal').forEach(modal => { modal.addEventListener('click', (e) => { if (e.target === modal) fechar(modal.id); }); });
     });
+
+    // ==========================================
+    // SISTEMA DE LOGIN COM SUPABASE AUTH
+    // ==========================================
+    const SENHA_KEY = 'farmed_auth_ts';
+    const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 horas
+
+    function verificarSessao() {
+        const ts = localStorage.getItem(SENHA_KEY);
+        if (ts && (Date.now() - parseInt(ts)) < SESSION_DURATION) {
+            ocultarLoginMostrarApp();
+        } else {
+            localStorage.removeItem(SENHA_KEY);
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+    }
+
+    async function tentarLogin() {
+        const senhaInput = document.getElementById('loginSenha');
+        const senha = senhaInput.value;
+        const erroEl = document.getElementById('loginErro');
+        erroEl.textContent = '';
+
+        if (!senha) { erroEl.textContent = 'Por favor insira a senha.'; return; }
+
+        const btn = document.querySelector('.login-btn');
+        btn.disabled = true;
+        btn.textContent = 'A verificar...';
+
+        try {
+            // Busca a senha armazenada no Supabase (tabela configuracoes, chave 'app_senha')
+            const { data, error } = await supabaseClient
+                .from('configuracoes')
+                .select('valor')
+                .eq('chave', 'app_senha')
+                .single();
+
+            if (error || !data) {
+                // Fallback: senha padrão caso a configuração não exista
+                const SENHA_PADRAO = 'farmed2025';
+                if (senha === SENHA_PADRAO) {
+                    confirmarLogin();
+                } else {
+                    mostrarErroLogin(erroEl, senhaInput);
+                }
+            } else {
+                if (senha === data.valor) {
+                    confirmarLogin();
+                } else {
+                    mostrarErroLogin(erroEl, senhaInput);
+                }
+            }
+        } catch (err) {
+            erroEl.textContent = 'Erro de ligação. Tente novamente.';
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+    }
+
+    function confirmarLogin() {
+        localStorage.setItem(SENHA_KEY, Date.now().toString());
+        ocultarLoginMostrarApp();
+        toast('Bem-vindo ao Farmed!', 'Sessão iniciada com sucesso.', 'success');
+        carregar();
+    }
+
+    function mostrarErroLogin(erroEl, senhaInput) {
+        erroEl.textContent = 'Senha incorreta. Tente novamente.';
+        senhaInput.value = '';
+        const card = document.querySelector('.login-card');
+        card.classList.remove('login-shake');
+        void card.offsetWidth;
+        card.classList.add('login-shake');
+    }
+
+    function ocultarLoginMostrarApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+    }
+
+    function logout() {
+        localStorage.removeItem(SENHA_KEY);
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('loginSenha').value = '';
+        document.getElementById('loginErro').textContent = '';
+        toast('Sessão terminada', 'Até logo!', 'info');
+    }
+
+    // ==========================================
+    // SISTEMA DE TOASTS (substitui alert())
+    // ==========================================
+    function toast(titulo, mensagem, tipo = 'info', duracao = 4000) {
+        const container = document.getElementById('toast-container');
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const t = document.createElement('div');
+        t.className = `toast ${tipo}`;
+        t.innerHTML = `
+            <span class="toast-icon">${icons[tipo] || icons.info}</span>
+            <div class="toast-body">
+                <div class="toast-title">${titulo}</div>
+                ${mensagem ? `<div class="toast-msg">${mensagem}</div>` : ''}
+            </div>
+            <button class="toast-close" onclick="fecharToast(this.parentElement)">×</button>
+            <div class="toast-bar" style="animation-duration: ${duracao}ms;"></div>
+        `;
+        container.appendChild(t);
+        requestAnimationFrame(() => { requestAnimationFrame(() => { t.classList.add('show'); }); });
+        setTimeout(() => fecharToast(t), duracao);
+        return t;
+    }
+
+    function fecharToast(el) {
+        if (!el || !el.parentElement) return;
+        el.classList.remove('show');
+        el.classList.add('hide');
+        setTimeout(() => el.remove(), 350);
+    }
+
+    // ==========================================
+    // DASHBOARD — INDICADORES NO TOPO
+    // ==========================================
+    function atualizarDashboard() {
+        // Total de acolhidos únicos
+        const nomesUnicos = [...new Set(registros.map(r => r.nome))];
+        document.getElementById('statTotalAcolhidos').textContent = nomesUnicos.length;
+
+        // Receitas vencendo nos próximos 30 dias (dias_faltantes entre 0 e 30)
+        const vencendo = registros.filter(r => {
+            const d = calcularDiasFaltantes(r);
+            return d !== null && d >= 0 && d <= 30;
+        });
+        document.getElementById('statReceitasVencendo').textContent = [...new Set(vencendo.map(r => r.nome))].length;
+
+        // Receitas já vencidas (dias_faltantes < 0)
+        const vencidas = registros.filter(r => {
+            const d = calcularDiasFaltantes(r);
+            return d !== null && d < 0;
+        });
+        document.getElementById('statReceitasVencidas').textContent = [...new Set(vencidas.map(r => r.nome))].length;
+
+        // Medicamentos tomados hoje
+        const tomadosHoje = registrosMedicacaoDia.filter(rm => rm.status === true || rm.status === 'true').length;
+        document.getElementById('statMedHoje').textContent = tomadosHoje;
+    }
+
+    // ==========================================
+    // VISTA SEMANAL DE MEDICAMENTOS
+    // ==========================================
+    let semanaOffset = 0;
+
+    function abrirVistaSemanal() {
+        semanaOffset = 0;
+        renderizarSemana();
+        abrir('modalSemana');
+    }
+
+    function navegarSemana(dir) {
+        semanaOffset += dir;
+        renderizarSemana();
+    }
+
+    async function renderizarSemana() {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const inicioSemana = new Date(hoje);
+        inicioSemana.setDate(hoje.getDate() - hoje.getDay() + semanaOffset * 7); // domingo
+
+        const fimSemana = new Date(inicioSemana);
+        fimSemana.setDate(inicioSemana.getDate() + 6);
+
+        const fmt = d => `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`;
+        const fmtIso = d => `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+
+        document.getElementById('semanaTitulo').textContent = `${fmt(inicioSemana)} — ${fmt(fimSemana)}/${fimSemana.getFullYear()}`;
+        document.getElementById('semanaSubtitulo').textContent = semanaOffset === 0 ? 'Semana atual' : semanaOffset > 0 ? `+${semanaOffset} semana(s)` : `${semanaOffset} semana(s)`;
+
+        // Busca registros de medicação da semana inteira
+        const dataIniStr = fmtIso(inicioSemana);
+        const dataFimStr = fmtIso(fimSemana);
+        const { data: regSemana } = await supabaseClient.from('registro_medicacao').select('*').gte('data', dataIniStr).lte('data', dataFimStr);
+        const registosSemana = regSemana || [];
+
+        const nomesDias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const grade = document.getElementById('semanaGrade');
+        grade.innerHTML = '';
+
+        for (let i = 0; i < 7; i++) {
+            const dia = new Date(inicioSemana);
+            dia.setDate(inicioSemana.getDate() + i);
+            const diaIso = fmtIso(dia);
+            const ehHoje = diaIso === fmtIso(hoje);
+
+            // Medicamentos agendados para este dia (todos os registros com hora definida)
+            const medsDia = registros.filter(r => r.hora);
+
+            const col = document.createElement('div');
+            col.className = 'semana-col' + (ehHoje ? ' hoje' : '');
+
+            let medsHtml = '';
+            if (medsDia.length === 0) {
+                medsHtml = '<div class="semana-vazio">Sem medicamentos</div>';
+            } else {
+                // Agrupa por horário
+                const porHorario = {};
+                medsDia.forEach(r => {
+                    if (!porHorario[r.hora]) porHorario[r.hora] = [];
+                    porHorario[r.hora].push(r);
+                });
+
+                Object.keys(porHorario).sort((a,b) => parseInt(a) - parseInt(b)).forEach(hora => {
+                    porHorario[hora].forEach(r => {
+                        const registo = registosSemana.find(rm => String(rm.paciente_id) === String(r.id) && rm.data === diaIso && rm.horario === hora && (rm.status === true || rm.status === 'true'));
+                        const tomado = !!registo;
+                        medsHtml += `<div class="semana-med-item ${tomado ? 'tomado' : ''}">
+                            <div class="semana-horario-tag ${tomado ? 'tomado-tag' : ''}">${hora}</div>
+                            <div class="semana-med-nome">${r.nome}</div>
+                            <div class="semana-med-hora">${(r.medicamento || 'Sem med.').split(',')[0].trim()}</div>
+                        </div>`;
+                    });
+                });
+            }
+
+            col.innerHTML = `
+                <div class="semana-col-header">
+                    <div class="semana-col-dia-num">${dia.getDate()}</div>
+                    <div class="semana-col-dia-nome">${nomesDias[i]}</div>
+                </div>
+                ${medsHtml}
+            `;
+            grade.appendChild(col);
+        }
+    }
+
+    // ==========================================
+    // IMPRIMIR LISTA DO DIA (PDF)
+    // ==========================================
+    function imprimirListaDoDia() {
+        const hoje = obterDataAtualLocal();
+        const hojeDate = new Date(hoje + 'T00:00:00');
+        const diaFormatado = hojeDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+        const horaEmissao = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        // Agrupa por horário → pacientes
+        const porHorario = {};
+        const medAtivos = registros.filter(r => r.hora);
+        medAtivos.forEach(r => {
+            if (!porHorario[r.hora]) porHorario[r.hora] = [];
+            porHorario[r.hora].push(r);
+        });
+
+        const horariosOrdenados = Object.keys(porHorario).sort((a, b) => parseInt(a) - parseInt(b));
+
+        let tabelasHtml = '';
+        horariosOrdenados.forEach(hora => {
+            const lista = porHorario[hora].sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt'));
+            tabelasHtml += `
+                <div style="margin-bottom: 24px; break-inside: avoid;">
+                    <div style="background: #1a5276; color: white; padding: 8px 14px; border-radius: 8px 8px 0 0; font-weight: 800; font-size: 15px;">
+                        ⏰ Horário: ${hora}
+                    </div>
+                    <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #eaf2ff;">
+                                <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #bdd7f7; width: 30px;">#</th>
+                                <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #bdd7f7;">Acolhido</th>
+                                <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #bdd7f7;">Medicamento(s)</th>
+                                <th style="padding: 8px 12px; text-align: center; border-bottom: 2px solid #bdd7f7; width: 80px;">Entregue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lista.map((p, idx) => `
+                                <tr style="background: ${idx % 2 === 0 ? '#fff' : '#f7fbff'};">
+                                    <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; color: #888;">${idx + 1}</td>
+                                    <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; font-weight: 700;">${p.nome}</td>
+                                    <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; color: #444;">${p.medicamento || '—'}</td>
+                                    <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; text-align: center;">
+                                        <div style="width: 22px; height: 22px; border: 2px solid #aaa; border-radius: 4px; margin: 0 auto;"></div>
+                                    </td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        });
+
+        const total = medAtivos.length;
+        const htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Lista de Medicamentos — ${hoje}</title>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; padding: 20px 30px; }
+            h1 { font-size: 20px; color: #1a5276; margin-bottom: 4px; }
+            .subtitulo { color: #555; font-size: 13px; margin-bottom: 20px; }
+            .rodape { margin-top: 30px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; color: #888; text-align: center; }
+            @media print { body { padding: 10px 20px; } }
+        </style></head>
+        <body>
+            <h1>Lista de Medicamentos — ${diaFormatado}</h1>
+            <div class="subtitulo">Emitido às ${horaEmissao} · Total: ${total} registo(s)</div>
+            ${tabelasHtml || '<p style="color: #888; text-align: center; padding: 40px;">Nenhum medicamento registado para hoje.</p>'}
+            <div class="rodape">Gerado automaticamente pelo sistema Farmed.</div>
+            <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
+        </body></html>`;
+
+        const blob = new Blob([htmlPdf], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const jan = window.open(url, '_blank', 'width=900,height=700');
+        if (!jan) { toast('Popups bloqueados', 'Permita popups neste site e tente novamente.', 'warning'); URL.revokeObjectURL(url); return; }
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
     // ==========================================
     // IMPORTAÇÃO DE EXCEL (PLANILHA)
     // ==========================================
@@ -1482,19 +1945,199 @@ async function importarPlanilhaAcolhidos(event) {
             }
 
             if (erros > 0) {
-                alert(`Importação concluída com ressalvas: ${inseridos} registros adicionados, mas ${erros} falharam.\n\nPressione F12 → aba "Console" para ver os detalhes do erro em vermelho.`);
+                toast("Importação com ressalvas", `${inseridos} registros adicionados, ${erros} falharam. Veja o console (F12).`, "warning");
             } else {
-                alert(`Importação finalizada com sucesso! ${inseridos} registros adicionados.`);
+                toast("Importação concluída", `${inseridos} registros adicionados com sucesso!`, "success");
             }
             
             if (typeof carregar === "function") carregar(); 
         } catch (err) {
             console.error("Erro fatal ao processar o Excel:", err);
-            alert("Não foi possível processar o arquivo. Certifique-se de que é uma planilha válida do Excel (.xlsx).");
+            toast("Erro ao importar", "Não foi possível processar o arquivo. Certifique-se de que é uma planilha válida do Excel (.xlsx).", "error");
         }
     };
     reader.readAsArrayBuffer(file);
 }
+
+    // ==========================================
+    // GESTÃO DE SENHA DE ACESSO
+    // ==========================================
+    let _senhaAtualCached = null;
+    let _senhaVisivel = false;
+
+    async function abrirGestaoSenha() {
+        document.getElementById('inpNovaSenha').value = '';
+        document.getElementById('inpConfirmarNovaSenha').value = '';
+        document.getElementById('inpSenhaAtualConfirm').value = '';
+        document.getElementById('senhaAtualDisplay').textContent = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+        document.getElementById('senhaStrengthBar').style.width = '0';
+        document.getElementById('senhaStrengthLabel').textContent = '';
+        _senhaVisivel = false;
+        _senhaAtualCached = null;
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('configuracoes')
+                .select('valor')
+                .eq('chave', 'app_senha')
+                .single();
+            _senhaAtualCached = (data && data.valor) ? data.valor : 'farmed2025';
+        } catch (e) {
+            _senhaAtualCached = 'farmed2025';
+        }
+
+        abrir('modalGestaoSenha');
+    }
+
+    function toggleVerSenhaAtual() {
+        const display = document.getElementById('senhaAtualDisplay');
+        if (_senhaAtualCached === null) return;
+        _senhaVisivel = !_senhaVisivel;
+        display.textContent = _senhaVisivel ? _senhaAtualCached : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+        display.style.letterSpacing = _senhaVisivel ? '1px' : '2px';
+    }
+
+    function toggleVerNovaSenha() {
+        const inp = document.getElementById('inpNovaSenha');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function avaliarForcaSenha(senha) {
+        const bar = document.getElementById('senhaStrengthBar');
+        const label = document.getElementById('senhaStrengthLabel');
+        if (!senha) { bar.style.width = '0'; label.textContent = ''; return; }
+        const temMaiuscula = /[A-Z]/.test(senha);
+        const temNumero = /[0-9]/.test(senha);
+        const temEspecial = /[^A-Za-z0-9]/.test(senha);
+        const comprimento = senha.length;
+        let pontos = 0;
+        if (comprimento >= 6) pontos++;
+        if (comprimento >= 10) pontos++;
+        if (temMaiuscula) pontos++;
+        if (temNumero) pontos++;
+        if (temEspecial) pontos++;
+
+        bar.className = 'senha-strength';
+        label.className = 'senha-strength-label';
+
+        if (pontos <= 2) {
+            bar.classList.add('fraca'); label.classList.add('fraca'); label.textContent = 'Senha fraca';
+        } else if (pontos <= 3) {
+            bar.classList.add('media'); label.classList.add('media'); label.textContent = 'Senha razoavel';
+        } else {
+            bar.classList.add('forte'); label.classList.add('forte'); label.textContent = 'Senha forte';
+        }
+    }
+
+    async function salvarNovaSenha() {
+        const novaSenha = document.getElementById('inpNovaSenha').value;
+        const confirmar = document.getElementById('inpConfirmarNovaSenha').value;
+        const senhaAtualDigitada = document.getElementById('inpSenhaAtualConfirm').value;
+
+        if (!novaSenha || !confirmar || !senhaAtualDigitada) {
+            toast('Campos obrigatorios', 'Preencha todos os campos.', 'warning'); return;
+        }
+        if (novaSenha.length < 6) {
+            toast('Senha muito curta', 'A senha deve ter pelo menos 6 caracteres.', 'warning'); return;
+        }
+        if (novaSenha !== confirmar) {
+            toast('Senhas nao coincidem', 'A nova senha e a confirmacao sao diferentes.', 'warning'); return;
+        }
+        if (senhaAtualDigitada !== _senhaAtualCached) {
+            toast('Senha atual incorreta', 'A senha atual digitada esta errada.', 'error');
+            document.getElementById('inpSenhaAtualConfirm').value = '';
+            return;
+        }
+
+        const btn = document.getElementById('btnSalvarSenha');
+        btn.disabled = true; btn.textContent = 'A guardar...';
+
+        try {
+            const { data: existente } = await supabaseClient
+                .from('configuracoes')
+                .select('id')
+                .eq('chave', 'app_senha')
+                .single();
+
+            let erro = null;
+            if (existente) {
+                const res = await supabaseClient
+                    .from('configuracoes')
+                    .update({ valor: novaSenha })
+                    .eq('chave', 'app_senha');
+                erro = res.error;
+            } else {
+                const res = await supabaseClient
+                    .from('configuracoes')
+                    .insert([{ chave: 'app_senha', valor: novaSenha }]);
+                erro = res.error;
+            }
+
+            if (erro) {
+                toast('Erro ao guardar', erro.message, 'error');
+            } else {
+                _senhaAtualCached = novaSenha;
+                fechar('modalGestaoSenha');
+                toast('Senha alterada', 'A nova senha ja esta ativa. Use-a no proximo login.', 'success');
+            }
+        } catch (err) {
+            toast('Erro inesperado', err.message, 'error');
+        }
+
+        btn.disabled = false; btn.textContent = 'Salvar Nova Senha';
+    }
+
 </script>
+
+<!-- ===== MODAL GESTÃO DE SENHA ===== -->
+<div id="modalGestaoSenha" class="modal" style="z-index: 110000;">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2 style="margin-bottom: 6px;">🔑 Gestão de Acesso</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 20px;">Altere a senha de acesso ao Farmed. Todos os utilizadores partilham esta senha.</p>
+
+        <div class="senha-info-box">
+            <span class="senha-info-icon">🔒</span>
+            <div class="senha-info-text">
+                <strong style="color: var(--texto-p);">Senha atual</strong><br>
+                Guardada de forma segura no Supabase.
+            </div>
+        </div>
+
+        <div class="senha-atual-display">
+            <span class="senha-atual-valor" id="senhaAtualDisplay">••••••••</span>
+            <button class="senha-toggle-vis" onclick="toggleVerSenhaAtual()" id="btnVerSenha" title="Mostrar/ocultar senha">👁️</button>
+        </div>
+
+        <label>Nova Senha</label>
+        <div style="position: relative;">
+            <input type="password" id="inpNovaSenha" class="modal-content input" placeholder="Mínimo 6 caracteres"
+                style="width:100%; margin: 8px 0 6px 0; padding: 12px 44px 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);"
+                oninput="avaliarForcaSenha(this.value)" onkeydown="if(event.key==='Enter') document.getElementById('inpConfirmarNovaSenha').focus()">
+            <button onclick="toggleVerNovaSenha()" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--texto-s); cursor:pointer; font-size:16px; padding:0;">👁️</button>
+        </div>
+        <div class="senha-strength" id="senhaStrengthBar" style="width:0; background: transparent;"></div>
+        <div class="senha-strength-label" id="senhaStrengthLabel"></div>
+
+        <label>Confirmar Nova Senha</label>
+        <input type="password" id="inpConfirmarNovaSenha" placeholder="Repita a nova senha"
+            style="width:100%; margin: 8px 0 14px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);"
+            onkeydown="if(event.key==='Enter') salvarNovaSenha()">
+
+        <label>Senha Atual (confirmação)</label>
+        <input type="password" id="inpSenhaAtualConfirm" placeholder="Digite a senha atual para confirmar"
+            style="width:100%; margin: 8px 0 20px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);"
+            onkeydown="if(event.key==='Enter') salvarNovaSenha()">
+
+        <button onclick="salvarNovaSenha()" id="btnSalvarSenha"
+            style="width:100%; padding:13px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:15px;">
+            Salvar Nova Senha
+        </button>
+        <button onclick="fechar('modalGestaoSenha')"
+            style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Cancelar
+        </button>
+    </div>
+</div>
+
 </body>
 </html>
