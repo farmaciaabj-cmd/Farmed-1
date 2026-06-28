@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -18,6 +19,48 @@
             --shadow-in: inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.05);
             --shadow-out: 5px 5px 15px rgba(0,0,0,0.4), -2px -2px 10px rgba(255,255,255,0.05);
         }
+
+        body.modo-claro {
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --texto-p: #1e293b;
+            --texto-s: #64748b;
+            --borda: #cbd5e1;
+            --shadow-in: inset 2px 2px 5px rgba(0,0,0,0.08), inset -2px -2px 5px rgba(255,255,255,0.8);
+            --shadow-out: 4px 4px 12px rgba(0,0,0,0.1), -2px -2px 8px rgba(255,255,255,0.9);
+        }
+        body.modo-claro .search-input,
+        body.modo-claro .modal-content input,
+        body.modo-claro .modal-content select,
+        body.modo-claro .modal-content textarea,
+        body.modo-claro .login-input { background: #f8fafc; color: #1e293b; }
+        body.modo-claro .semana-col,
+        body.modo-claro .col-esquerda,
+        body.modo-claro .col-direita { background: #f1f5f9; }
+        body.modo-claro .cal-dia { background: #e2e8f0; color: #1e293b; }
+        body.modo-claro .time-selector { background: #e2e8f0; }
+        body.modo-claro .time-btn { color: #475569; }
+        body.modo-claro .time-btn.active { background: #fff; color: #1e293b; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+        body.modo-claro .btn-action { background: #e2e8f0; color: #1e293b; }
+        body.modo-claro .btn-bula { background: #dbeafe; color: #1e40af; border-color: rgba(30,64,175,0.2); }
+        body.modo-claro .btn-edit { background: #fef3c7; color: #92400e; border-color: rgba(146,64,14,0.2); }
+        body.modo-claro .btn-delete { background: #fee2e2; color: #991b1b; border-color: rgba(153,27,27,0.2); }
+        body.modo-claro #loginScreen { background: var(--bg); }
+        body.modo-claro .login-card { background: var(--card-bg); }
+        body.modo-claro .switch { background: #cbd5e1; }
+        body.modo-claro .switch.checked { background: #22c55e; }
+        body.modo-claro .sidebar { background: #f8fafc; }
+        body.modo-claro .sidebar-item { background: #fff; color: #1e293b; border-color: #e2e8f0; }
+        body.modo-claro .sidebar-item:hover { background: #e0f2fe; border-color: rgba(0,156,217,0.3); }
+        body.modo-claro .record-card { border-top-color: rgba(0,0,0,0.05); }
+        body.modo-claro .add-btn { color: white; }
+        body.modo-claro .toast { background: #ffffff; border-color: #e2e8f0; }
+        body.modo-claro .toast-title { color: #1e293b; }
+        body.modo-claro .modal-content { background: #ffffff; }
+        body.modo-claro h1 { background: linear-gradient(135deg, #1e293b 0%, var(--cor-azul) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body.modo-claro .search-input-compacto { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; }
+        body.modo-claro .relatorio-item { background: #f8fafc; border-color: #e2e8f0; color: #1e293b; }
+        body.modo-claro .semana-med-item { background: #f1f5f9; }
 
         /* ===== TOAST SYSTEM ===== */
         #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
@@ -123,10 +166,10 @@
         
         .time-selector { display: flex; gap: 10px; margin-bottom: 25px; background: #151f32; padding: 6px; border-radius: 16px; box-shadow: var(--shadow-in); overflow-x: auto; align-items: center; }
         .time-btn { flex: 1; padding: 12px; border: none; background: transparent; color: var(--texto-s); border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s ease; min-width: 60px; }
-        .time-btn.active { background: var(--card-bg); color: #fff; box-shadow: var(--shadow-out); border: 1px solid rgba(255,255,255,0.05); }
+        .time-btn.active { background: var(--card-bg); color: var(--texto-p); box-shadow: var(--shadow-out); border: 1px solid rgba(0,0,0,0.08); }
         
         .record-card { background: var(--card-bg); padding: 20px; border-radius: 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--cor-azul); box-shadow: var(--shadow-out); border-top: 1px solid rgba(255,255,255,0.05); }
-        .record-card strong { font-size: 18px; color: #fff; letter-spacing: -0.3px; }
+        .record-card strong { font-size: 18px; color: var(--texto-p); letter-spacing: -0.3px; }
         .record-card small { color: var(--texto-s); font-size: 14px; display: inline-block; margin-top: 4px; }
         
         .actions-wrapper { display: flex; align-items: center; gap: 10px; }
@@ -193,32 +236,32 @@
         .alertas-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding-bottom: 15px; border-bottom: 1px solid var(--borda); }
         .alertas-modal-titulo { font-size: 13px; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
         .alertas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-        .alerta-card { background: #1e293b; border-radius: 16px; overflow: hidden; border: 1px solid var(--borda); box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .alerta-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid var(--borda); box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; }
         .alerta-card-bar { height: 4px; width: 100%; }
         .alerta-card-bar.critico  { background: linear-gradient(90deg, #dc2626, #ef4444); }
         .alerta-card-bar.atencao  { background: linear-gradient(90deg, #ea580c, #f97316); }
         .alerta-card-bar.ok       { background: linear-gradient(90deg, #ca8a04, #eab308); }
         .alerta-card-body { padding: 14px 16px; flex: 1; }
         .alerta-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .alerta-card-nome { font-weight: 700; font-size: 15px; color: #fff; line-height: 1.2; }
+        .alerta-card-nome { font-weight: 700; font-size: 15px; color: var(--texto-p); line-height: 1.2; }
         .alerta-card-med  { font-size: 12px; color: var(--cor-azul); margin-top: 3px; }
         .alerta-badge { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-left: 8px; }
         .alerta-badge.critico { background: #7f1d1d; color: #fca5a5; }
         .alerta-badge.atencao { background: #7c2d12; color: #fed7aa; }
         .alerta-badge.ok      { background: #713f12; color: #fde68a; }
         .alerta-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-bottom: 10px; }
-        .alerta-info-cell { background: #151f32; border-radius: 8px; padding: 7px 10px; }
+        .alerta-info-cell { background: rgba(0,0,0,0.12); border-radius: 8px; padding: 7px 10px; }
         .alerta-info-label { font-size: 10px; color: var(--texto-s); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
-        .alerta-info-val   { font-size: 13px; font-weight: 700; color: #fff; }
+        .alerta-info-val   { font-size: 13px; font-weight: 700; color: var(--texto-p); }
         .alerta-receita-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
         .alerta-receita-tag.valida   { background: #14532d; color: #86efac; }
         .alerta-receita-tag.invalida { background: #7f1d1d; color: #fca5a5; }
-        .alerta-receita-tag.nd       { background: #1e293b; color: #64748b; border: 1px solid var(--borda); }
-        .alerta-obs { background: rgba(0,0,0,0.25); border-left: 3px solid #475569; border-radius: 0 8px 8px 0; padding: 7px 10px; font-size: 12px; color: #cbd5e1; font-style: italic; line-height: 1.4; }
-        .alerta-card-footer { padding: 10px 16px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--borda); font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .alerta-receita-tag.nd       { background: rgba(0,0,0,0.1); color: var(--texto-s); border: 1px solid var(--borda); }
+        .alerta-obs { background: rgba(0,0,0,0.1); border-left: 3px solid #475569; border-radius: 0 8px 8px 0; padding: 7px 10px; font-size: 12px; color: var(--texto-s); font-style: italic; line-height: 1.4; }
+        .alerta-card-footer { padding: 10px 16px; background: rgba(0,0,0,0.08); border-top: 1px solid var(--borda); font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
         .alerta-card-footer.critico { color: #f87171; }
         .alerta-card-footer.atencao { color: #fb923c; }
-        .alerta-card-footer.ok      { color: #fbbf24; }
+        .alerta-card-footer.ok      { color: #ca8a04; }
         .alertas-secao-titulo { font-size: 11px; font-weight: 800; color: var(--texto-s); text-transform: uppercase; letter-spacing: 0.8px; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
         .alertas-secao-titulo::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
         .badge-count-alerta { display: inline-block; background: #f97316; color: white; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
@@ -281,8 +324,8 @@
         .sidebar-item:hover { transform: translateY(-2px); background: #243147; border-color: rgba(0,156,217,0.3); }
         .sidebar-item:active { transform: translateY(1px); box-shadow: var(--shadow-in); }
 
-        .med-tag-list { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; background: #151f32; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--borda); }
-        .med-tag-item { font-size: 13px !important; color: #e2e8f0 !important; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+        .med-tag-list { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--borda); }
+        .med-tag-item { font-size: 13px !important; color: var(--texto-p) !important; font-weight: 500; display: flex; align-items: center; gap: 6px; }
 
         @media (max-width: 768px) {
             .dashboard { padding: 10px; width: 100%; }
@@ -405,6 +448,7 @@
             <div class="sidebar-item" onclick="abrirVistaSemanal(); fecharMenuLateral();">📅 Vista Semanal</div>
             <div class="sidebar-item" onclick="imprimirListaDoDia(); fecharMenuLateral();">🖨️ Imprimir Lista do Dia</div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
+            <div class="sidebar-item" onclick="toggleModoClaro(); fecharMenuLateral();" id="btnModoClaro">☀️ Modo Claro</div>
             <div class="sidebar-item" onclick="abrirGestaoSenha(); fecharMenuLateral();">🔑 Gerir Senha de Acesso</div>
             <div class="sidebar-item" id="sidebarGestaoUsuarios" style="display:none;" onclick="abrirGestaoUsuarios(); fecharMenuLateral();">👥 Gerir Utilizadores</div>
             <div class="sidebar-item" onclick="logout()" style="color: #f87171;">🔒 Terminar Sessão</div>
@@ -991,46 +1035,111 @@
     function filtrar(hora) { horaAtual = hora; renderizarHorarios(); renderizar(); }
 
     // ==========================================
-    // CHECKLIST DE ASSINATURA DA MEDICAÇÃO
+    // ALERTA SONORO POR HORÁRIO DE MEDICAÇÃO
     // ==========================================
-    async function toggleMedicacao(pacienteId) {
-        const hoje = new Date().toISOString().split('T')[0];
-        const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
+    let _horariosAlertados = new Set();
+
+    function tocarAleraSonoro() {
         try {
-            // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
-            if (existente && (existente.status === true || existente.status === 'true')) {
-                perguntarConfirmacao(
-                    "Inverter Registo", 
-                    "Este medicamento já foi marcado como TOMADO.\n\nDeseja realmente anular esta confirmação?", 
-                    async () => {
-                        const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
-                        if (!error) {
-                            registrosMedicacaoDia = registrosMedicacaoDia.filter(rm => rm.id !== existente.id);
-                            renderizar();
-                            atualizarDashboard();
-                        } else {
-                            console.error("ERRO AO EXCLUIR REGISTRO:", error);
-                            toast("Erro", "Falha ao desfazer a marcação. Verifique o console (F12).", "error");
-                        }
-                    }
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const tocar = (freq, inicio, duracao) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.35, ctx.currentTime + inicio);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + inicio + duracao);
+                osc.start(ctx.currentTime + inicio);
+                osc.stop(ctx.currentTime + inicio + duracao + 0.05);
+            };
+            tocar(880, 0, 0.18);
+            tocar(1046, 0.22, 0.18);
+            tocar(1318, 0.44, 0.3);
+        } catch (_) { /* Navegador sem AudioContext */ }
+    }
+
+    function verificarAlertasHorario() {
+        const agora = new Date();
+        const hAtual = agora.getHours();
+        const mAtual = agora.getMinutes();
+        horariosAtivos.forEach(h => {
+            const hNum = parseInt(h);
+            const chave = `${h}_${agora.toDateString()}`;
+            if (hNum === hAtual && mAtual === 0 && !_horariosAlertados.has(chave)) {
+                const pendentes = registros.filter(r => r.hora === h).filter(r =>
+                    !registrosMedicacaoDia.some(rm => rm.paciente_id == r.id && rm.horario === h && (rm.status === true || rm.status === 'true'))
                 );
-            } else {
-                const novoRegistro = { paciente_id: pacienteId, data: hoje, horario: horaAtual, status: true, registrado_por_usuario: usuarioLogado ? usuarioLogado.nome_completo : null };
-                const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
-                if (!error && data && data[0]) {
-                    registrosMedicacaoDia.push(data[0]);
-                    renderizar();
-                    atualizarDashboard();
-                } else {
-                    console.error("ERRO AO INSERIR REGISTRO:", error);
-                    toast("Erro", "Falha ao salvar a marcação. Verifique o console (F12).", "error");
+                if (pendentes.length > 0) {
+                    _horariosAlertados.add(chave);
+                    tocarAleraSonoro();
+                    toast(`⏰ Hora da medicação — ${h}`, `${pendentes.length} acolhido(s) com medicação pendente!`, 'warning', 8000);
                 }
             }
-        } catch (error) {
-            console.error("ERRO INESPERADO:", error);
-            toast("Erro inesperado", "Verifique o console do navegador (F12) para detalhes.", "error");
+        });
+    }
+
+    setInterval(verificarAlertasHorario, 30000); // verifica a cada 30 segundos
+    let _pendingTogglePacienteId = null;
+
+    async function toggleMedicacao(pacienteId) {
+        const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
+        if (existente && (existente.status === true || existente.status === 'true')) {
+            // Desmarcar: pede confirmação
+            perguntarConfirmacao(
+                "Inverter Registo",
+                "Este medicamento já foi marcado como TOMADO.\n\nDeseja realmente anular esta confirmação?",
+                async () => {
+                    const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
+                    if (!error) {
+                        registrosMedicacaoDia = registrosMedicacaoDia.filter(rm => rm.id !== existente.id);
+                        renderizar();
+                        atualizarDashboard();
+                    } else {
+                        toast("Erro", "Falha ao desfazer a marcação.", "error");
+                    }
+                }
+            );
+        } else {
+            // Marcar: abre modal de observação rápida
+            _pendingTogglePacienteId = pacienteId;
+            const pac = registros.find(r => r.id == pacienteId);
+            document.getElementById('obsRegistroNomePac').textContent = pac ? pac.nome : '';
+            document.getElementById('inpObsRegistro').value = '';
+            abrir('modalObsRegistro');
+            setTimeout(() => document.getElementById('inpObsRegistro').focus(), 80);
         }
     }
+
+    window.confirmarToggleMedicacao = async function(pularObs) {
+        fechar('modalObsRegistro');
+        const pacienteId = _pendingTogglePacienteId;
+        if (!pacienteId) return;
+        const obs = pularObs ? null : (document.getElementById('inpObsRegistro').value.trim() || null);
+        const hoje = new Date().toISOString().split('T')[0];
+        try {
+            const novoRegistro = {
+                paciente_id: pacienteId,
+                data: hoje,
+                horario: horaAtual,
+                status: true,
+                registrado_por_usuario: usuarioLogado ? usuarioLogado.nome_completo : null,
+                observacao_registro: obs
+            };
+            const { data, error } = await supabaseClient.from('registro_medicacao').insert([novoRegistro]).select();
+            if (!error && data && data[0]) {
+                registrosMedicacaoDia.push(data[0]);
+                renderizar();
+                atualizarDashboard();
+            } else {
+                toast("Erro", "Falha ao salvar a marcação.", "error");
+            }
+        } catch (err) {
+            toast("Erro inesperado", "Verifique o console (F12).", "error");
+        }
+        _pendingTogglePacienteId = null;
+    };
 
     // ==========================================
     // MARCAR TODOS DO HORÁRIO ATUAL
@@ -1274,6 +1383,37 @@
         const totalPendentes = pendentes.length;
         const totalAcolhidos = new Set([...Object.keys(porAcolhidoTomados), ...Object.keys(porAcolhidoPendentes)]).size;
 
+        // Bloco de adesão por acolhido
+        const todosNomes = [...new Set([...Object.keys(porAcolhidoTomados), ...Object.keys(porAcolhidoPendentes)])].sort((a,b) => a.localeCompare(b,'pt'));
+        const adesaoRows = todosNomes.map(nome => {
+            const t = (porAcolhidoTomados[nome]?.ocorrencias || []).length;
+            const p = (porAcolhidoPendentes[nome]?.ocorrencias || []).length;
+            const total = t + p;
+            const pct = total > 0 ? Math.round((t / total) * 100) : 0;
+            const cor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+            const bg = pct >= 80 ? '#dcfce7' : pct >= 50 ? '#fef3c7' : '#fee2e2';
+            const barra = `<div style="width:100%;background:#e2e8f0;border-radius:99px;height:8px;margin-top:4px;"><div style="width:${pct}%;background:${cor};border-radius:99px;height:8px;transition:width 0.5s;"></div></div>`;
+            return `<tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 12px;font-size:13px;font-weight:600;color:#1e293b;">${nome}</td>
+                <td style="padding:10px 12px;font-size:13px;text-align:center;color:#16a34a;font-weight:700;">${t}</td>
+                <td style="padding:10px 12px;font-size:13px;text-align:center;color:#dc2626;font-weight:700;">${p}</td>
+                <td style="padding:10px 12px;text-align:center;">
+                    <span style="background:${bg};color:${cor};font-weight:800;font-size:13px;padding:3px 10px;border-radius:20px;">${pct}%</span>
+                    ${barra}
+                </td>
+            </tr>`;
+        }).join('');
+
+        const tabelaAdesao = `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+            <thead><tr style="background:#1e3a5f;color:white;">
+                <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">ACOLHIDO</th>
+                <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;">TOMADOS</th>
+                <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;">PENDÊNCIAS</th>
+                <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;">ADESÃO</th>
+            </tr></thead>
+            <tbody>${adesaoRows}</tbody>
+        </table>`;
+
         const conteudoTabelaTomados = totalTomados === 0
             ? `<p style="text-align:center;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">Nenhuma toma de medicação registada no período consultado.</p>`
             : montarTabela(porAcolhidoTomados, 'TOMADO', '#dcfce7', '#166534', '#86efac');
@@ -1307,6 +1447,9 @@
             <div class="card" style="background:#dcfce7;border-left:4px solid #16a34a"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#166534">Tomados</div><div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:4px">${totalTomados}</div></div>
             <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Pendências</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${totalPendentes}</div></div>
         </div>
+        <h2 style="color:#1e3a5f;margin-top:32px">📊 Adesão por Acolhido</h2>
+        <p>Percentual de doses tomadas em relação ao total esperado no período.</p>
+        ${tabelaAdesao}
         <h2 style="color:#166534">Medicação Administrada (Tomados)</h2>
         ${conteudoTabelaTomados}
         <h2 style="color:#b91c1c;margin-top:32px">Medicação Não Administrada (Pendências)</h2>
@@ -1334,7 +1477,12 @@
         if (!lista) return;
         
         let filtrados = registros.filter(r => termo !== "" ? (r.nome || "").toLowerCase().includes(termo) : r.hora === horaAtual);
-        filtrados.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' }));
+        filtrados.sort((a, b) => {
+            const aTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == a.id && rm.horario === horaAtual && (rm.status === true || rm.status === 'true'));
+            const bTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == b.id && rm.horario === horaAtual && (rm.status === true || rm.status === 'true'));
+            if (aTomado !== bTomado) return aTomado ? 1 : -1;
+            return (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' });
+        });
         lista.innerHTML = filtrados.map(r => {
             const diasFaltantes = calcularDiasFaltantes(r);
             const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
@@ -1347,6 +1495,9 @@
             const listaMeds = (r.medicamento || 'Sem medicação definida').split(',');
             const blocoMedicamentosHtml = `<div class="med-tag-list">` + listaMeds.map(med => `<div class="med-tag-item">💊 ${med.trim()}</div>`).join('') + `</div>`;
 
+            const registradoPor = medHoje && medHoje.registrado_por_usuario ? medHoje.registrado_por_usuario : null;
+            const obsRegistro = medHoje && medHoje.observacao_registro ? medHoje.observacao_registro : null;
+
             return `
             <div class="record-card">
                 <div style="flex: 1; display: flex; align-items: flex-start; gap: 15px;">
@@ -1357,6 +1508,8 @@
                         ${blocoMedicamentosHtml}
                         ${r.observacao ? `<div style="margin-top:6px; background:#1a2744; border-left:3px solid #475569; border-radius:0 8px 8px 0; padding:6px 10px; font-size:12px; color:#94a3b8; font-style:italic; line-height:1.4;">💬 ${r.observacao}</div>` : ''}
                         ${diasFaltantes !== null ? `<small style="${statusAlerta} font-weight: bold; margin-top:6px; display:inline-block;">${diasFaltantes < 0 ? '❌ Sem Estoque / Renovação Necessária' : (diasFaltantes <= 30 ? '⏰ Faltam: ' + diasFaltantes + ' dias' : '')}</small>` : ''}
+                        ${isChecked && registradoPor ? `<div style="margin-top:5px; font-size:11px; color:#22c55e; display:flex; align-items:center; gap:4px;">✅ Marcado por <strong>${registradoPor}</strong></div>` : ''}
+                        ${isChecked && obsRegistro ? `<div style="margin-top:3px; background:#0f2818; border-left:3px solid #22c55e; border-radius:0 6px 6px 0; padding:5px 9px; font-size:11px; color:#86efac; font-style:italic;">📝 ${obsRegistro}</div>` : ''}
                     </div>
                 </div>
                 <div class="actions-wrapper">
@@ -1599,6 +1752,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        aplicarModoSalvo();
         verificarSessao();
         document.querySelectorAll('.modal').forEach(modal => { modal.addEventListener('click', (e) => { if (e.target === modal) fechar(modal.id); }); });
     });
@@ -1611,6 +1765,24 @@
     const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 horas
 
     let usuarioLogado = null; // { username, nome_completo, nivel }
+
+    // ==========================================
+    // MODO CLARO / ESCURO
+    // ==========================================
+    function toggleModoClaro() {
+        const isClaro = document.body.classList.toggle('modo-claro');
+        localStorage.setItem('farmed_modo_claro', isClaro ? '1' : '0');
+        document.getElementById('btnModoClaro').textContent = isClaro ? '🌙 Modo Escuro' : '☀️ Modo Claro';
+    }
+
+    function aplicarModoSalvo() {
+        const salvo = localStorage.getItem('farmed_modo_claro');
+        if (salvo === '1') {
+            document.body.classList.add('modo-claro');
+            const btn = document.getElementById('btnModoClaro');
+            if (btn) btn.textContent = '🌙 Modo Escuro';
+        }
+    }
 
     function verificarSessao() {
         const ts = localStorage.getItem(SENHA_KEY);
@@ -2414,6 +2586,28 @@ async function importarPlanilhaAcolhidos(event) {
             style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
             Fechar
         </button>
+    </div>
+</div>
+
+<!-- ===== MODAL OBSERVAÇÃO RÁPIDA AO MARCAR MEDICAÇÃO ===== -->
+<div id="modalObsRegistro" class="modal" style="z-index: 120000;">
+    <div class="modal-content" style="max-width: 400px;">
+        <h2 style="margin-bottom: 6px;">💊 Confirmar Medicação</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 16px;">Acolhido: <strong id="obsRegistroNomePac" style="color: var(--texto-p);"></strong></p>
+        <label>Observação (opcional)</label>
+        <textarea id="inpObsRegistro" rows="3" placeholder="Ex: acolhido recusou, tomou com atraso, precisou de ajuda..."
+            style="width:100%; margin: 8px 0 16px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in); resize: vertical; font-size: 14px;"
+            onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); window.confirmarToggleMedicacao(false); }"></textarea>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.confirmarToggleMedicacao(false)"
+                style="flex:1; padding:13px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:15px;">
+                ✅ Confirmar
+            </button>
+            <button onclick="fechar('modalObsRegistro')"
+                style="flex:1; padding:12px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+                Cancelar
+            </button>
+        </div>
     </div>
 </div>
 
