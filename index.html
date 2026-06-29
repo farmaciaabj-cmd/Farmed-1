@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -210,8 +211,13 @@
         .data-selecionada-titulo { font-size: 16px; color: var(--cor-azul); font-weight: bold; margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--borda); padding-bottom: 8px; flex-shrink: 0; }
         .container-scroll-pacientes { flex: 1; overflow-y: auto; padding-right: 5px; }
         
-        .drive-frame-container { width: 100%; flex: 1; border-radius: 12px; overflow: hidden; background: #0b0f19; border: 1px solid var(--borda); box-shadow: var(--shadow-in); min-height: 400px; }
-        .drive-frame-container iframe { width: 100%; height: 100%; border: none; }
+        .drive-frame-container { width: 100%; flex: 1; border-radius: 12px; overflow: auto; background: #0b0f19; border: 1px solid var(--borda); box-shadow: var(--shadow-in); min-height: 400px; }
+        .drive-frame-container::-webkit-scrollbar { width: 12px; height: 12px; }
+        .drive-frame-container::-webkit-scrollbar-track { background: #0b0f19; }
+        .drive-frame-container::-webkit-scrollbar-thumb { background: #2b3a55; border-radius: 8px; border: 2px solid #0b0f19; }
+        .drive-frame-container::-webkit-scrollbar-thumb:hover { background: var(--cor-azul); }
+        .drive-frame-zoom-wrap { width: 160%; height: 160%; }
+        .drive-frame-container iframe { width: 100%; height: 100%; border: none; transform: scale(1.6); transform-origin: top left; display: block; }
         
         .card-saida-paciente { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: var(--shadow-out); border-left: 5px solid #22c55e; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; }
         .card-saida-paciente.realizado { border-left-color: #475569; opacity: 0.65; }
@@ -339,7 +345,19 @@
             .relatorio-item { flex-direction: column; align-items: flex-start !important; gap: 10px; }
         }   
 
-        #modalReceitas .modal-content { display: flex; flex-direction: column; height: 90vh; width: 95% !important; }
+        #modalReceitas .modal-content { display: flex; flex-direction: column; height: 96vh; max-height: 96vh; width: 98% !important; max-width: 1600px !important; }
+        #modalReceitas .col-esquerda { flex: 0.8; min-width: 280px; max-width: 320px; }
+        #modalReceitas .col-direita { flex: 3; }
+        #modalReceitas .drive-frame-container { min-height: 600px; }
+        @media (max-width: 768px) {
+            #modalReceitas .modal-content { height: 95vh; max-height: 95vh; width: 100% !important; padding: 12px !important; }
+            #modalReceitas .agenda-body { flex-direction: column !important; overflow-y: auto !important; gap: 12px; }
+            #modalReceitas .col-esquerda { max-width: 100% !important; min-width: unset !important; flex: none !important; height: auto !important; min-height: 280px; max-height: 55vh; overflow-y: auto; }
+            #modalReceitas .col-direita { flex: none !important; min-width: unset !important; width: 100% !important; min-height: 320px; height: auto !important; }
+            #modalReceitas .drive-frame-container { min-height: 320px; height: 55vw; min-height: 240px; }
+            #modalReceitas .drive-frame-zoom-wrap { width: 100%; height: 100%; }
+            #modalReceitas .drive-frame-container iframe { transform: scale(1); transform-origin: top left; width: 100%; height: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -557,10 +575,19 @@
                 <div id="listaAlertas" style="flex: 1; overflow-y: auto; padding-right: 5px;"></div>
             </div>
             <div class="col-direita">
-                <div class="data-selecionada-titulo" id="nomeAcolhidoTitulo">Selecione um acolhido para inspecionar as pastas</div>
+                <div class="data-selecionada-titulo" id="nomeAcolhidoTitulo" style="display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;">
+                    <span id="nomeAcolhidoTitulo-texto">Selecione um acolhido para inspecionar as pastas</span>
+                    <a id="linkAbrirDrive" href="#" target="_blank" rel="noopener" class="link-drive" style="display:none;">⤢ Abrir em tamanho real</a>
+                </div>
                 <div class="container-scroll-pacientes" style="padding: 0;">
-                    <div class="drive-frame-container" id="driveContainer">
-                        <iframe id="driveIframe" src="https://drive.google.com/embeddedfolderview?id=1kGWG5rLmVBET55jxG9kPxGw2GWZv5PGf#grid"></iframe>
+                    <div id="driveVazio" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; min-height:300px; color:var(--texto-s); font-size:14px; gap:12px; padding:30px; text-align:center;">
+                        <span style="font-size:48px; opacity:0.3;">📁</span>
+                        <span>Selecione um acolhido na lista ao lado para visualizar a pasta</span>
+                    </div>
+                    <div class="drive-frame-container" id="driveContainer" style="display:none;">
+                        <div class="drive-frame-zoom-wrap">
+                            <iframe id="driveIframe" src="about:blank"></iframe>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1710,12 +1737,39 @@
     function selecionarAcolhidoParaDrive(id, nomeAcolhido) { 
         document.querySelectorAll('.card-paciente-link').forEach(c => c.classList.remove('selecionado'));
         const card = document.getElementById(`rec-card-${id}`); if(card) card.classList.add('selecionado');
-        const item = registros.find(r => r.id === id); if(!item) return; document.getElementById('nomeAcolhidoTitulo').innerText = `Acolhido: ${nomeAcolhido}`;
+        const item = registros.find(r => r.id === id); if(!item) return;
+        document.getElementById('nomeAcolhidoTitulo-texto').innerText = `Acolhido: ${nomeAcolhido}`;
         const iframe = document.getElementById('driveIframe');
         const evento = saidas.filter(s => s.nome === nomeAcolhido && s.links).pop();
         const linkFinal = (evento && evento.links) ? evento.links : item.links;
-        const idPasta = linkFinal ? extrairIdDrive(linkFinal) : "1kGWG5rLmVBET55jxG9kPxGw2GWZv5PGf";
+
+        // Oculta placeholder e mostra o drive
+        const driveVazio = document.getElementById('driveVazio');
+        const driveContainer = document.getElementById('driveContainer');
+
+        if (!linkFinal) {
+            // Sem pasta cadastrada: mostra aviso específico
+            if (driveVazio) { driveVazio.style.display = 'flex'; driveVazio.innerHTML = '<span style="font-size:48px; opacity:0.3;">📂</span><span>Nenhuma pasta do Drive cadastrada para este acolhido.</span>'; }
+            if (driveContainer) driveContainer.style.display = 'none';
+            document.getElementById('linkAbrirDrive').style.display = 'none';
+
+            // Em mobile: rola a col-direita até ficar visível
+            const colDireita = document.querySelector('#modalReceitas .col-direita');
+            if (colDireita && window.innerWidth <= 768) colDireita.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
+
+        const idPasta = extrairIdDrive(linkFinal);
+        if (driveVazio) driveVazio.style.display = 'none';
+        if (driveContainer) driveContainer.style.display = 'block';
         iframe.src = `https://drive.google.com/embeddedfolderview?id=${idPasta}&hl=pt-BR#grid`; 
+        const linkAbrir = document.getElementById('linkAbrirDrive');
+        linkAbrir.href = `https://drive.google.com/drive/folders/${idPasta}`;
+        linkAbrir.style.display = 'inline-block';
+
+        // Em mobile: rola a col-direita até ficar visível
+        const colDireita = document.querySelector('#modalReceitas .col-direita');
+        if (colDireita && window.innerWidth <= 768) colDireita.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     
     function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia();
