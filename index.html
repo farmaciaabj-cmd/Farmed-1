@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -833,7 +832,7 @@
             }
             const mStatus = m.diasFaltantes < 0 ? 'critico' : (m.diasFaltantes <= 5 ? 'atencao' : 'ok');
             return `
-            <div class="alerta-card">
+            <div class="alerta-card" onclick="irParaReceitaPaciente('${alerta.nome.replace(/'/g, "\\'")}')" style="cursor:pointer;" title="Clique para abrir a Central de Receitas Médicas">
                 <div class="alerta-card-bar ${mStatus}"></div>
                 <div class="alerta-card-body">
                     <div class="alerta-card-head">
@@ -861,7 +860,7 @@
         const status = alerta.status === 'vencida' ? 'critico' : 'atencao';
         const dias = Math.abs(alerta.diasRestantes);
         return `
-        <div class="alerta-card">
+        <div class="alerta-card" onclick="irParaAgendaData('${alerta.data}')" style="cursor:pointer;" title="Clique para abrir a Agenda Profissional na data agendada">
             <div class="alerta-card-bar ${status}"></div>
             <div class="alerta-card-body">
                 <div class="alerta-card-head">
@@ -1773,6 +1772,28 @@
     }
     
     function abrirCalendarioGrande() { abrir('modalCalendario'); gerarCalendario(); renderizarPacientesDoDia();
+    }
+
+    // Navega da área de Alertas para a Central de Receitas Médicas, já com o acolhido selecionado
+    function irParaReceitaPaciente(nomeAcolhido) {
+        fechar('modalAlertas');
+        fechar('modalReceitas');
+        const item = registros.find(r => r.nome === nomeAcolhido);
+        const id = item ? item.id : 0;
+        abrirGerenciadorReceitas();
+        setTimeout(() => { selecionarAcolhidoParaDrive(id, nomeAcolhido); }, 50);
+    }
+
+    // Navega da área de Alertas para a Agenda Profissional - Saídas, já na data da renovação agendada
+    function irParaAgendaData(dataIso) {
+        fechar('modalAlertas');
+        if (!dataIso) { abrirCalendarioGrande(); return; }
+        const [ano, mes, dia] = dataIso.split('-').map(Number);
+        dataAtual = new Date(ano, mes - 1, dia);
+        dataSelecionada = new Date(ano, mes - 1, dia);
+        abrir('modalCalendario');
+        gerarCalendario();
+        renderizarPacientesDoDia();
     }
     function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
     }
