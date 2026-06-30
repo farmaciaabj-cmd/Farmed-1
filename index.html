@@ -357,6 +357,44 @@
             #modalReceitas .drive-frame-zoom-wrap { width: 100%; height: 100%; }
             #modalReceitas .drive-frame-container iframe { transform: scale(1); transform-origin: top left; width: 100%; height: 100%; }
         }
+
+        /* ===== CENTRAL DE PA / GLICOSE ===== */
+        #modalGlicosePA .modal-content { display: flex; flex-direction: column; height: 96vh; max-height: 96vh; width: 98% !important; max-width: 1600px !important; }
+        #modalGlicosePA .col-esquerda { flex: 0.8; min-width: 280px; max-width: 320px; }
+        #modalGlicosePA .col-direita { flex: 3; overflow-y: auto; padding-right: 4px; }
+        .gp-form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; }
+        .gp-form-grid .campo label { font-size: 11px; color: var(--texto-s); font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 6px; }
+        .gp-form-grid .campo input { width: 100%; padding: 11px 14px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; font-size: 14px; box-shadow: var(--shadow-in); }
+        .gp-form-grid .campo input:focus { border-color: var(--cor-azul); }
+        .gp-usuario-logado { font-size: 12px; color: var(--texto-s); background: #151f32; border-radius: 10px; padding: 8px 14px; margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; }
+        .gp-btn-salvar { background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; padding: 12px 22px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; box-shadow: var(--shadow-out); margin-top: 14px; transition: transform 0.1s, opacity 0.2s; }
+        .gp-btn-salvar:hover { opacity: 0.92; }
+        .gp-btn-salvar:active { transform: scale(0.97); }
+        .gp-btn-salvar:disabled { opacity: 0.6; cursor: not-allowed; }
+        .gp-busca-row { display: flex; gap: 10px; align-items: end; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--borda); flex-wrap: wrap; }
+        .gp-busca-row .campo label { font-size: 11px; color: var(--texto-s); font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 6px; }
+        .gp-busca-row .campo input { padding: 10px 14px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; font-size: 14px; box-shadow: var(--shadow-in); }
+        .gp-btn-buscar { background: #0f3652; color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); padding: 10px 18px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: var(--shadow-out); transition: all 0.2s; white-space: nowrap; }
+        .gp-btn-buscar:hover { background: var(--cor-azul); color: white; }
+        .gp-btn-limpar-busca { background: #151f32; color: var(--texto-s); border: 1px solid var(--borda); padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .gp-tabela-wrap { margin-top: 18px; overflow-x: auto; border-radius: 14px; box-shadow: var(--shadow-out); }
+        table.gp-tabela { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 14px; overflow: hidden; min-width: 560px; }
+        table.gp-tabela th { background: #151f32; color: var(--cor-azul); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; padding: 12px 14px; text-align: left; font-weight: 700; }
+        table.gp-tabela td { padding: 12px 14px; font-size: 13px; color: var(--texto-p); border-top: 1px solid var(--borda); }
+        table.gp-tabela tr:hover td { background: rgba(0,156,217,0.06); }
+        .gp-badge-glicose { font-weight: 700; }
+        .gp-badge-pa { font-weight: 700; color: var(--cor-azul); }
+        .gp-vazio-aviso { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 280px; color: var(--texto-s); font-size: 14px; gap: 12px; padding: 30px; text-align: center; }
+        .gp-btn-delete-row { border: none; background: #4c1d1d; color: #f87171; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+        .gp-btn-delete-row:hover { background: #dc2626; color: white; }
+        @media (max-width: 768px) {
+            #modalGlicosePA .modal-content { height: 95vh; max-height: 95vh; width: 100% !important; padding: 12px !important; }
+            #modalGlicosePA .agenda-body { flex-direction: column !important; overflow-y: auto !important; gap: 12px; }
+            #modalGlicosePA .col-esquerda { max-width: 100% !important; min-width: unset !important; flex: none !important; height: auto !important; min-height: 220px; max-height: 40vh; overflow-y: auto; }
+            #modalGlicosePA .col-direita { flex: none !important; min-width: unset !important; width: 100% !important; }
+            .gp-form-grid { grid-template-columns: repeat(2, 1fr); }
+            .gp-busca-row { flex-direction: column; align-items: stretch; }
+        }
     </style>
 </head>
 <body>
@@ -587,6 +625,88 @@
                         <div class="drive-frame-zoom-wrap">
                             <iframe id="driveIframe" src="about:blank"></iframe>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalGlicosePA" class="modal">
+    <div class="modal-content modal-grande">
+        <div class="agenda-header">
+            <h2>🩸 Central de Pressão Arterial e Glicose</h2>
+            <button onclick="fechar('modalGlicosePA')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+        </div>
+        <div class="agenda-body">
+            <div class="col-esquerda">
+                <div class="col-esquerda-titulo">ACOLHIDOS REGISTRADOS</div>
+                <input type="text" id="searchGlicosePAInput" class="search-input-compacto" placeholder="🔍 Filtrar por nome..." onkeyup="gerarListaAcolhidosGlicosePA()">
+                <div class="col-esquerda-scroll" id="listaNomesGlicosePA" style="flex:1; overflow-y:auto;"></div>
+            </div>
+            <div class="col-direita">
+                <div id="gpVazio" class="gp-vazio-aviso">
+                    <span style="font-size:48px; opacity:0.3;">🩸</span>
+                    <span>Selecione um acolhido na lista ao lado para registar Pressão Arterial e Glicose</span>
+                </div>
+                <div id="gpConteudo" style="display:none;">
+                    <div class="data-selecionada-titulo" id="gpNomeAcolhidoTitulo" style="margin-bottom:14px;">
+                        Acolhido: <strong id="gpNomeAcolhidoTexto" style="color:var(--cor-azul);"></strong>
+                    </div>
+
+                    <form id="formGlicosePA" onsubmit="salvarRegistroGlicosePA(event)">
+                        <div class="gp-form-grid">
+                            <div class="campo">
+                                <label>Data</label>
+                                <input type="date" id="gpInputData" required>
+                            </div>
+                            <div class="campo">
+                                <label>Hora</label>
+                                <input type="time" id="gpInputHora" required>
+                            </div>
+                            <div class="campo">
+                                <label>Glicose (mg/dL)</label>
+                                <input type="number" id="gpInputGlicose" placeholder="Ex: 110" min="0" step="1">
+                            </div>
+                            <div class="campo">
+                                <label>Pressão Arterial</label>
+                                <input type="text" id="gpInputPA" placeholder="Ex: 120/80">
+                            </div>
+                        </div>
+                        <div class="gp-usuario-logado">👤 Registado por: <strong id="gpUsuarioLogadoTexto" style="color:var(--texto-p);">—</strong></div>
+                        <br>
+                        <button type="submit" class="gp-btn-salvar" id="gpBtnSalvar">💾 Salvar Registo</button>
+                    </form>
+
+                    <div class="gp-busca-row">
+                        <div class="campo">
+                            <label>Buscar de</label>
+                            <input type="date" id="gpBuscaDataIni">
+                        </div>
+                        <div class="campo">
+                            <label>Até</label>
+                            <input type="date" id="gpBuscaDataFim">
+                        </div>
+                        <button type="button" class="gp-btn-buscar" onclick="buscarRegistrosGlicosePA()">🔍 Buscar por Data</button>
+                        <button type="button" class="gp-btn-limpar-busca" onclick="limparBuscaGlicosePA()">Limpar Busca</button>
+                    </div>
+
+                    <div class="gp-tabela-wrap">
+                        <table class="gp-tabela">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Hora</th>
+                                    <th>Glicose</th>
+                                    <th>PA</th>
+                                    <th>Registado por</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="gpTabelaCorpo">
+                                <tr><td colspan="6" style="text-align:center; color:var(--texto-s); padding:20px;">Sem registos para mostrar.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1006,6 +1126,7 @@
                 <button class="btn-plus" style="width: 38px; height: 38px;" onclick="adicionarNovoHorario()" title="Adicionar Horário Extra">+</button>
                 <button class="btn-plus" style="width: auto; padding: 0 12px; height: 38px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap;" onclick="marcarTodosHorario()" title="Marcar todos como tomado neste horário">✅ Todos</button>
                 <button class="btn-calendario-header" onclick="abrirModalRelatorioGeral()" title="Relatório de Medicamentos">📅 Relatório</button>
+                <button class="btn-calendario-header" onclick="abrirGlicosePA()" title="Registar Pressão Arterial e Glicose">🩸 PA/Glicose</button>
             </div>
         `;
     }
@@ -1782,6 +1903,180 @@
         const id = item ? item.id : 0;
         abrirGerenciadorReceitas();
         setTimeout(() => { selecionarAcolhidoParaDrive(id, nomeAcolhido); }, 50);
+    }
+
+    // ==========================================
+    // CENTRAL DE PRESSÃO ARTERIAL E GLICOSE
+    // Tabela Supabase utilizada: registros_glicose_pa
+    // Colunas esperadas: id, paciente_id, paciente_nome, data, hora, glicose, pa, registado_por, created_at
+    // ==========================================
+    let gpAcolhidoSelecionadoId = null;
+    let gpAcolhidoSelecionadoNome = null;
+
+    function abrirGlicosePA() {
+        document.getElementById('searchGlicosePAInput').value = "";
+        document.getElementById('gpVazio').style.display = 'flex';
+        document.getElementById('gpConteudo').style.display = 'none';
+        gpAcolhidoSelecionadoId = null;
+        gpAcolhidoSelecionadoNome = null;
+        abrir('modalGlicosePA');
+        gerarListaAcolhidosGlicosePA();
+    }
+
+    function gerarListaAcolhidosGlicosePA() {
+        const container = document.getElementById('listaNomesGlicosePA');
+        const termo = document.getElementById('searchGlicosePAInput').value.toLowerCase();
+        if (registros.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum acolhido.</p>"; return;
+        }
+        const nomesUnicos = [...new Set(registros.map(p => p.nome))];
+        let nomesFiltrados = nomesUnicos.filter(nome => nome.toLowerCase().includes(termo)).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
+        if (nomesFiltrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px;'>Nenhum resultado.</p>"; return;
+        }
+        container.innerHTML = nomesFiltrados.map(nome => { const id = registros.find(r => r.nome === nome)?.id || 0; return `<div class="card-paciente-link" id="gp-card-${id}" onclick="selecionarAcolhidoGlicosePA(${id}, '${nome.replace(/'/g, "\\'")}')"><span>👤 ${nome}</span><span style="font-size: 11px; color: var(--cor-azul);">Registar ➔</span></div>`; }).join('');
+    }
+
+    function selecionarAcolhidoGlicosePA(id, nomeAcolhido) {
+        document.querySelectorAll('#listaNomesGlicosePA .card-paciente-link').forEach(c => c.classList.remove('selecionado'));
+        const card = document.getElementById(`gp-card-${id}`); if (card) card.classList.add('selecionado');
+
+        gpAcolhidoSelecionadoId = id;
+        gpAcolhidoSelecionadoNome = nomeAcolhido;
+
+        document.getElementById('gpVazio').style.display = 'none';
+        document.getElementById('gpConteudo').style.display = 'block';
+        document.getElementById('gpNomeAcolhidoTexto').innerText = nomeAcolhido;
+        document.getElementById('gpUsuarioLogadoTexto').innerText = usuarioLogado ? usuarioLogado.nome_completo : '—';
+
+        // Pré-preenche data e hora atuais
+        document.getElementById('gpInputData').value = obterDataAtualLocal();
+        const agora = new Date();
+        document.getElementById('gpInputHora').value = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+        document.getElementById('gpInputGlicose').value = '';
+        document.getElementById('gpInputPA').value = '';
+        document.getElementById('gpBuscaDataIni').value = '';
+        document.getElementById('gpBuscaDataFim').value = '';
+
+        carregarRegistrosGlicosePA();
+
+        // Em mobile: rola a col-direita até ficar visível
+        const colDireita = document.querySelector('#modalGlicosePA .col-direita');
+        if (colDireita && window.innerWidth <= 768) colDireita.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function salvarRegistroGlicosePA(event) {
+        event.preventDefault();
+        if (!gpAcolhidoSelecionadoId) { toast("Atenção", "Selecione um acolhido antes de salvar.", "warning"); return; }
+
+        const data = document.getElementById('gpInputData').value;
+        const hora = document.getElementById('gpInputHora').value;
+        const glicose = document.getElementById('gpInputGlicose').value;
+        const pa = document.getElementById('gpInputPA').value.trim();
+
+        if (!data || !hora) { toast("Atenção", "Preencha a data e a hora.", "warning"); return; }
+        if (!glicose && !pa) { toast("Atenção", "Preencha pelo menos Glicose ou Pressão Arterial.", "warning"); return; }
+
+        const btn = document.getElementById('gpBtnSalvar');
+        btn.disabled = true; btn.innerText = "A guardar...";
+
+        const novoRegistro = {
+            paciente_id: gpAcolhidoSelecionadoId,
+            paciente_nome: gpAcolhidoSelecionadoNome,
+            data: data,
+            hora: hora,
+            glicose: glicose ? Number(glicose) : null,
+            pa: pa || null,
+            registado_por: usuarioLogado ? usuarioLogado.nome_completo : null
+        };
+
+        const { error } = await supabaseClient.from('registros_glicose_pa').insert([novoRegistro]);
+
+        btn.disabled = false; btn.innerText = "💾 Salvar Registo";
+
+        if (error) {
+            toast("Erro ao salvar", error.message || "Não foi possível salvar o registo.", "error");
+            return;
+        }
+
+        toast("Registo guardado", `PA/Glicose de ${gpAcolhidoSelecionadoNome} salvo com sucesso.`, "success");
+        document.getElementById('gpInputGlicose').value = '';
+        document.getElementById('gpInputPA').value = '';
+        carregarRegistrosGlicosePA();
+    }
+
+    async function carregarRegistrosGlicosePA() {
+        if (!gpAcolhidoSelecionadoId) return;
+        const tbody = document.getElementById('gpTabelaCorpo');
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--texto-s); padding:20px;">A carregar...</td></tr>`;
+
+        const { data, error } = await supabaseClient
+            .from('registros_glicose_pa')
+            .select('*')
+            .eq('paciente_id', gpAcolhidoSelecionadoId)
+            .order('data', { ascending: false })
+            .order('hora', { ascending: false });
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#f87171; padding:20px;">Erro ao carregar registos.</td></tr>`;
+            return;
+        }
+        renderizarTabelaGlicosePA(data || []);
+    }
+
+    async function buscarRegistrosGlicosePA() {
+        if (!gpAcolhidoSelecionadoId) { toast("Atenção", "Selecione um acolhido primeiro.", "warning"); return; }
+        const dataIni = document.getElementById('gpBuscaDataIni').value;
+        const dataFim = document.getElementById('gpBuscaDataFim').value;
+
+        if (!dataIni && !dataFim) { carregarRegistrosGlicosePA(); return; }
+
+        const tbody = document.getElementById('gpTabelaCorpo');
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--texto-s); padding:20px;">A procurar...</td></tr>`;
+
+        let query = supabaseClient.from('registros_glicose_pa').select('*').eq('paciente_id', gpAcolhidoSelecionadoId);
+        if (dataIni) query = query.gte('data', dataIni);
+        if (dataFim) query = query.lte('data', dataFim);
+        query = query.order('data', { ascending: false }).order('hora', { ascending: false });
+
+        const { data, error } = await query;
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#f87171; padding:20px;">Erro ao procurar registos.</td></tr>`;
+            return;
+        }
+        renderizarTabelaGlicosePA(data || []);
+        if ((data || []).length === 0) toast("Sem resultados", "Nenhum registo encontrado neste período.", "info");
+    }
+
+    function limparBuscaGlicosePA() {
+        document.getElementById('gpBuscaDataIni').value = '';
+        document.getElementById('gpBuscaDataFim').value = '';
+        carregarRegistrosGlicosePA();
+    }
+
+    function renderizarTabelaGlicosePA(lista) {
+        const tbody = document.getElementById('gpTabelaCorpo');
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--texto-s); padding:20px;">Sem registos para mostrar.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = lista.map(r => `
+            <tr>
+                <td>${formatarDataBr(r.data)}</td>
+                <td>${r.hora || '—'}</td>
+                <td class="gp-badge-glicose">${r.glicose !== null && r.glicose !== undefined ? r.glicose + ' mg/dL' : '—'}</td>
+                <td class="gp-badge-pa">${r.pa || '—'}</td>
+                <td>${r.registado_por || '—'}</td>
+                <td><button class="gp-btn-delete-row" onclick="excluirRegistroGlicosePA('${r.id}')" title="Excluir">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function excluirRegistroGlicosePA(id) {
+        if (!confirm("Deseja realmente excluir este registo?")) return;
+        const { error } = await supabaseClient.from('registros_glicose_pa').delete().eq('id', id);
+        if (error) { toast("Erro", "Não foi possível excluir o registo.", "error"); return; }
+        toast("Excluído", "Registo removido com sucesso.", "success");
+        carregarRegistrosGlicosePA();
     }
 
     // Navega da área de Alertas para a Agenda Profissional - Saídas, já na data da renovação agendada
