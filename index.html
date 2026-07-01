@@ -771,6 +771,14 @@
             <div class="alertas-modal-titulo">⚠️ Alertas de Renovação</div>
             <button onclick="fechar('modalAlertas')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
         </div>
+        <div class="relatorio-filtros" style="padding: 0 15px; margin-top: 12px;">
+            <input type="date" id="alertasDataInicio" title="Data Inicial (vencimento/agendamento)" onchange="filtrarAlertasModal()">
+            <input type="date" id="alertasDataFim" title="Data Final (vencimento/agendamento)" onchange="filtrarAlertasModal()">
+        </div>
+        <div style="display:flex; gap:10px; padding: 0 15px; margin-top:10px; margin-bottom: 5px;">
+            <button onclick="limparFiltroAlertas()" style="flex:1; padding:10px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">✖ Limpar Filtro</button>
+            <button onclick="exportarAlertasPdf()" style="flex:1.3; padding:10px; background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">📄 Exportar PDF</button>
+        </div>
         <div id="alertasModalBody">
             <p style="color:#64748b; text-align:center; padding:30px;">A carregar alertas...</p>
         </div>
@@ -927,6 +935,25 @@
         return Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
     }
 
+    // Igual ao cálculo acima, mas devolve a DATA de vencimento (YYYY-MM-DD) em vez dos dias restantes.
+    // Usado para permitir filtrar/exportar os Alertas de Renovação por período de data.
+    function calcularDataVencimento(paciente) {
+        if (!paciente.ultima_retirada) return null;
+        const dataRetirada = new Date(paciente.ultima_retirada + 'T00:00:00');
+        let dataVencimento = new Date(dataRetirada.getTime());
+
+        if (paciente.qtd_meses && paciente.qtd_meses > 0) {
+            dataVencimento.setMonth(dataVencimento.getMonth() + parseInt(paciente.qtd_meses));
+        } else {
+            dataVencimento = dataRetirada;
+        }
+
+        const ano = dataVencimento.getFullYear();
+        const mes = String(dataVencimento.getMonth() + 1).padStart(2, '0');
+        const dia = String(dataVencimento.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
+
     function calcularStatusReceita(paciente) {
         const diasFaltantes = calcularDiasFaltantes(paciente);
         const resultado = { nome: paciente.nome, medicamento: paciente.medicamento, dias_faltantes: diasFaltantes, ultima_retirada: paciente.ultima_retirada, data_prescricao: paciente.data_prescricao, qtd_meses: paciente.qtd_meses, status: 'ok', mensagem: '', alerta: false };
@@ -975,7 +1002,7 @@
             pacientes.forEach(p => {
                 const diasFaltantes = calcularDiasFaltantes(p);
                 if (diasFaltantes !== null && diasFaltantes <= 30) {
-                     medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida });
+                     medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida, data_vencimento: calcularDataVencimento(p) });
                     if (diasFaltantesMinimo === null || diasFaltantes < diasFaltantesMinimo) diasFaltantesMinimo = diasFaltantes;
                 }
             });
@@ -1049,11 +1076,40 @@
         </div>`;
     }
 
-    function buildAlertasHTML() {
+    // Monta as listas base (sem filtro de data) de alertas de estoque e de renovações agendadas
+    function obterAlertasBase() {
         const alertasPacientes = agruparAlertasPorPaciente();
         const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
         const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes, alerta: true })).sort((a, b) => (a.dias_faltantes || 0) - (b.dias_faltantes || 0));
+        return { alertasEstoque, alertasRenovacao };
+    }
+
+    // Filtra as listas base por período de data (data de vencimento do medicamento / data agendada da renovação).
+    // Se ambas as datas vierem vazias, devolve tudo sem filtrar.
+    function filtrarAlertasPorData(base, dataIni, dataFim) {
+        if (!dataIni && !dataFim) return base;
+        const alertasRenovacao = base.alertasRenovacao.filter(a => (!dataIni || (a.data && a.data >= dataIni)) && (!dataFim || (a.data && a.data <= dataFim)));
+        const alertasEstoque = base.alertasEstoque
+            .map(a => ({ ...a, medicamentos: a.medicamentos.filter(m => m.data_vencimento && (!dataIni || m.data_vencimento >= dataIni) && (!dataFim || m.data_vencimento <= dataFim)) }))
+            .filter(a => a.medicamentos.length > 0);
+        return { alertasEstoque, alertasRenovacao };
+    }
+
+    // Monta o HTML (cards) a partir de listas já filtradas
+    function montarHtmlAlertasSecoes(alertasEstoque, alertasRenovacao) {
         const totalAlertas = alertasEstoque.length + alertasRenovacao.length;
+        if (totalAlertas === 0) return `<p style='color:#22c55e; text-align:center; font-size:13px; padding:30px 0;'>✅ Nenhum alerta encontrado!</p>`;
+        let html = '';
+        if (alertasEstoque.length > 0) { html += `<div class="alertas-secao-titulo">💊 Estoque de Medicamentos</div><div class="alertas-grid">`; alertasEstoque.forEach(a => { html += buildCardEstoque(a); });
+        html += `</div>`; }
+        if (alertasRenovacao.length > 0) { html += `<div class="alertas-secao-titulo">📋 Renovações Agendadas</div><div class="alertas-grid">`;
+        alertasRenovacao.forEach(a => { html += buildCardRenovacao(a); }); html += `</div>`; }
+        return html;
+    }
+
+    function buildAlertasHTML() {
+        const base = obterAlertasBase();
+        const totalAlertas = base.alertasEstoque.length + base.alertasRenovacao.length;
         const badge = document.getElementById('badgeAlertasCount');
         const btnAlertas = document.getElementById('btnAlertas');
         if (badge) {
@@ -1063,14 +1119,23 @@
             }
         }
         if (btnAlertas) btnAlertas.classList.toggle('alerta-ativo', totalAlertas > 0);
-        if (totalAlertas === 0) return `<p style='color:#22c55e; text-align:center; font-size:13px; padding:30px 0;'>✅ Nenhum alerta de momento!</p>`;
+        return montarHtmlAlertasSecoes(base.alertasEstoque, base.alertasRenovacao);
+    }
 
-        let html = '';
-        if (alertasEstoque.length > 0) { html += `<div class="alertas-secao-titulo">💊 Estoque de Medicamentos</div><div class="alertas-grid">`; alertasEstoque.forEach(a => { html += buildCardEstoque(a); });
-        html += `</div>`; }
-        if (alertasRenovacao.length > 0) { html += `<div class="alertas-secao-titulo">📋 Renovações Agendadas</div><div class="alertas-grid">`;
-        alertasRenovacao.forEach(a => { html += buildCardRenovacao(a); }); html += `</div>`; }
-        return html;
+    // Reaplica o filtro de data (campos do modal) e re-renderiza a lista de alertas exibida
+    function filtrarAlertasModal() {
+        const dataIni = (document.getElementById('alertasDataInicio') || {}).value || '';
+        const dataFim = (document.getElementById('alertasDataFim') || {}).value || '';
+        const base = obterAlertasBase();
+        const filtrado = filtrarAlertasPorData(base, dataIni, dataFim);
+        const modalBody = document.getElementById('alertasModalBody');
+        if (modalBody) modalBody.innerHTML = montarHtmlAlertasSecoes(filtrado.alertasEstoque, filtrado.alertasRenovacao);
+    }
+
+    function limparFiltroAlertas() {
+        const di = document.getElementById('alertasDataInicio'); if (di) di.value = '';
+        const df = document.getElementById('alertasDataFim'); if (df) df.value = '';
+        filtrarAlertasModal();
     }
 
     function gerarAlertas() {
@@ -1093,7 +1158,136 @@
         if (modalBody) modalBody.innerHTML = buildAlertasHTML();
     }
 
-    function abrirModalAlertas() { abrir('modalAlertas'); document.getElementById('alertasModalBody').innerHTML = buildAlertasHTML(); }
+    function abrirModalAlertas() {
+        abrir('modalAlertas');
+        const di = document.getElementById('alertasDataInicio'); if (di) di.value = '';
+        const df = document.getElementById('alertasDataFim'); if (df) df.value = '';
+        document.getElementById('alertasModalBody').innerHTML = buildAlertasHTML();
+    }
+
+    // Gera um relatório em PDF (imprimível) dos Alertas de Renovação, respeitando o filtro de data do modal
+    function exportarAlertasPdf() {
+        const dataIni = (document.getElementById('alertasDataInicio') || {}).value || '';
+        const dataFim = (document.getElementById('alertasDataFim') || {}).value || '';
+        const base = obterAlertasBase();
+        const { alertasEstoque, alertasRenovacao } = filtrarAlertasPorData(base, dataIni, dataFim);
+
+        if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) { toast("Sem alertas", "Nenhum alerta encontrado para o período selecionado.", "warning"); return; }
+
+        const hoje = new Date();
+        const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        const horaEmissao = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const periodoLabel = (dataIni || dataFim) ? `${dataIni ? formatarDataBr(dataIni) : 'Início'} — ${dataFim ? formatarDataBr(dataFim) : 'Hoje'}` : 'Todos os alertas atuais';
+
+        // Linhas de Estoque de Medicamentos (uma linha por medicamento, ordenadas pela data de vencimento)
+        let linhasEstoque = '';
+        let totalMeds = 0;
+        let contador = 1;
+        alertasEstoque.forEach(a => {
+            [...a.medicamentos].sort((x, y) => (x.data_vencimento || '').localeCompare(y.data_vencimento || '')).forEach(m => {
+                totalMeds++;
+                const status = m.diasFaltantes < 0 ? 'critico' : (m.diasFaltantes <= 5 ? 'atencao' : 'ok');
+                const cor = status === 'critico' ? '#b91c1c' : status === 'atencao' ? '#b45309' : '#166534';
+                const bg = status === 'critico' ? '#fee2e2' : status === 'atencao' ? '#fef3c7' : '#dcfce7';
+                const borda = status === 'critico' ? '#fca5a5' : status === 'atencao' ? '#fcd34d' : '#86efac';
+                const label = m.diasFaltantes < 0 ? `❌ Vencido há ${Math.abs(m.diasFaltantes)}d` : `⏰ Faltam ${m.diasFaltantes}d`;
+                const bgLinha = contador % 2 === 0 ? 'background:#f8fafc;' : '';
+                linhasEstoque += `<tr style="border-bottom:1px solid #e2e8f0;${bgLinha}">
+                    <td style="padding:9px 12px;font-size:13px;color:#334155;">${contador++}</td>
+                    <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#1e293b;">${a.nome}</td>
+                    <td style="padding:9px 12px;font-size:12px;color:#64748b;font-style:italic;">${m.medicamento}</td>
+                    <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${m.data_vencimento ? formatarDataBr(m.data_vencimento) : '—'}</td>
+                    <td style="padding:9px 12px;text-align:center;"><span style="background:${bg};color:${cor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${borda};">${label}</span></td>
+                </tr>`;
+            });
+        });
+
+        const tabelaEstoque = totalMeds === 0
+            ? `<p style="text-align:center;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">✓ Nenhum alerta de estoque de medicamentos no período selecionado.</p>`
+            : `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <thead><tr style="background:#1e3a5f;color:white;">
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">#</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">ACOLHIDO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">MEDICAMENTO</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">VENCE EM</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">SITUAÇÃO</th>
+                </tr></thead>
+                <tbody>${linhasEstoque}</tbody>
+            </table>`;
+
+        // Linhas de Renovações Agendadas
+        let linhasRenovacao = '';
+        let contador2 = 1;
+        [...alertasRenovacao].sort((a, b) => (a.data || '').localeCompare(b.data || '')).forEach(a => {
+            const status = a.status === 'vencida' ? 'critico' : 'atencao';
+            const cor = status === 'critico' ? '#b91c1c' : '#b45309';
+            const bg = status === 'critico' ? '#fee2e2' : '#fef3c7';
+            const borda = status === 'critico' ? '#fca5a5' : '#fcd34d';
+            const bgLinha = contador2 % 2 === 0 ? 'background:#f8fafc;' : '';
+            linhasRenovacao += `<tr style="border-bottom:1px solid #e2e8f0;${bgLinha}">
+                <td style="padding:9px 12px;font-size:13px;color:#334155;">${contador2++}</td>
+                <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#1e293b;">${a.nome}</td>
+                <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${a.data ? formatarDataBr(a.data) : '—'}</td>
+                <td style="padding:9px 12px;text-align:center;"><span style="background:${bg};color:${cor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${borda};">${a.mensagem}</span></td>
+            </tr>`;
+        });
+
+        const tabelaRenovacao = alertasRenovacao.length === 0
+            ? `<p style="text-align:center;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">✓ Nenhuma renovação agendada pendente no período selecionado.</p>`
+            : `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <thead><tr style="background:#1e3a5f;color:white;">
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">#</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">ACOLHIDO</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">DATA AGENDADA</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">SITUAÇÃO</th>
+                </tr></thead>
+                <tbody>${linhasRenovacao}</tbody>
+            </table>`;
+
+        const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Alertas_Renovacao_${new Date().toISOString().slice(0,10)}</title>
+        <style>
+            *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:32px;font-size:13px}
+            h1{font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;margin-bottom:8px}
+            h2{font-size:12px;font-weight:700;text-transform:uppercase;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:14px;margin-top:28px}
+            p{font-size:13px;color:#475569;margin-bottom:20px;line-height:1.7}
+            table{width:100%;border-collapse:collapse;margin-top:10px}thead tr{background:#1e3a5f;color:white}
+            th{padding:10px 12px;text-align:left;font-size:12px;font-weight:700}td{padding:9px 12px;font-size:13px;border-bottom:1px solid #e2e8f0}tr{page-break-inside:avoid}
+            .cards{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}.card{flex:1;min-width:100px;border-radius:10px;padding:14px 18px}
+            .rodape{margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6}
+            @media print{@page{margin:15mm;size:A4}}
+        </style></head><body>
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px">
+            <div style="font-size:22px;font-weight:800;color:#1e3a5f">FARMED</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
+        </div>
+        <h1>⚠️ Alertas de Renovação</h1>
+        <p>Este relatório lista os acolhidos com estoque de medicação próximo do fim (ou já vencido) e as renovações/saídas agendadas pendentes.</p>
+        <div class="cards">
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f;min-width:140px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Período</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${periodoLabel}</div></div>
+            <div class="card" style="background:#fef3c7;border-left:4px solid #d97706"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#92400e">Alertas de Estoque</div><div style="font-size:22px;font-weight:800;color:#d97706;margin-top:4px">${totalMeds}</div></div>
+            <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Renovações Agendadas</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${alertasRenovacao.length}</div></div>
+        </div>
+        <h2 style="color:#92400e">💊 Estoque de Medicamentos</h2>
+        ${tabelaEstoque}
+        <h2 style="color:#b91c1c;margin-top:32px">📋 Renovações Agendadas</h2>
+        ${tabelaRenovacao}
+        <div class="rodape"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
+        <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+        </body></html>`;
+
+        const _blob = new Blob([_htmlPdf], { type: 'text/html;charset=utf-8' });
+        const _url = URL.createObjectURL(_blob);
+        const _nomeArquivo = `Alertas_Renovacao_${new Date().toISOString().slice(0,10)}.html`;
+        const _a = document.createElement('a');
+        _a.href = _url;
+        _a.download = _nomeArquivo;
+        document.body.appendChild(_a);
+        _a.click();
+        document.body.removeChild(_a);
+        setTimeout(() => URL.revokeObjectURL(_url), 10000);
+        toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
+    }
     
     // ==========================================
     // CARREGAMENTO DE DADOS (BASE DE DADOS)
@@ -1513,6 +1707,7 @@
             const linha = item._linhaPaciente;
             const nomePac = linha ? linha.nome : 'Acolhido Eliminado';
             const medicamentoLinha = linha ? linha.medicamento : null;
+            const capsulaLinha = (linha && linha.capsula !== null && linha.capsula !== undefined && linha.capsula !== '') ? linha.capsula : null;
 
             // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
             const isTomado = item.status === true || item.status === 'true';
@@ -1522,7 +1717,7 @@
                 <div style="display:flex; flex-direction:column; gap:4px; flex: 1;">
                     <span>📅 ${formatarDataBr(item.data)} às <strong>${item.horario}</strong></span>
                     ${pacSelecionado === 'todos' ? `<small style="color:var(--cor-azul); font-weight:bold;">👤 ${nomePac}</small>` : ''}
-                    ${medicamentoLinha ? `<small style="color:#e2e8f0; font-style: italic; background:#1e293b; padding:4px 8px; border-radius:6px; margin-top:3px; display:inline-block; width: fit-content;">💊 ${medicamentoLinha}</small>` : ''}
+                    ${medicamentoLinha ? `<small style="color:#e2e8f0; font-style: italic; background:#1e293b; padding:4px 8px; border-radius:6px; margin-top:3px; display:inline-block; width: fit-content;">💊 ${medicamentoLinha}${capsulaLinha !== null ? ` <span style="color:#38bdf8; font-style: normal; font-weight:bold;">(${capsulaLinha}cp)</span>` : ''}</small>` : ''}
                 </div>
                 <span style="font-weight: bold; background: ${isTomado ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isTomado ? '#4ade80' : '#f87171'}; padding: 4px 8px; border-radius: 6px; font-size: 12px; height: fit-content; white-space: nowrap;">
                     ${isTomado ? '✅ TOMADO' : '❌ PENDENTE'}
@@ -1553,8 +1748,9 @@
                 const pac = registros.find(r => r.id == item.paciente_id);
                 const nome = pac ? pac.nome : 'Acolhido N/D';
                 const med = pac ? (pac.medicamento || 'Não informado') : 'Não informado';
+                const capsula = (pac && pac.capsula !== null && pac.capsula !== undefined && pac.capsula !== '') ? pac.capsula : null;
                 if (!porAcolhido[nome]) porAcolhido[nome] = { ocorrencias: [] };
-                porAcolhido[nome].ocorrencias.push({ data: item.data, horario: item.horario, medicamento: med });
+                porAcolhido[nome].ocorrencias.push({ data: item.data, horario: item.horario, medicamento: med, capsula: capsula });
             });
             return porAcolhido;
         }
@@ -1572,6 +1768,7 @@
                         <td style="padding:9px 12px;font-size:13px;color:#334155;">${formatarDataBr(oc.data)}</td>
                         <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${oc.horario}</td>
                         <td style="padding:9px 12px;font-size:12px;color:#64748b;font-style:italic;">${oc.medicamento}</td>
+                        <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;font-weight:600;">${oc.capsula !== null && oc.capsula !== undefined ? oc.capsula + 'cp' : '—'}</td>
                         <td style="padding:9px 12px;text-align:center;"><span style="background:${situacaoBg};color:${situacaoCor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${situacaoBorda};">${situacaoLabel}</span></td>
                     </tr>`;
                 });
@@ -1583,6 +1780,7 @@
                     <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">DATA</th>
                     <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">HORÁRIO</th>
                     <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">MEDICAMENTO(S)</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">QTD.</th>
                     <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">SITUAÇÃO</th>
                 </tr></thead>
                 <tbody>${linhas}</tbody>
