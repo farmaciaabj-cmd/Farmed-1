@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -164,8 +165,13 @@
         .upload-label:hover { border-color: var(--cor-azul); color: white; background: #151f32; }
         
         .time-selector { display: flex; gap: 10px; margin-bottom: 25px; background: #151f32; padding: 6px; border-radius: 16px; box-shadow: var(--shadow-in); overflow-x: auto; align-items: center; }
-        .time-btn { flex: 1; padding: 12px; border: none; background: transparent; color: var(--texto-s); border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s ease; min-width: 60px; }
+        .time-btn { flex: 1; padding: 12px; border: none; background: transparent; color: var(--texto-s); border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s ease; min-width: 60px; justify-content: center; }
         .time-btn.active { background: var(--card-bg); color: var(--texto-p); box-shadow: var(--shadow-out); border: 1px solid rgba(0,0,0,0.08); }
+        .time-selector-actions { display: flex; gap: 10px; margin-left: auto; align-items: center; }
+        .btn-add-horario { background: var(--cor-azul); color: white; border: none; width: 38px; height: 38px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-out); transition: all 0.1s ease; flex-shrink: 0; }
+        .btn-add-horario:active { transform: scale(0.92); }
+        .btn-marcar-todos { background: var(--cor-azul); color: white; border: none; padding: 0 14px; height: 38px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: var(--shadow-out); transition: all 0.1s ease; flex-shrink: 0; }
+        .btn-marcar-todos:active { transform: scale(0.97); }
         
         .record-card { background: var(--card-bg); padding: 20px; border-radius: 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--cor-azul); box-shadow: var(--shadow-out); border-top: 1px solid rgba(255,255,255,0.05); }
         .record-card strong { font-size: 18px; color: var(--texto-p); letter-spacing: -0.3px; }
@@ -339,6 +345,10 @@
             .modal-content { width: 95% !important; margin: 10px auto !important; padding: 20px !important; }
             .time-selector { flex-wrap: wrap; }
             .time-btn { min-width: 45%; }
+            .time-selector-actions { flex-basis: 100%; margin-left: 0; margin-top: 8px; justify-content: space-between; gap: 8px; }
+            .time-selector-actions .btn-add-horario { width: 46px; height: 46px; font-size: 22px; }
+            .time-selector-actions .btn-marcar-todos,
+            .time-selector-actions .btn-calendario-header { flex: 1; justify-content: center; height: 46px; font-size: 13px; padding: 0 10px; }
             .agenda-body { flex-direction: column !important; }
             .col-esquerda, .col-direita { min-width: 100% !important; height: auto !important; }
             .relatorio-item { flex-direction: column; align-items: flex-start !important; gap: 10px; }
@@ -389,6 +399,10 @@
         .gp-btn-delete-row:hover { background: #dc2626; color: white; }
         @media (max-width: 768px) {
             #modalGlicosePA .modal-content { height: 95vh; max-height: 95vh; width: 100% !important; padding: 12px !important; }
+            #modalGlicosePA .agenda-header { flex-wrap: wrap; gap: 10px; }
+            #modalGlicosePA .agenda-header h2 { font-size: 16px; }
+            #modalGlicosePA .agenda-header > div { width: 100%; justify-content: space-between; }
+            #modalGlicosePA .agenda-header .gp-btn-buscar { flex: 1; text-align: center; }
             #modalGlicosePA .agenda-body { flex-direction: column !important; overflow-y: auto !important; gap: 12px; }
             #modalGlicosePA .col-esquerda { max-width: 100% !important; min-width: unset !important; flex: none !important; height: auto !important; min-height: 220px; max-height: 40vh; overflow-y: auto; }
             #modalGlicosePA .col-direita { flex: none !important; min-width: unset !important; width: 100% !important; }
@@ -497,6 +511,7 @@
             
             <div class="sidebar-item" onclick="abrirCalendarioGrande(); fecharMenuLateral();">📅 Agenda / Saídas</div>
             <div class="sidebar-item" onclick="abrirGerenciadorReceitas(); fecharMenuLateral();">📄✍️ Gerir Receitas</div>
+            <div class="sidebar-item" onclick="abrirGlicosePA(); fecharMenuLateral();">🩸 PA/HGT</div>
             <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="abrirVistaSemanal(); fecharMenuLateral();">📅 Vista Semanal</div>
@@ -636,7 +651,10 @@
     <div class="modal-content modal-grande">
         <div class="agenda-header">
             <h2>🩸 Central de Pressão Arterial e Glicose</h2>
-            <button onclick="fechar('modalGlicosePA')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="abrirExportarGlicosePA()" class="gp-btn-buscar" style="height: 38px;">📄 Baixar Histórico (PDF)</button>
+                <button onclick="fechar('modalGlicosePA')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+            </div>
         </div>
         <div class="agenda-body">
             <div class="col-esquerda">
@@ -710,6 +728,35 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalExportarGlicosePA" class="modal">
+    <div class="modal-content" style="max-width: 460px;">
+        <h2>📄 Baixar Histórico em PDF</h2>
+        <label>Selecione o(s) Acolhido(s)</label>
+        <input type="text" id="expGpFiltro" class="search-input-compacto" placeholder="🔍 Filtrar por nome..." onkeyup="renderizarListaExportarGlicosePA()" style="width:100%; margin:8px 0 10px 0;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span onclick="marcarTodosExportarGlicosePA(true)" style="font-size:12px; color:var(--cor-azul); cursor:pointer; font-weight:700;">✔️ Selecionar todos</span>
+            <span onclick="marcarTodosExportarGlicosePA(false)" style="font-size:12px; color:var(--texto-s); cursor:pointer; font-weight:700;">Limpar seleção</span>
+        </div>
+        <div id="expGpListaAcolhidos" style="max-height:220px; overflow-y:auto; border:1px solid var(--borda); border-radius:12px; padding:6px 10px; background:#151f32; box-shadow: var(--shadow-in); margin-bottom:16px;"></div>
+
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+                <label>De (opcional)</label>
+                <input type="date" id="expGpDataIni">
+            </div>
+            <div style="flex:1;">
+                <label>Até (opcional)</label>
+                <input type="date" id="expGpDataFim">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" onclick="fechar('modalExportarGlicosePA')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:12px; cursor:pointer; font-weight:700;">Cancelar</button>
+            <button type="button" id="expGpBtnGerar" onclick="gerarPdfGlicosePA()" class="gp-btn-salvar" style="flex:1.3; margin-top:0;">📄 Gerar PDF</button>
         </div>
     </div>
 </div>
@@ -1120,13 +1167,12 @@
             const btnRemover = isExtra
                 ? `<span onclick="removerHorario('${h}')" title="Remover horário" style="margin-left:3px; cursor:pointer; color:#f87171; font-size:14px; font-weight:bold; line-height:1;">✕</span>`
                 : '';
-            return `<button class="time-btn ${horaAtual === h ? 'active' : ''}" onclick="filtrar('${h}')" style="display:inline-flex; align-items:center; gap:4px;">${h}${btnRemover}</button>`;
+            return `<button class="time-btn ${horaAtual === h ? 'active' : ''}" onclick="filtrar('${h}')" style="display:inline-flex; align-items:center; justify-content:center; gap:4px;">${h}${btnRemover}</button>`;
         }).join('') + `
-            <div style="display:flex; gap:10px; margin-left:auto; align-items:center;">
-                <button class="btn-plus" style="width: 38px; height: 38px;" onclick="adicionarNovoHorario()" title="Adicionar Horário Extra">+</button>
-                <button class="btn-plus" style="width: auto; padding: 0 12px; height: 38px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap;" onclick="marcarTodosHorario()" title="Marcar todos como tomado neste horário">✅ Todos</button>
+            <div class="time-selector-actions">
+                <button class="btn-add-horario" onclick="adicionarNovoHorario()" title="Adicionar Horário Extra">+</button>
+                <button class="btn-marcar-todos" onclick="marcarTodosHorario()" title="Marcar todos como tomado neste horário">✅ Todos</button>
                 <button class="btn-calendario-header" onclick="abrirModalRelatorioGeral()" title="Relatório de Medicamentos">📅 Relatório</button>
-                <button class="btn-calendario-header" onclick="abrirGlicosePA()" title="Registar Pressão Arterial e Glicose">🩸 PA/HGT</button>
             </div>
         `;
     }
@@ -1912,6 +1958,7 @@
     // ==========================================
     let gpAcolhidoSelecionadoId = null;
     let gpAcolhidoSelecionadoNome = null;
+    let expGpSelecionados = new Set();
 
     function abrirGlicosePA() {
         document.getElementById('searchGlicosePAInput').value = "";
@@ -2077,6 +2124,165 @@
         if (error) { toast("Erro", "Não foi possível excluir o registo.", "error"); return; }
         toast("Excluído", "Registo removido com sucesso.", "success");
         carregarRegistrosGlicosePA();
+    }
+
+    // ===== EXPORTAÇÃO DO HISTÓRICO DE PA/GLICOSE EM PDF (1 ou vários acolhidos) =====
+    function abrirExportarGlicosePA() {
+        document.getElementById('expGpFiltro').value = '';
+        document.getElementById('expGpDataIni').value = '';
+        document.getElementById('expGpDataFim').value = '';
+        // Pré-marca o acolhido que já estiver aberto na tela, se houver
+        expGpSelecionados = new Set(gpAcolhidoSelecionadoNome ? [gpAcolhidoSelecionadoNome] : []);
+        renderizarListaExportarGlicosePA();
+        abrir('modalExportarGlicosePA');
+    }
+
+    function toggleExportarGlicosePANome(nome, marcado) {
+        if (marcado) expGpSelecionados.add(nome); else expGpSelecionados.delete(nome);
+    }
+
+    function renderizarListaExportarGlicosePA() {
+        const container = document.getElementById('expGpListaAcolhidos');
+        const termo = document.getElementById('expGpFiltro').value.toLowerCase();
+        const nomesUnicos = [...new Set(registros.map(p => p.nome))].sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
+
+        if (nomesUnicos.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px; padding:10px;'>Nenhum acolhido cadastrado.</p>"; return; }
+
+        const filtrados = nomesUnicos.filter(n => n.toLowerCase().includes(termo));
+        if (filtrados.length === 0) { container.innerHTML = "<p style='color:#64748b; text-align:center; font-size:13px; padding:10px;'>Nenhum resultado para esta busca.</p>"; return; }
+
+        container.innerHTML = filtrados.map(nome => {
+            const nomeAttr = nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const marcado = expGpSelecionados.has(nome);
+            return `<label style="display:flex; align-items:center; gap:8px; padding:7px 4px; cursor:pointer; font-size:13px; color:var(--texto-p); border-bottom:1px solid var(--borda);">
+                <input type="checkbox" ${marcado ? 'checked' : ''} onchange="toggleExportarGlicosePANome('${nomeAttr}', this.checked)" style="width:16px; height:16px; accent-color: var(--cor-azul); cursor:pointer; flex-shrink:0;">
+                <span>👤 ${nome}</span>
+            </label>`;
+        }).join('');
+    }
+
+    function marcarTodosExportarGlicosePA(marcar) {
+        const nomesUnicos = [...new Set(registros.map(p => p.nome))];
+        if (marcar) nomesUnicos.forEach(n => expGpSelecionados.add(n));
+        else expGpSelecionados.clear();
+        renderizarListaExportarGlicosePA();
+    }
+
+    async function gerarPdfGlicosePA() {
+        const nomesSelecionados = [...expGpSelecionados];
+        if (nomesSelecionados.length === 0) { toast("Atenção", "Selecione pelo menos um acolhido.", "warning"); return; }
+
+        const dataIni = document.getElementById('expGpDataIni').value;
+        const dataFim = document.getElementById('expGpDataFim').value;
+
+        const btn = document.getElementById('expGpBtnGerar');
+        btn.disabled = true; btn.innerText = "A gerar...";
+
+        // Cada nome corresponde ao mesmo "id" usado ao registar (1ª linha de "registros" com aquele nome),
+        // exatamente como em selecionarAcolhidoGlicosePA/gerarListaAcolhidosGlicosePA.
+        const idsSelecionados = nomesSelecionados
+            .map(nome => registros.find(r => r.nome === nome)?.id)
+            .filter(id => id !== undefined && id !== null);
+
+        let query = supabaseClient.from('registros_glicose_pa').select('*').in('paciente_id', idsSelecionados);
+        if (dataIni) query = query.gte('data', dataIni);
+        if (dataFim) query = query.lte('data', dataFim);
+
+        const { data, error } = await query;
+
+        btn.disabled = false; btn.innerText = "📄 Gerar PDF";
+
+        if (error) { toast("Erro", error.message || "Não foi possível gerar o relatório.", "error"); return; }
+
+        montarESalvarPdfGlicosePA(nomesSelecionados, data || [], dataIni, dataFim);
+    }
+
+    function montarESalvarPdfGlicosePA(nomesSelecionados, dados, dataIni, dataFim) {
+        const hoje = new Date();
+        const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        const horaEmissao = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const periodoLabel = (dataIni || dataFim) ? `${dataIni ? formatarDataBr(dataIni) : 'Início'} — ${dataFim ? formatarDataBr(dataFim) : 'Hoje'}` : 'Todo o histórico';
+
+        const nomesOrdenados = [...nomesSelecionados].sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
+
+        let blocos = '';
+        let totalRegistos = 0;
+        nomesOrdenados.forEach(nome => {
+            const registosPac = dados
+                .filter(r => r.paciente_nome === nome)
+                .sort((a, b) => b.data.localeCompare(a.data) || (b.hora || '').localeCompare(a.hora || ''));
+            totalRegistos += registosPac.length;
+
+            const linhas = registosPac.map((r, idx) => `
+                <tr style="border-bottom:1px solid #e2e8f0; ${idx % 2 === 0 ? '' : 'background:#f8fafc;'}">
+                    <td style="padding:9px 12px; font-size:13px; color:#334155;">${formatarDataBr(r.data)}</td>
+                    <td style="padding:9px 12px; font-size:13px; color:#334155; text-align:center;">${r.hora || '—'}</td>
+                    <td style="padding:9px 12px; font-size:13px; font-weight:700; color:#b91c1c;">${r.glicose !== null && r.glicose !== undefined ? r.glicose + ' mg/dL' : '—'}</td>
+                    <td style="padding:9px 12px; font-size:13px; font-weight:700; color:#1e3a5f;">${r.pa || '—'}</td>
+                    <td style="padding:9px 12px; font-size:12px; color:#64748b;">${r.registado_por || '—'}</td>
+                </tr>`).join('');
+
+            const tabelaOuAviso = registosPac.length === 0
+                ? `<p style="text-align:center; color:#64748b; background:#f1f5f9; border-radius:8px; padding:14px; font-size:13px;">Sem registos de PA/Glicose no período consultado.</p>`
+                : `<table style="width:100%; border-collapse:collapse; margin-top:8px;">
+                    <thead><tr style="background:#1e3a5f; color:white;">
+                        <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:700;">DATA</th>
+                        <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:700;">HORA</th>
+                        <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:700;">GLICOSE</th>
+                        <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:700;">PRESSÃO ARTERIAL</th>
+                        <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:700;">REGISTADO POR</th>
+                    </tr></thead>
+                    <tbody>${linhas}</tbody>
+                </table>`;
+
+            blocos += `
+                <h2 style="color:#1e3a5f;">👤 ${nome}</h2>
+                ${tabelaOuAviso}
+            `;
+        });
+
+        const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Historico_PA_Glicose_${new Date().toISOString().slice(0,10)}</title>
+        <style>
+            *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:32px;font-size:13px}
+            h1{font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;margin-bottom:8px}
+            h2{font-size:13px;font-weight:700;text-transform:uppercase;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:6px;margin-top:28px}
+            p{font-size:13px;color:#475569;margin-bottom:20px;line-height:1.7}
+            table{width:100%;border-collapse:collapse;margin-top:10px}thead tr{background:#1e3a5f;color:white}
+            th{padding:10px 12px;text-align:left;font-size:12px;font-weight:700}td{padding:9px 12px;font-size:13px;border-bottom:1px solid #e2e8f0}tr{page-break-inside:avoid}
+            .cards{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}.card{flex:1;min-width:150px;border-radius:10px;padding:14px 18px}
+            .rodape{margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6}
+            @media print{@page{margin:15mm;size:A4}}
+        </style></head><body>
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px">
+            <div style="font-size:22px;font-weight:800;color:#1e3a5f">FARMED</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
+        </div>
+        <h1>🩸 Histórico de Pressão Arterial e Glicose</h1>
+        <p>Registos de aferição de pressão arterial e glicose do(s) acolhido(s) selecionado(s).</p>
+        <div class="cards">
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Período</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${periodoLabel}</div></div>
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Acolhidos</div><div style="font-size:22px;font-weight:800;color:#1e293b;margin-top:4px">${nomesOrdenados.length}</div></div>
+            <div class="card" style="background:#dbeafe;border-left:4px solid #1e40af"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f">Registos</div><div style="font-size:22px;font-weight:800;color:#1e40af;margin-top:4px">${totalRegistos}</div></div>
+        </div>
+        ${blocos}
+        <div class="rodape"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
+        <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+        </body></html>`;
+
+        const _blob = new Blob([_htmlPdf], { type: 'text/html;charset=utf-8' });
+        const _url = URL.createObjectURL(_blob);
+        const _nomeArquivo = `Historico_PA_Glicose_${new Date().toISOString().slice(0,10)}.html`;
+        const _a = document.createElement('a');
+        _a.href = _url;
+        _a.download = _nomeArquivo;
+        document.body.appendChild(_a);
+        _a.click();
+        document.body.removeChild(_a);
+        setTimeout(() => URL.revokeObjectURL(_url), 10000);
+
+        fechar('modalExportarGlicosePA');
+        toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
     }
 
     // Navega da área de Alertas para a Agenda Profissional - Saídas, já na data da renovação agendada
