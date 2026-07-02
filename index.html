@@ -169,6 +169,11 @@
         .time-selector-actions { display: flex; gap: 10px; margin-left: auto; align-items: center; }
         .btn-add-horario { background: var(--cor-azul); color: white; border: none; width: 38px; height: 38px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-out); transition: all 0.1s ease; flex-shrink: 0; }
         .btn-add-horario:active { transform: scale(0.92); }
+        .hora-multi-select { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .hora-chip { position: relative; }
+        .hora-chip input[type="checkbox"] { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+        .hora-chip label { display: inline-block; padding: 8px 14px; border-radius: 20px; background: #151f32; color: var(--texto-s); font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-out); border: 1px solid var(--borda); transition: all 0.15s ease; user-select: none; margin: 0; }
+        .hora-chip input[type="checkbox"]:checked + label { background: var(--cor-azul); color: #fff; border-color: var(--cor-azul); box-shadow: 0 0 0 2px rgba(0,156,217,0.35); }
         .btn-marcar-todos { background: var(--cor-azul); color: white; border: none; padding: 0 14px; height: 38px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: var(--shadow-out); transition: all 0.1s ease; flex-shrink: 0; }
         .btn-marcar-todos:active { transform: scale(0.97); }
         
@@ -517,6 +522,7 @@
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="abrirVistaSemanal(); fecharMenuLateral();">📅 Vista Semanal</div>
             <div class="sidebar-item" onclick="imprimirListaDoDia(); fecharMenuLateral();">🖨️ Imprimir Lista do Dia</div>
+            <div class="sidebar-item" onclick="abrirModalDuplicados(); fecharMenuLateral();">🔎 Verificar Duplicados</div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="toggleModoClaro(); fecharMenuLateral();" id="btnModoClaro">☀️ Modo Claro</div>
             <div class="sidebar-item" onclick="abrirGestaoSenha(); fecharMenuLateral();">🔑 Gerir Senha de Acesso</div>
@@ -544,10 +550,10 @@
         <input type="text" id="inpMed" placeholder="Ex: Dipirona, Omeprazol, Losartana">
 
         <label>Quantidade de Comprimidos/Cápsulas <span style="color:var(--cor-azul); font-size:11px;">(usada para calcular o gasto mensal)</span></label>
-        <input type="number" id="inpCapsula" placeholder="Ex: 2" min="0">
+        <input type="number" id="inpCapsula" placeholder="Ex: 2" min="0" oninput="atualizarPreviewDiasFaltantes()">
         
-        <label>Horário Fixo</label>
-        <select id="inpHora"></select>
+        <label>Horário(s) Fixo(s) <span style="color:var(--cor-azul); font-size:11px;">(selecione um ou mais — quanto mais horários, mais rápido a medicação acaba)</span></label>
+        <div id="inpHoraContainer" class="hora-multi-select"></div>
         
         <label>Link ou ID da Pasta do Google Drive</label>
         <input type="text" id="inpDrive" placeholder="Cole o link ou ID da pasta">
@@ -559,20 +565,34 @@
         <input type="date" id="inpReceitaValida">
         
         <label>Última Retirada (data do início do lote)</label>
-        <input type="date" id="inpUltimaRetirada">
+        <input type="date" id="inpUltimaRetirada" oninput="atualizarPreviewDiasFaltantes()">
         
         <label>Qtd. Meses de Validade</label>
-        <input type="number" id="inpQtdMeses" placeholder="Ex: 3">
+        <input type="number" id="inpQtdMeses" placeholder="Ex: 3" oninput="atualizarPreviewDiasFaltantes()">
         
         <label>Dias Faltantes <span style="color: #22c55e;">(Calculado Automaticamente)</span></label>
         <input type="number" id="inpDiasFaltantes" placeholder="Preenchido automaticamente" disabled>
-        <div class="info-calculo">ℹ️ Cálculo preciso baseado no calendário real + meses de validade.</div>
+        <div class="info-calculo">ℹ️ O cálculo considera: (Qtd. Meses × 30 dias) ÷ (Comprimidos por dose × Qtd. de Horários selecionados).</div>
 
         <label>Observação</label>
         <textarea id="inpObservacao" rows="3" placeholder="Ex: Acolhido com restrição alimentar, alergias, informações relevantes..." style="resize: vertical; font-family: inherit;"></textarea>
         
         <button id="btnSalvarCadastro" onclick="salvar()" style="width:100%; padding:14px; background:linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; margin-top:10px;">Guardar</button>
         <button onclick="fechar('modalCadastro')" style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">Cancelar</button>
+    </div>
+</div>
+
+<div id="modalDuplicados" class="modal">
+    <div class="modal-content modal-grande">
+        <div class="agenda-header">
+            <h2>🔎 Cadastros Possivelmente Duplicados</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="gerarListaDuplicados()" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">🔄 Atualizar</button>
+                <button onclick="fechar('modalDuplicados')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+            </div>
+        </div>
+        <p style="color: var(--texto-s); font-size: 13px; margin: 4px 0 14px;">Agrupa cadastros com o <strong>mesmo nome + mesmo medicamento</strong> em mais de um registo. Desde que passamos a permitir vários horários num único cadastro, isso costuma indicar registos antigos (feitos separadamente por horário) que hoje podem ser unificados. Confira os horários de cada linha antes de excluir e mantenha apenas o registo mais completo/correto.</p>
+        <div id="conteudoDuplicados"></div>
     </div>
 </div>
 
@@ -914,6 +934,44 @@
     // ==========================================
     // CÁLCULO DE DIAS FALTANTES CORRIGIDO
     // ==========================================
+    // Devolve os horários fixos de um registo como array (ex: "07h,15h" -> ["07h","15h"])
+    function getHorariosArray(item) {
+        if (!item || !item.hora) return [];
+        return String(item.hora).split(',').map(h => h.trim()).filter(Boolean);
+    }
+
+    // Texto amigável dos horários para exibição (ex: "07h / 15h")
+    function formatarHorariosDisplay(item) {
+        const arr = getHorariosArray(item);
+        return arr.length ? arr.join(' / ') : '—';
+    }
+
+    // Etiqueta usada nos cartões da lista principal para deixar claro, quando um
+    // acolhido tem MAIS DE UM horário, qual deles está a ser marcado no filtro atual
+    // (evita a pessoa achar que marcar o check confirma todos os horários de uma vez).
+    function buildEtiquetaHorariosCard(r) {
+        const arr = getHorariosArray(r);
+        if (arr.length <= 1) return '';
+        const partes = arr.map(h => h === horaAtual
+            ? `<strong style="color:#22c55e;">${h} (esta dose)</strong>`
+            : `<span style="opacity:0.65;">${h}</span>`
+        ).join(' / ');
+        return `<span style="display:inline-block; font-size:11px; font-weight:700; margin-left:6px; padding:2px 8px; border-radius:8px; background:rgba(0,156,217,0.14); color:var(--texto-s); vertical-align:middle;" title="Este acolhido toma medicação em mais de um horário. O check confirma apenas a dose de ${horaAtual}.">🕐 ${partes}</span>`;
+    }
+
+    // Quantos dias a medicação dura com base na Qtd. de Meses de Validade,
+    // na quantidade de comprimidos por dose e na quantidade de horários selecionados.
+    // Fórmula: (qtd_meses * 30 dias) / (comprimidos por dose * qtd. de horários)
+    function calcularDiasDuracaoMedicacao(paciente) {
+        if (!paciente.qtd_meses || paciente.qtd_meses <= 0) return null;
+        const numHorarios = Math.max(1, getHorariosArray(paciente).length);
+        const capsula = (paciente.capsula && paciente.capsula > 0) ? parseFloat(paciente.capsula) : 1;
+        const totalDiasBase = parseFloat(paciente.qtd_meses) * 30;
+        const consumoDiario = capsula * numHorarios;
+        if (consumoDiario <= 0) return null;
+        return Math.floor(totalDiasBase / consumoDiario);
+    }
+
     function calcularDiasFaltantes(paciente) {
         if (!paciente.ultima_retirada) return null;
         const hoje = new Date();
@@ -923,9 +981,9 @@
         const dataRetirada = new Date(paciente.ultima_retirada + 'T00:00:00');
         let dataVencimento = new Date(dataRetirada.getTime());
 
-        if (paciente.qtd_meses && paciente.qtd_meses > 0) {
-            // Adiciona meses de forma exata baseada em calendário (tratando 28, 30 e 31 dias)
-            dataVencimento.setMonth(dataVencimento.getMonth() + parseInt(paciente.qtd_meses));
+        const diasDuracao = calcularDiasDuracaoMedicacao(paciente);
+        if (diasDuracao !== null) {
+            dataVencimento.setDate(dataVencimento.getDate() + diasDuracao);
         } else {
             // Fallback sem quantidade de meses estipulada
             dataVencimento = dataRetirada;
@@ -942,8 +1000,9 @@
         const dataRetirada = new Date(paciente.ultima_retirada + 'T00:00:00');
         let dataVencimento = new Date(dataRetirada.getTime());
 
-        if (paciente.qtd_meses && paciente.qtd_meses > 0) {
-            dataVencimento.setMonth(dataVencimento.getMonth() + parseInt(paciente.qtd_meses));
+        const diasDuracao = calcularDiasDuracaoMedicacao(paciente);
+        if (diasDuracao !== null) {
+            dataVencimento.setDate(dataVencimento.getDate() + diasDuracao);
         } else {
             dataVencimento = dataRetirada;
         }
@@ -1346,14 +1405,49 @@
         select.innerHTML = '<option value="">👤 Selecione o Acolhido</option><option value="todos" style="font-weight:bold; color:var(--cor-azul);">👥 Buscar TODOS os Acolhidos</option>' + 
             nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
 
-        // Popula o select de "Horário Fixo" do modal de Cadastro/Edição
-        // (esse select ficava vazio porque nada o preenchia antes)
-        const selectHora = document.getElementById('inpHora');
-        if (selectHora) {
-            const valorAtual = selectHora.value;
-            selectHora.innerHTML = horariosAtivos.map(h => `<option value="${h}">${h}</option>`).join('');
-            if (valorAtual && horariosAtivos.includes(valorAtual)) selectHora.value = valorAtual;
+        // Popula os checkboxes de "Horário(s) Fixo(s)" do modal de Cadastro/Edição,
+        // preservando a seleção atual (se já havia horários marcados)
+        const containerHora = document.getElementById('inpHoraContainer');
+        if (containerHora) {
+            const selecionadosAntes = obterHorariosSelecionados();
+            containerHora.innerHTML = horariosAtivos.map(h => `
+                <div class="hora-chip">
+                    <input type="checkbox" id="chkHora_${h}" value="${h}" onchange="atualizarPreviewDiasFaltantes()">
+                    <label for="chkHora_${h}">${h}</label>
+                </div>
+            `).join('');
+            if (selecionadosAntes.length) setHorariosSelecionados(selecionadosAntes);
         }
+    }
+
+    // Devolve um array com os horários marcados no modal de Cadastro/Edição
+    function obterHorariosSelecionados() {
+        const container = document.getElementById('inpHoraContainer');
+        if (!container) return [];
+        return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(chk => chk.value);
+    }
+
+    // Marca no modal os checkboxes correspondentes a um array de horários
+    function setHorariosSelecionados(horarios) {
+        const container = document.getElementById('inpHoraContainer');
+        if (!container) return;
+        const lista = Array.isArray(horarios) ? horarios : getHorariosArray({ hora: horarios });
+        container.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+            chk.checked = lista.includes(chk.value);
+        });
+    }
+
+    // Recalcula e mostra em tempo real quantos dias a medicação vai durar
+    // conforme os horários/comprimidos/meses de validade preenchidos no modal
+    function atualizarPreviewDiasFaltantes() {
+        const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
+        const qtd_meses = document.getElementById('inpQtdMeses').value ? parseFloat(document.getElementById('inpQtdMeses').value) : null;
+        const capsula = document.getElementById('inpCapsula').value !== "" ? parseFloat(document.getElementById('inpCapsula').value) : null;
+        const hora = obterHorariosSelecionados().join(',');
+        const campo = document.getElementById('inpDiasFaltantes');
+        if (!ultima_retirada) { campo.value = ""; return; }
+        const dias = calcularDiasFaltantes({ ultima_retirada, qtd_meses, capsula, hora });
+        campo.value = dias !== null ? dias : "";
     }
 
     const HORARIOS_FIXOS = ["07h", "15h", "19h", "23h"];
@@ -1475,7 +1569,7 @@
             const hNum = parseInt(h);
             const chave = `${h}_${agora.toDateString()}`;
             if (hNum === hAtual && mAtual === 0 && !_horariosAlertados.has(chave)) {
-                const pendentes = registros.filter(r => r.hora === h).filter(r =>
+                const pendentes = registros.filter(r => getHorariosArray(r).includes(h)).filter(r =>
                     !registrosMedicacaoDia.some(rm => rm.paciente_id == r.id && rm.horario === h && (rm.status === true || rm.status === 'true'))
                 );
                 if (pendentes.length > 0) {
@@ -1489,14 +1583,16 @@
 
     setInterval(verificarAlertasHorario, 30000); // verifica a cada 30 segundos
     let _pendingTogglePacienteId = null;
+    let _pendingToggleHorario = null;
 
-    async function toggleMedicacao(pacienteId) {
-        const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horaAtual);
+    async function toggleMedicacao(pacienteId, horarioAlvo) {
+        const horario = horarioAlvo || horaAtual;
+        const existente = registrosMedicacaoDia.find(rm => rm.paciente_id == pacienteId && rm.horario === horario);
         if (existente && (existente.status === true || existente.status === 'true')) {
             // Desmarcar: pede confirmação
             perguntarConfirmacao(
                 "Inverter Registo",
-                "Este medicamento já foi marcado como TOMADO.\n\nDeseja realmente anular esta confirmação?",
+                `Este medicamento já foi marcado como TOMADO às ${horario}.\n\nDeseja realmente anular esta confirmação?`,
                 async () => {
                     const { error } = await supabaseClient.from('registro_medicacao').delete().eq('id', existente.id);
                     if (!error) {
@@ -1511,8 +1607,9 @@
         } else {
             // Marcar: abre modal de observação rápida
             _pendingTogglePacienteId = pacienteId;
+            _pendingToggleHorario = horario;
             const pac = registros.find(r => r.id == pacienteId);
-            document.getElementById('obsRegistroNomePac').textContent = pac ? pac.nome : '';
+            document.getElementById('obsRegistroNomePac').textContent = pac ? `${pac.nome} — ${horario}` : horario;
             document.getElementById('inpObsRegistro').value = '';
             abrir('modalObsRegistro');
             setTimeout(() => document.getElementById('inpObsRegistro').focus(), 80);
@@ -1522,6 +1619,7 @@
     window.confirmarToggleMedicacao = async function(pularObs) {
         fechar('modalObsRegistro');
         const pacienteId = _pendingTogglePacienteId;
+        const horario = _pendingToggleHorario || horaAtual;
         if (!pacienteId) return;
         const obs = pularObs ? null : (document.getElementById('inpObsRegistro').value.trim() || null);
         const hoje = new Date().toISOString().split('T')[0];
@@ -1529,7 +1627,7 @@
             const novoRegistro = {
                 paciente_id: pacienteId,
                 data: hoje,
-                horario: horaAtual,
+                horario: horario,
                 status: true,
                 registrado_por_usuario: usuarioLogado ? usuarioLogado.nome_completo : null,
                 observacao_registro: obs
@@ -1546,15 +1644,97 @@
             toast("Erro inesperado", "Verifique o console (F12).", "error");
         }
         _pendingTogglePacienteId = null;
+        _pendingToggleHorario = null;
     };
 
+    // ==========================================
+    // VERIFICADOR DE CADASTROS DUPLICADOS
+    // ==========================================
+    // Normaliza texto para comparação (ignora maiúsculas/minúsculas e espaços extras)
+    function normalizarTextoComparacao(txt) {
+        return (txt || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    function abrirModalDuplicados() {
+        gerarListaDuplicados();
+        abrir('modalDuplicados');
+    }
+
+    function gerarListaDuplicados() {
+        const container = document.getElementById('conteudoDuplicados');
+        if (!container) return;
+
+        // Agrupa por Nome + Medicamento normalizados
+        const grupos = {};
+        registros.forEach(r => {
+            const chave = normalizarTextoComparacao(r.nome) + '|' + normalizarTextoComparacao(r.medicamento);
+            if (!grupos[chave]) grupos[chave] = [];
+            grupos[chave].push(r);
+        });
+
+        const duplicados = Object.values(grupos)
+            .filter(g => g.length > 1)
+            .sort((a, b) => (a[0].nome || '').localeCompare(b[0].nome || '', 'pt', { sensitivity: 'base' }));
+
+        if (duplicados.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:#22c55e; padding:24px; font-weight:600;">✅ Nenhuma duplicidade encontrada.</p>`;
+            return;
+        }
+
+        container.innerHTML = duplicados.map(grupo => {
+            const nome = grupo[0].nome || 'Sem nome';
+            const med = grupo[0].medicamento || 'Sem medicação definida';
+            const horariosTotais = new Set();
+            grupo.forEach(r => getHorariosArray(r).forEach(h => horariosTotais.add(h)));
+
+            const linhas = grupo.map(r => `
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 12px; background:#151f32; border-radius:8px; margin-bottom:6px; flex-wrap:wrap;">
+                    <div>
+                        <strong>ID ${r.id}</strong> — Horário(s): <span style="color:var(--cor-azul); font-weight:700;">${formatarHorariosDisplay(r)}</span>
+                        ${r.ultima_retirada ? `<br><small style="color:#94a3b8;">Última retirada: ${formatarDataBr(r.ultima_retirada)}</small>` : ''}
+                        ${r.qtd_meses ? `<small style="color:#94a3b8;"> · Validade: ${r.qtd_meses} mês(es)</small>` : ''}
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-action btn-edit" onclick="fechar('modalDuplicados'); prepararEdicao(${r.id});" title="Editar este registo">✏️ Editar</button>
+                        <button class="btn-action btn-delete" onclick="excluirRegistroEAtualizarDuplicados(${r.id}, '${nome.replace(/'/g, "\\'")}')" title="Excluir este registo">🗑️ Excluir</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const avisoSobreposicao = grupo.length !== new Set(grupo.flatMap(r => getHorariosArray(r))).size
+                ? `<div style="color:#f87171; font-size:12px; font-weight:700; margin-bottom:8px;">⚠️ Há horário(s) repetido(s) entre os registos abaixo — provável duplicidade real.</div>`
+                : `<div style="color:#94a3b8; font-size:12px; margin-bottom:8px;">Horários não se repetem entre os registos — pode ser intencional (ex: lotes/receitas diferentes) ou pode ser candidato à unificação.</div>`;
+
+            return `
+                <div style="border:1px solid var(--borda); border-radius:12px; padding:12px; margin-bottom:16px;">
+                    <div style="font-weight:800; margin-bottom:4px;">👤 ${nome} — 💊 ${med}</div>
+                    ${avisoSobreposicao}
+                    ${linhas}
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Exclui um registo e depois atualiza a própria lista de duplicados (sem fechar o modal)
+    async function excluirRegistroEAtualizarDuplicados(id, nome) {
+        perguntarConfirmacao("Excluir Registo", `Tem a certeza que deseja eliminar o cadastro de ${nome} (ID ${id}) permanentemente do sistema?`, async () => {
+            const { error } = await supabaseClient.from('pacientes').delete().eq('id', id);
+            if (!error) {
+                await carregar();
+                gerarListaDuplicados();
+                toast("Eliminado", "Registo eliminado com sucesso.", "success");
+            } else {
+                toast("Erro ao excluir", error.message, "error");
+            }
+        });
+    }
     // ==========================================
     // MARCAR TODOS DO HORÁRIO ATUAL
     // ==========================================
     async function marcarTodosHorario() {
         const hoje = obterDataAtualLocal();
         // Filtra apenas os registos do horário atual (sem busca por texto)
-        const filtrados = registros.filter(r => r.hora === horaAtual);
+        const filtrados = registros.filter(r => getHorariosArray(r).includes(horaAtual));
         if (filtrados.length === 0) {
             toast("Aviso", "Nenhum acolhido neste horário.", "warning");
             return;
@@ -1677,21 +1857,23 @@
 
         // Linhas-alvo: cada linha = 1 remédio + 1 horário de uma pessoa
         let linhasAlvo = pacSelecionado === 'todos' ? registros.slice() : registros.filter(r => r.nome === pacSelecionado);
-        linhasAlvo = linhasAlvo.filter(r => !!r.hora);
-        if (horarioFiltro) linhasAlvo = linhasAlvo.filter(r => r.hora === horarioFiltro);
+        linhasAlvo = linhasAlvo.filter(r => getHorariosArray(r).length > 0);
 
         const datasIntervalo = gerarIntervaloDatas(dataIn, dataFim);
 
         const universoCompleto = [];
         linhasAlvo.forEach(linha => {
-            datasIntervalo.forEach(dataDia => {
-                if (linha.data_prescricao && dataDia < linha.data_prescricao) return;
-                const real = (registosTomados || []).find(rm => String(rm.paciente_id) === String(linha.id) && rm.data === dataDia && rm.horario === linha.hora && (rm.status === true || rm.status === 'true'));
-                if (real) {
-                    universoCompleto.push({ ...real, _linhaPaciente: linha });
-                } else {
-                    universoCompleto.push({ paciente_id: linha.id, data: dataDia, horario: linha.hora, status: false, _semRegisto: true, _linhaPaciente: linha });
-                }
+            const horariosLinha = getHorariosArray(linha).filter(h => !horarioFiltro || h === horarioFiltro);
+            horariosLinha.forEach(horarioDaLinha => {
+                datasIntervalo.forEach(dataDia => {
+                    if (linha.data_prescricao && dataDia < linha.data_prescricao) return;
+                    const real = (registosTomados || []).find(rm => String(rm.paciente_id) === String(linha.id) && rm.data === dataDia && rm.horario === horarioDaLinha && (rm.status === true || rm.status === 'true'));
+                    if (real) {
+                        universoCompleto.push({ ...real, _linhaPaciente: linha });
+                    } else {
+                        universoCompleto.push({ paciente_id: linha.id, data: dataDia, horario: horarioDaLinha, status: false, _semRegisto: true, _linhaPaciente: linha });
+                    }
+                });
             });
         });
 
@@ -1887,24 +2069,44 @@
         if (!lista) return;
 
         const buscaAtiva = termo !== "";
-        const buscaNome = buscaAtiva && registros.some(r => (r.nome || "").toLowerCase().includes(termo));
         const buscaMed  = buscaAtiva && registros.some(r => (r.medicamento || "").toLowerCase().includes(termo));
 
-        let filtrados = registros.filter(r => {
-            if (!buscaAtiva) return r.hora === horaAtual;
-            return (r.nome || "").toLowerCase().includes(termo) || (r.medicamento || "").toLowerCase().includes(termo);
-        });
-        filtrados.sort((a, b) => {
-            const aTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == a.id && rm.horario === horaAtual && (rm.status === true || rm.status === 'true'));
-            const bTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == b.id && rm.horario === horaAtual && (rm.status === true || rm.status === 'true'));
+        // Monta uma lista de "linhas" no formato { r: registro, horarioCard: horário específico deste cartão }.
+        // Fora da busca: 1 cartão por acolhido, sempre referente ao horário da aba ativa.
+        // Durante a busca: um acolhido com 2+ horários vira 1 cartão POR HORÁRIO (nunca um cartão combinado
+        // tipo "07h/19h"), pra não correr risco de marcar/desmarcar o horário errado no checklist.
+        let linhas = [];
+        if (!buscaAtiva) {
+            linhas = registros.filter(r => getHorariosArray(r).includes(horaAtual)).map(r => ({ r, horarioCard: horaAtual }));
+        } else {
+            const encontrados = registros.filter(r => (r.nome || "").toLowerCase().includes(termo) || (r.medicamento || "").toLowerCase().includes(termo));
+            encontrados.forEach(r => {
+                const horariosDoRegistro = getHorariosArray(r);
+                if (horariosDoRegistro.length === 0) {
+                    linhas.push({ r, horarioCard: null });
+                } else {
+                    horariosDoRegistro.forEach(h => linhas.push({ r, horarioCard: h }));
+                }
+            });
+        }
+
+        linhas.sort((a, b) => {
+            const horA = a.horarioCard || horaAtual; const horB = b.horarioCard || horaAtual;
+            const aTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == a.r.id && rm.horario === horA && (rm.status === true || rm.status === 'true'));
+            const bTomado = registrosMedicacaoDia.some(rm => rm.paciente_id == b.r.id && rm.horario === horB && (rm.status === true || rm.status === 'true'));
             if (aTomado !== bTomado) return aTomado ? 1 : -1;
-            if (buscaAtiva) return (a.hora || "").localeCompare(b.hora || "");
-            return (a.nome || "").localeCompare(b.nome || "", 'pt', { sensitivity: 'base' });
+            if (buscaAtiva) {
+                const cmpHor = (a.horarioCard || '').localeCompare(b.horarioCard || '');
+                if (cmpHor !== 0) return cmpHor;
+            }
+            return (a.r.nome || "").localeCompare(b.r.nome || "", 'pt', { sensitivity: 'base' });
         });
-        lista.innerHTML = filtrados.map(r => {
+
+        lista.innerHTML = linhas.map(({ r, horarioCard }) => {
+            const horarioEfetivo = horarioCard || horaAtual;
             const diasFaltantes = calcularDiasFaltantes(r);
             const statusAlerta = diasFaltantes !== null && diasFaltantes < 0 ? 'color: #f87171;' : 'color: #f97316;';
-            const medHoje = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horaAtual);
+            const medHoje = registrosMedicacaoDia.find(rm => rm.paciente_id == r.id && rm.horario === horarioEfetivo);
             
             // CORREÇÃO: Verifica tanto pelo booleano true quanto pelo texto 'true'
             const isChecked = medHoje && (medHoje.status === true || medHoje.status === 'true');
@@ -1919,13 +2121,18 @@
 
             const registradoPor = medHoje && medHoje.registrado_por_usuario ? medHoje.registrado_por_usuario : null;
             const obsRegistro = medHoje && medHoje.observacao_registro ? medHoje.observacao_registro : null;
+            // Durante a busca, cada cartão já é de UM horário só; fora da busca, usa a etiqueta que
+            // destaca "esta dose" quando o acolhido tem mais de um horário cadastrado.
+            const tagHorario = buscaAtiva
+                ? `<span style="font-size:12px; color:var(--cor-azul); font-weight:700;">(${horarioCard || 'sem horário'})</span>`
+                : buildEtiquetaHorariosCard(r);
 
             return `
             <div class="record-card">
                 <div style="flex: 1; display: flex; align-items: flex-start; gap: 15px;">
-                    <div class="switch ${isChecked ? 'checked' : ''}" onclick="toggleMedicacao('${r.id}')" title="Marcar como tomado" style="margin-top: 2px;"></div>
+                    <div class="switch ${isChecked ? 'checked' : ''}" onclick="toggleMedicacao('${r.id}', '${horarioEfetivo}')" title="Marcar como tomado às ${horarioEfetivo}" style="margin-top: 2px;"></div>
                     <div style="flex: 1;">
-                        <strong>${r.nome} ${buscaAtiva ? `<span style="font-size:12px; color:var(--cor-azul); font-weight:700;">(${r.hora})</span>` : ''}</strong>
+                        <strong>${r.nome} ${tagHorario}</strong>
                         ${r.cpf ? `<br><small style="color: var(--cor-azul); font-weight: 600;">CPF: ${r.cpf}</small>` : ''}
                         ${blocoMedicamentosHtml}
                         ${r.observacao ? `<div style="margin-top:6px; background:#1a2744; border-left:3px solid #475569; border-radius:0 8px 8px 0; padding:6px 10px; font-size:12px; color:#94a3b8; font-style:italic; line-height:1.4;">💬 ${r.observacao}</div>` : ''}
@@ -2029,21 +2236,38 @@
     function abrirCadastroNovos() { 
         popularSelectHorariosFixo();
         document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = "";
-        document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpCapsula').value = ""; document.getElementById('inpDrive').value = ""; document.getElementById('inpHora').value = horaAtual; document.getElementById('inpDataPrescricao').value = "";
+        document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpCapsula').value = ""; document.getElementById('inpDrive').value = ""; setHorariosSelecionados([horaAtual]); document.getElementById('inpDataPrescricao').value = "";
         document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; document.getElementById('inpReceitaValida').value = ""; abrir('modalCadastro');
     }
     
     function prepararEdicao(id) { 
         const item = registros.find(r => r.id === id);
         if (!item) return; popularSelectHorariosFixo(); document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
-        document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpCapsula').value = (item.capsula !== null && item.capsula !== undefined) ? item.capsula : ""; document.getElementById('inpDrive').value = item.links || ""; document.getElementById('inpHora').value = item.hora; document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
+        document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpCapsula').value = (item.capsula !== null && item.capsula !== undefined) ? item.capsula : ""; document.getElementById('inpDrive').value = item.links || ""; setHorariosSelecionados(getHorariosArray(item)); document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
         document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
         diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; document.getElementById('inpReceitaValida').value = item.receita_valida || ""; abrir('modalCadastro'); 
     }
     
+    // Verifica se já existe outro cadastro (mesmo nome + mesmo medicamento) usando
+    // algum dos horários que estão a ser selecionados agora — sinal de duplicidade
+    // (comum em cadastros antigos feitos como registos separados por horário).
+    function detectarDuplicidadeHorario(nome, medicamento, horariosSelecionados, idAtual) {
+        const nomeNorm = (nome || '').trim().toLowerCase();
+        const medNorm = (medicamento || '').trim().toLowerCase();
+        const conflitos = [];
+        registros.forEach(r => {
+            if (String(r.id) === String(idAtual)) return;
+            if ((r.nome || '').trim().toLowerCase() !== nomeNorm) return;
+            if ((r.medicamento || '').trim().toLowerCase() !== medNorm) return;
+            const overlap = getHorariosArray(r).filter(h => horariosSelecionados.includes(h));
+            if (overlap.length > 0) conflitos.push({ registro: r, overlap });
+        });
+        return conflitos;
+    }
+
     async function salvar() { 
         const id = document.getElementById('editId').value;
-        const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const hora = document.getElementById('inpHora').value; const driveRaw = document.getElementById('inpDrive').value;
+        const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const horariosSelecionados = obterHorariosSelecionados(); const hora = horariosSelecionados.join(','); const driveRaw = document.getElementById('inpDrive').value;
         const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
         const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
         const observacao = document.getElementById('inpObservacao').value.trim() || null;
@@ -2051,13 +2275,29 @@
         const capsula = document.getElementById('inpCapsula').value !== "" ? parseInt(document.getElementById('inpCapsula').value) : null;
         
         if (!nome) { toast("Campo obrigatório", "Por favor, preencha o nome!", "warning"); return; }
+        if (horariosSelecionados.length === 0) { toast("Campo obrigatório", "Selecione ao menos um Horário Fixo!", "warning"); return; }
         if (cpf && !validarCPF(cpf)) { toast("CPF inválido", "O CPF introduzido não é válido! Por favor corrija.", "warning"); return; }
 
+        const conflitos = detectarDuplicidadeHorario(nome, med, horariosSelecionados, id);
+        if (conflitos.length > 0) {
+            const horariosConflito = [...new Set(conflitos.flatMap(c => c.overlap))].join(', ');
+            perguntarConfirmacao(
+                "Possível cadastro duplicado",
+                `Já existe outro cadastro de "${nome}" para "${med || 'este medicamento'}" no(s) horário(s) ${horariosConflito}. Em vez de duplicar, considere editar o cadastro existente e juntar os horários nele. Deseja salvar mesmo assim?`,
+                () => executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula })
+            );
+            return;
+        }
+
+        await executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula });
+    }
+
+    async function executarSalvarCadastro({ id, nome, cpf, med, hora, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula }) {
         const btn = document.getElementById('btnSalvarCadastro');
         btn.disabled = true;
         btn.innerText = "A guardar...";
 
-        const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses });
+        const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses, capsula, hora });
         const dados = { nome, cpf, medicamento: med, capsula, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc, observacao, receita_valida };
         let erro = null;
         if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error;
@@ -2313,7 +2553,7 @@
         tbody.innerHTML = lista.map(r => `
             <tr>
                 <td>${formatarDataBr(r.data)}</td>
-                <td>${r.hora || '—'}</td>
+                <td>${formatarHorariosDisplay(r)}</td>
                 <td class="gp-badge-glicose">${r.glicose !== null && r.glicose !== undefined ? r.glicose + ' mg/dL' : '—'}</td>
                 <td class="gp-badge-pa">${r.pa || '—'}</td>
                 <td>${r.registado_por || '—'}</td>
@@ -2420,7 +2660,7 @@
             const linhas = registosPac.map((r, idx) => `
                 <tr style="border-bottom:1px solid #e2e8f0; ${idx % 2 === 0 ? '' : 'background:#f8fafc;'}">
                     <td style="padding:9px 12px; font-size:13px; color:#334155;">${formatarDataBr(r.data)}</td>
-                    <td style="padding:9px 12px; font-size:13px; color:#334155; text-align:center;">${r.hora || '—'}</td>
+                    <td style="padding:9px 12px; font-size:13px; color:#334155; text-align:center;">${formatarHorariosDisplay(r)}</td>
                     <td style="padding:9px 12px; font-size:13px; font-weight:700; color:#b91c1c;">${r.glicose !== null && r.glicose !== undefined ? r.glicose + ' mg/dL' : '—'}</td>
                     <td style="padding:9px 12px; font-size:13px; font-weight:700; color:#1e3a5f;">${r.pa || '—'}</td>
                     <td style="padding:9px 12px; font-size:12px; color:#64748b;">${r.registado_por || '—'}</td>
@@ -2623,20 +2863,19 @@
         btn.textContent = 'A verificar...';
 
         try {
+            // A verificação da senha agora acontece dentro do banco (função verificar_login),
+            // que compara o hash e nunca devolve a senha/hash para o navegador.
             const { data, error } = await supabaseClient
-                .from('usuarios')
-                .select('username, nome_completo, senha, nivel, ativo')
-                .eq('username', usernameDigitado)
-                .single();
+                .rpc('verificar_login', { p_username: usernameDigitado, p_senha: senha });
 
-            if (error || !data) {
+            const usuarioEncontrado = Array.isArray(data) ? data[0] : data;
+
+            if (error || !usuarioEncontrado) {
                 mostrarErroLogin(erroEl, senhaInput);
-            } else if (data.ativo === false) {
+            } else if (usuarioEncontrado.ativo === false) {
                 erroEl.textContent = 'Utilizador inativo. Contacte o administrador.';
-            } else if (senha === data.senha) {
-                confirmarLogin({ username: data.username, nome_completo: data.nome_completo || data.username, nivel: data.nivel || 'usuario' });
             } else {
-                mostrarErroLogin(erroEl, senhaInput);
+                confirmarLogin({ username: usuarioEncontrado.username, nome_completo: usuarioEncontrado.nome_completo || usuarioEncontrado.username, nivel: usuarioEncontrado.nivel || 'usuario' });
             }
         } catch (err) {
             erroEl.textContent = 'Erro de ligação. Tente novamente.';
@@ -2798,7 +3037,7 @@
             const ehHoje = diaIso === fmtIso(hoje);
 
             // Medicamentos agendados para este dia (todos os registros com hora definida)
-            const medsDia = registros.filter(r => r.hora);
+            const medsDia = registros.filter(r => getHorariosArray(r).length > 0);
 
             const col = document.createElement('div');
             col.className = 'semana-col' + (ehHoje ? ' hoje' : '');
@@ -2807,11 +3046,13 @@
             if (medsDia.length === 0) {
                 medsHtml = '<div class="semana-vazio">Sem medicamentos</div>';
             } else {
-                // Agrupa por horário
+                // Agrupa por horário (um acolhido com vários horários aparece em cada um deles)
                 const porHorario = {};
                 medsDia.forEach(r => {
-                    if (!porHorario[r.hora]) porHorario[r.hora] = [];
-                    porHorario[r.hora].push(r);
+                    getHorariosArray(r).forEach(h => {
+                        if (!porHorario[h]) porHorario[h] = [];
+                        porHorario[h].push(r);
+                    });
                 });
 
                 Object.keys(porHorario).sort((a,b) => parseInt(a) - parseInt(b)).forEach(hora => {
@@ -2847,12 +3088,14 @@
         const diaFormatado = hojeDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
         const horaEmissao = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-        // Agrupa por horário → pacientes
+        // Agrupa por horário → pacientes (um acolhido com vários horários aparece em cada um deles)
         const porHorario = {};
-        const medAtivos = registros.filter(r => r.hora);
+        const medAtivos = registros.filter(r => getHorariosArray(r).length > 0);
         medAtivos.forEach(r => {
-            if (!porHorario[r.hora]) porHorario[r.hora] = [];
-            porHorario[r.hora].push(r);
+            getHorariosArray(r).forEach(h => {
+                if (!porHorario[h]) porHorario[h] = [];
+                porHorario[h].push(r);
+            });
         });
 
         const horariosOrdenados = Object.keys(porHorario).sort((a, b) => parseInt(a) - parseInt(b));
