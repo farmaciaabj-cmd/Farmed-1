@@ -795,8 +795,14 @@
             <button onclick="fechar('modalAlertas')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
         </div>
         <div class="relatorio-filtros" style="padding: 0 15px; margin-top: 12px;">
-            <input type="date" id="alertasDataInicio" title="Data Inicial (vencimento/agendamento)" onchange="filtrarAlertasModal()">
-            <input type="date" id="alertasDataFim" title="Data Final (vencimento/agendamento)" onchange="filtrarAlertasModal()">
+            <div style="flex:1; min-width:130px;">
+                <label style="display:block; font-size:11px; color:var(--texto-s); margin-bottom:4px;">Mês Inicial (vencimento)</label>
+                <input type="month" id="alertasMesInicio" style="width:100%;" onchange="filtrarAlertasModal()">
+            </div>
+            <div style="flex:1; min-width:130px;">
+                <label style="display:block; font-size:11px; color:var(--texto-s); margin-bottom:4px;">Mês Final (vencimento)</label>
+                <input type="month" id="alertasMesFim" style="width:100%;" onchange="filtrarAlertasModal()">
+            </div>
         </div>
         <div style="display:flex; gap:10px; padding: 0 15px; margin-top:10px; margin-bottom: 5px;">
             <button onclick="limparFiltroAlertas()" style="flex:1; padding:10px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">✖ Limpar Filtro</button>
@@ -1167,13 +1173,21 @@
         return { alertasEstoque, alertasRenovacao };
     }
 
-    // Filtra as listas base por período de data (data de vencimento do medicamento / data agendada da renovação).
-    // Se ambas as datas vierem vazias, devolve tudo sem filtrar.
-    function filtrarAlertasPorData(base, dataIni, dataFim) {
-        if (!dataIni && !dataFim) return base;
-        const alertasRenovacao = base.alertasRenovacao.filter(a => (!dataIni || (a.data && a.data >= dataIni)) && (!dataFim || (a.data && a.data <= dataFim)));
+    // Filtra as listas base por INTERVALO DE MESES de VENCIMENTO DA RECEITA (campo receita_valida) / data agendada da renovação.
+    // mesIni/mesFim no formato "YYYY-MM". Comparação lexicográfica funciona pois o formato já é cronológico.
+    // Ex: mesIni="2026-06" e mesFim="2026-06" mostra só Junho/2026. Se ambos vierem vazios, devolve tudo sem filtrar.
+    // IMPORTANTE: usa receita_valida (data de vencimento da receita, exibida no card como "Vence em Xd (data)"),
+    // e NÃO data_vencimento (que é o vencimento do ESTOQUE calculado por última retirada + qtd_meses — outra data).
+    function filtrarAlertasPorMes(base, mesIni, mesFim) {
+        if (!mesIni && !mesFim) return base;
+        const dentroDoIntervalo = (dataStr) => {
+            if (!dataStr) return false;
+            const mes = dataStr.slice(0, 7);
+            return (!mesIni || mes >= mesIni) && (!mesFim || mes <= mesFim);
+        };
+        const alertasRenovacao = base.alertasRenovacao.filter(a => dentroDoIntervalo(a.data));
         const alertasEstoque = base.alertasEstoque
-            .map(a => ({ ...a, medicamentos: a.medicamentos.filter(m => m.data_vencimento && (!dataIni || m.data_vencimento >= dataIni) && (!dataFim || m.data_vencimento <= dataFim)) }))
+            .map(a => ({ ...a, medicamentos: a.medicamentos.filter(m => dentroDoIntervalo(m.receita_valida)) }))
             .filter(a => a.medicamentos.length > 0);
         return { alertasEstoque, alertasRenovacao };
     }
@@ -1205,19 +1219,19 @@
         return montarHtmlAlertasSecoes(base.alertasEstoque, base.alertasRenovacao);
     }
 
-    // Reaplica o filtro de data (campos do modal) e re-renderiza a lista de alertas exibida
+    // Reaplica o filtro de meses (campos do modal) e re-renderiza a lista de alertas exibida
     function filtrarAlertasModal() {
-        const dataIni = (document.getElementById('alertasDataInicio') || {}).value || '';
-        const dataFim = (document.getElementById('alertasDataFim') || {}).value || '';
+        const mesIni = (document.getElementById('alertasMesInicio') || {}).value || '';
+        const mesFim = (document.getElementById('alertasMesFim') || {}).value || '';
         const base = obterAlertasBase();
-        const filtrado = filtrarAlertasPorData(base, dataIni, dataFim);
+        const filtrado = filtrarAlertasPorMes(base, mesIni, mesFim);
         const modalBody = document.getElementById('alertasModalBody');
         if (modalBody) modalBody.innerHTML = montarHtmlAlertasSecoes(filtrado.alertasEstoque, filtrado.alertasRenovacao);
     }
 
     function limparFiltroAlertas() {
-        const di = document.getElementById('alertasDataInicio'); if (di) di.value = '';
-        const df = document.getElementById('alertasDataFim'); if (df) df.value = '';
+        const mi = document.getElementById('alertasMesInicio'); if (mi) mi.value = '';
+        const mf = document.getElementById('alertasMesFim'); if (mf) mf.value = '';
         filtrarAlertasModal();
     }
 
@@ -1243,31 +1257,38 @@
 
     function abrirModalAlertas() {
         abrir('modalAlertas');
-        const di = document.getElementById('alertasDataInicio'); if (di) di.value = '';
-        const df = document.getElementById('alertasDataFim'); if (df) df.value = '';
+        const mi = document.getElementById('alertasMesInicio'); if (mi) mi.value = '';
+        const mf = document.getElementById('alertasMesFim'); if (mf) mf.value = '';
         document.getElementById('alertasModalBody').innerHTML = buildAlertasHTML();
     }
 
-    // Gera um relatório em PDF (imprimível) dos Alertas de Renovação, respeitando o filtro de data do modal
+    // Gera um relatório em PDF (imprimível) dos Alertas de Renovação, respeitando o filtro de meses do modal
     function exportarAlertasPdf() {
-        const dataIni = (document.getElementById('alertasDataInicio') || {}).value || '';
-        const dataFim = (document.getElementById('alertasDataFim') || {}).value || '';
+        const mesIni = (document.getElementById('alertasMesInicio') || {}).value || '';
+        const mesFim = (document.getElementById('alertasMesFim') || {}).value || '';
         const base = obterAlertasBase();
-        const { alertasEstoque, alertasRenovacao } = filtrarAlertasPorData(base, dataIni, dataFim);
+        const { alertasEstoque, alertasRenovacao } = filtrarAlertasPorMes(base, mesIni, mesFim);
 
         if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) { toast("Sem alertas", "Nenhum alerta encontrado para o período selecionado.", "warning"); return; }
 
         const hoje = new Date();
         const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
         const horaEmissao = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const periodoLabel = (dataIni || dataFim) ? `${dataIni ? formatarDataBr(dataIni) : 'Início'} — ${dataFim ? formatarDataBr(dataFim) : 'Hoje'}` : 'Todos os alertas atuais';
+        function labelMes(mesStr) {
+            const [ano, mes] = mesStr.split('-').map(Number);
+            return new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        }
+        const periodoLabel = !mesIni && !mesFim ? 'Todos os alertas atuais'
+            : (mesIni === mesFim || !mesFim) ? labelMes(mesIni || mesFim)
+            : !mesIni ? `Até ${labelMes(mesFim)}`
+            : `${labelMes(mesIni)} — ${labelMes(mesFim)}`;
 
-        // Linhas de Estoque de Medicamentos (uma linha por medicamento, ordenadas pela data de vencimento)
+        // Linhas de Estoque de Medicamentos (uma linha por medicamento, ordenadas pela data de vencimento da receita)
         let linhasEstoque = '';
         let totalMeds = 0;
         let contador = 1;
         alertasEstoque.forEach(a => {
-            [...a.medicamentos].sort((x, y) => (x.data_vencimento || '').localeCompare(y.data_vencimento || '')).forEach(m => {
+            [...a.medicamentos].sort((x, y) => (x.receita_valida || '').localeCompare(y.receita_valida || '')).forEach(m => {
                 totalMeds++;
                 const status = m.diasFaltantes < 0 ? 'critico' : (m.diasFaltantes <= 5 ? 'atencao' : 'ok');
                 const cor = status === 'critico' ? '#b91c1c' : status === 'atencao' ? '#b45309' : '#166534';
@@ -1279,7 +1300,7 @@
                     <td style="padding:9px 12px;font-size:13px;color:#334155;">${contador++}</td>
                     <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#1e293b;">${a.nome}</td>
                     <td style="padding:9px 12px;font-size:12px;color:#64748b;font-style:italic;">${m.medicamento}</td>
-                    <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${m.data_vencimento ? formatarDataBr(m.data_vencimento) : '—'}</td>
+                    <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${m.receita_valida ? formatarDataBr(m.receita_valida) : '—'}</td>
                     <td style="padding:9px 12px;text-align:center;"><span style="background:${bg};color:${cor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${borda};">${label}</span></td>
                 </tr>`;
             });
@@ -1292,7 +1313,7 @@
                     <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">#</th>
                     <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">ACOLHIDO</th>
                     <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;letter-spacing:0.5px;">MEDICAMENTO</th>
-                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">VENCE EM</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">VENC. RECEITA</th>
                     <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;">SITUAÇÃO</th>
                 </tr></thead>
                 <tbody>${linhasEstoque}</tbody>
