@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -427,7 +428,7 @@
 <div id="loginScreen">
     <div class="login-card">
         <div class="login-logo">
-            <img src="Logo.png">
+            <img src="https://lh3.googleusercontent.com/d/1BIAepPrrliHft2rnjcCdQxAWu0icfL2y" alt="Logo Farmed">
         </div>
         <div class="login-title"></div>
         <div class="login-subtitle">Gestão de Medicamentos</div>
@@ -613,6 +614,7 @@
         <div class="agenda-header">
             <h2>Agenda Profissional - Saídas</h2>
             <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="abrirExportarSaidas()" title="Baixar Saídas em PDF" style="border:none; background:#0f3652; color:#38bdf8; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;">📄 PDF</button>
                 <button class="btn-plus" onclick="abrirModalNovaSaida()" title="Agendar Nova Saída">+</button>
                 <button onclick="fechar('modalCalendario')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
             </div>
@@ -834,6 +836,27 @@
         <input type="text" id="saidaInformacoes" placeholder="Digite detalhes da saída ou renovação...">
         <button id="btnSalvarSaida" onclick="window.salvarSaida()" style="background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px;">Salvar Agendamento</button>
         <button onclick="fechar('modalNovaSaida')" style="width:100%; border:none; background:none; color:var(--texto-s); margin-top:10px; cursor:pointer; font-weight:600;">Voltar</button>
+    </div>
+</div>
+
+<div id="modalExportarSaidas" class="modal">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2>📄 Baixar Saídas em PDF</h2>
+        <p style="font-size:12px; color:var(--texto-s); margin:-6px 0 14px 0; line-height:1.5;">Selecione o período (mês inicial e mês final) para gerar o relatório das saídas/renovações salvas.</p>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+                <label>Mês Inicial</label>
+                <input type="month" id="expSaidaMesIni">
+            </div>
+            <div style="flex:1;">
+                <label>Mês Final</label>
+                <input type="month" id="expSaidaMesFim">
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" onclick="fechar('modalExportarSaidas')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:12px; cursor:pointer; font-weight:700;">Cancelar</button>
+            <button type="button" id="expSaidaBtnGerar" onclick="gerarPdfSaidas()" class="gp-btn-salvar" style="flex:1.3; margin-top:0;">📄 Gerar PDF</button>
+        </div>
     </div>
 </div>
 
@@ -2741,6 +2764,120 @@
         gerarCalendario();
         renderizarPacientesDoDia();
     }
+    // ==========================================
+    // EXPORTAÇÃO DE SAÍDAS/RENOVAÇÕES EM PDF (por período de mês inicial/final)
+    // ==========================================
+    function abrirExportarSaidas() {
+        const hoje = new Date();
+        const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('expSaidaMesIni').value = mesAtual;
+        document.getElementById('expSaidaMesFim').value = mesAtual;
+        abrir('modalExportarSaidas');
+    }
+
+    function gerarPdfSaidas() {
+        const mesIniStr = document.getElementById('expSaidaMesIni').value; // formato "YYYY-MM"
+        const mesFimStr = document.getElementById('expSaidaMesFim').value;
+
+        if (!mesIniStr || !mesFimStr) { toast("Atenção", "Selecione o mês inicial e o mês final.", "warning"); return; }
+        if (mesFimStr < mesIniStr) { toast("Atenção", "O mês final deve ser igual ou posterior ao mês inicial.", "warning"); return; }
+
+        const [anoIni, numMesIni] = mesIniStr.split('-').map(Number);
+        const [anoFim, numMesFim] = mesFimStr.split('-').map(Number);
+
+        const dataIniISO = `${anoIni}-${String(numMesIni).padStart(2, '0')}-01`;
+        const ultimoDiaFim = new Date(anoFim, numMesFim, 0).getDate(); // último dia do mês final
+        const dataFimISO = `${anoFim}-${String(numMesFim).padStart(2, '0')}-${String(ultimoDiaFim).padStart(2, '0')}`;
+
+        const saidasFiltradas = saidas
+            .filter(s => s.data && s.data >= dataIniISO && s.data <= dataFimISO)
+            .sort((a, b) => a.data.localeCompare(b.data));
+
+        montarESalvarPdfSaidas(saidasFiltradas, mesIniStr, mesFimStr);
+    }
+
+    function montarESalvarPdfSaidas(lista, mesIniStr, mesFimStr) {
+        const hoje = new Date();
+        const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        const horaEmissao = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        function labelMes(mesStr) {
+            const [ano, mes] = mesStr.split('-').map(Number);
+            return new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        }
+        const periodoLabel = mesIniStr === mesFimStr ? labelMes(mesIniStr) : `${labelMes(mesIniStr)} — ${labelMes(mesFimStr)}`;
+
+        const totalRealizadas = lista.filter(s => s.realizado).length;
+        const totalPendentes = lista.length - totalRealizadas;
+
+        const linhas = lista.map((s, idx) => `
+            <tr style="border-bottom:1px solid #e2e8f0; ${idx % 2 === 0 ? '' : 'background:#f8fafc;'}">
+                <td style="padding:9px 12px; font-size:13px; color:#334155;">${formatarDataBr(s.data)}</td>
+                <td style="padding:9px 12px; font-size:13px; font-weight:600; color:#1e293b;">${s.nome || '—'}</td>
+                <td style="padding:9px 12px; font-size:12px; color:#475569;">${s.informacoes || '—'}</td>
+                <td style="padding:9px 12px; text-align:center;">
+                    <span style="background:${s.realizado ? '#dcfce7' : '#fee2e2'}; color:${s.realizado ? '#166534' : '#b91c1c'}; font-weight:700; font-size:11px; padding:3px 10px; border-radius:20px; border:1px solid ${s.realizado ? '#86efac' : '#fca5a5'};">
+                        ${s.realizado ? 'REALIZADO' : 'PENDENTE'}
+                    </span>
+                </td>
+            </tr>`).join('');
+
+        const tabelaOuAviso = lista.length === 0
+            ? `<p style="text-align:center;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">Nenhuma saída/renovação registada no período selecionado.</p>`
+            : `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <thead><tr style="background:#1e3a5f;color:white;">
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">DATA</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">ACOLHIDO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">INFORMAÇÕES</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;">SITUAÇÃO</th>
+                </tr></thead>
+                <tbody>${linhas}</tbody>
+            </table>`;
+
+        const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Saidas_${new Date().toISOString().slice(0,10)}</title>
+        <style>
+            *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:32px;font-size:13px}
+            h1{font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;margin-bottom:8px}
+            p{font-size:13px;color:#475569;margin-bottom:20px;line-height:1.7}
+            table{width:100%;border-collapse:collapse;margin-top:10px}thead tr{background:#1e3a5f;color:white}
+            th{padding:10px 12px;text-align:left;font-size:12px;font-weight:700}td{padding:9px 12px;font-size:13px;border-bottom:1px solid #e2e8f0}tr{page-break-inside:avoid}
+            .cards{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}.card{flex:1;min-width:130px;border-radius:10px;padding:14px 18px}
+            .rodape{margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6}
+            @media print{@page{margin:15mm;size:A4}}
+        </style></head><body>
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px">
+            <div style="font-size:22px;font-weight:800;color:#1e3a5f">FARMED</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
+        </div>
+        <h1>📅 Agenda Profissional — Saídas e Renovações</h1>
+        <p>Relatório das saídas e renovações agendadas/registadas no período selecionado.</p>
+        <div class="cards">
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Período</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${periodoLabel}</div></div>
+            <div class="card" style="background:#dbeafe;border-left:4px solid #1e40af"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f">Total</div><div style="font-size:22px;font-weight:800;color:#1e40af;margin-top:4px">${lista.length}</div></div>
+            <div class="card" style="background:#dcfce7;border-left:4px solid #16a34a"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#166534">Realizadas</div><div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:4px">${totalRealizadas}</div></div>
+            <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Pendentes</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${totalPendentes}</div></div>
+        </div>
+        ${tabelaOuAviso}
+        <div class="rodape"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
+        <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+        </body></html>`;
+
+        const _blob = new Blob([_htmlPdf], { type: 'text/html;charset=utf-8' });
+        const _url = URL.createObjectURL(_blob);
+        const _nomeArquivo = `Saidas_${mesIniStr}_a_${mesFimStr}.html`;
+        const _a = document.createElement('a');
+        _a.href = _url;
+        _a.download = _nomeArquivo;
+        document.body.appendChild(_a);
+        _a.click();
+        document.body.removeChild(_a);
+        setTimeout(() => URL.revokeObjectURL(_url), 10000);
+
+        fechar('modalExportarSaidas');
+        toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
+    }
+
     function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
     }
     function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia();
