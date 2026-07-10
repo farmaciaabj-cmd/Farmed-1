@@ -8,6 +8,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
+        .etiquetas-aba-btn { cursor:pointer; padding:8px 12px; border-radius:8px; border:1px solid transparent; background:transparent; color:var(--texto-s); }
+.etiquetas-aba-btn.ativa { background:var(--cor-azul); color:white; border-color:rgba(255,255,255,0.04); }
+.etiquetas-aba-conteudo { display:none; }
+.etiquetas-aba-conteudo.ativa { display:block; }
         :root { 
             --cor-azul: #009cd9;
             --bg: #121824; 
@@ -517,6 +521,7 @@
             
             <div class="sidebar-item" onclick="abrirCalendarioGrande(); fecharMenuLateral();">📅 Agenda / Saídas</div>
             <div class="sidebar-item" onclick="abrirGerenciadorReceitas(); fecharMenuLateral();">📄✍️ Gerir Receitas</div>
+            <div class="sidebar-item" onclick="abrirModalEtiquetas(); fecharMenuLateral();">🏷️ Etiquetas / Controle</div>
             <div class="sidebar-item" onclick="abrirGlicosePA(); fecharMenuLateral();">🩸 PA/HGT</div>
             <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
@@ -888,7 +893,114 @@
     </div>
 </div>
 
+    <!-- ===== MODAL ETIQUETAS / CONTROLE ===== -->
+<div id="modalEtiquetas" class="modal">
+  <div class="modal-content" style="max-width:900px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h2 style="margin:0;">🏷️ Etiquetas & Controle de Medicação</h2>
+      <button onclick="fechar('modalEtiquetas')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 12px; border-radius:10px; cursor:pointer;">Sair</button>
+    </div>
+
+    <!-- abas -->
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button class="etiquetas-aba-btn ativa" data-aba="abaEtiquetas" style="padding:8px 12px; border-radius:10px; background:var(--cor-azul); color:white; border:none; font-weight:700;">Gerar Etiqueta</button>
+      <button class="etiquetas-aba-btn" data-aba="abaControleMedicacao" style="padding:8px 12px; border-radius:10px; background:transparent; color:var(--texto-p); border:1px solid var(--borda); font-weight:700;">Controle de Medicação</button>
+    </div>
+
+    <!-- conteúdo das abas -->
+    <div id="abaEtiquetas" class="etiquetas-aba-conteudo ativa" style="display:block;">
+      <label>Selecione Acolhido</label>
+      <select id="etiquetaAcolhidoSelect" style="width:100%; padding:10px; margin-bottom:10px;">
+        <option value="">-- Carregando... --</option>
+      </select>
+
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label>Nome</label>
+          <input id="etiquetaNome" type="text" style="width:100%; padding:10px; margin-bottom:8px;">
+          <label>Data Nascimento</label>
+          <input id="etiquetaDataNascimento" type="date" style="width:100%; padding:10px; margin-bottom:8px;">
+        </div>
+        <div style="width:220px;">
+          <label>CPF</label>
+          <input id="etiquetaCPF" type="text" style="width:100%; padding:10px; margin-bottom:8px;" maxlength="14" oninput="aplicarMascaraCPF(this)">
+          <label>Tamanho</label>
+          <select id="etiquetaTamanho" style="width:100%; padding:10px;">
+            <option value="pequeno">Pequeno (meia folha)</option>
+            <option value="grande">Grande (etiqueta)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label>Horários (marque)</label>
+        <div id="etiquetasHorariosContainer" class="hora-multi-select" style="margin-top:6px;"></div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button onclick="gerarPdfEtiqueta()" style="flex:1; padding:12px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:10px; font-weight:700;">Gerar PDF</button>
+        <button onclick="fechar('modalEtiquetas')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border-radius:10px; border:none;">Fechar</button>
+      </div>
+    </div>
+
+    <div id="abaControleMedicacao" class="etiquetas-aba-conteudo" style="display:none;">
+      <label>Selecione Acolhido</label>
+      <select id="contraMedAcolhidoSelect" style="width:100%; padding:10px; margin-bottom:10px;">
+        <option value="">-- Carregando... --</option>
+      </select>
+
+      <label>Nome</label>
+      <input id="contraMedNome" type="text" style="width:100%; padding:10px; margin-bottom:8px;" readonly>
+
+      <label>Medicamentos</label>
+      <input id="contraMedMedicamentos" type="text" style="width:100%; padding:10px; margin-bottom:8px;" readonly>
+
+      <div id="contraMedHorarios" style="margin-top:10px;"></div>
+
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button onclick="gerarPdfControleMedicacao()" style="flex:1; padding:12px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:10px; font-weight:700;">Gerar PDF Controle</button>
+        <button onclick="fechar('modalEtiquetas')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border-radius:10px; border:none;">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+    
 <script>
+
+    // RENDERIZA CHECKBOXES DE HORÁRIOS (usado pela aba de etiquetas)
+function renderizarCheckboxesEtiquetas() {
+    const container = document.getElementById('etiquetasHorariosContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    (horariosAtivos || []).forEach(h => {
+        const id = `etq_hora_${h.replace(/\W/g,'')}`;
+        const wrapper = document.createElement('label');
+        wrapper.className = 'hora-chip';
+        wrapper.style.marginRight = '6px';
+        wrapper.innerHTML = `<input type="checkbox" name="etiquetaHorario" value="${h}" id="${id}"><label for="${id}" style="display:inline-block; padding:6px 10px; border-radius:16px; background:#151f32; color:var(--texto-s); cursor:pointer;">${h}</label>`;
+        container.appendChild(wrapper);
+    });
+}
+
+// Inicialização: liga eventos e carrega selects
+document.addEventListener('DOMContentLoaded', function() {
+    // renderiza checkboxes baseados em horariosAtivos
+    renderizarCheckboxesEtiquetas();
+
+    // inicializa abas (usa a função já fornecida)
+    try { inicializarAbasEtiquetas(); } catch(e){ console.warn('inicializarAbasEtiquetas não disponível ainda', e); }
+
+    // ligar selects (se existirem)
+    const selEtiq = document.getElementById('etiquetaAcolhidoSelect');
+    if (selEtiq) selEtiq.addEventListener('change', aoSelecionarAcolhidoEtiqueta);
+
+    const selContra = document.getElementById('contraMedAcolhidoSelect');
+    if (selContra) selContra.addEventListener('change', aoSelecionarAcolhidoContraMed);
+
+    // Carregamento inicial das listas (se quiser chamar já)
+    if (typeof atualizarListaAcolhidosEtiquetas === 'function') atualizarListaAcolhidosEtiquetas();
+    if (typeof atualizarListaAcolhidosContraMed === 'function') atualizarListaAcolhidosContraMed();
+});
     // =========================================================================================
     // 🔴 AVISO DE SEGURANÇA: Certifique-se de ativar o RLS (Row Level Security) no Supabase!
     // Sem RLS ativo, as chaves de API abaixo ficam vulneráveis a manipulações maliciosas.
