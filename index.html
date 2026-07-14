@@ -949,13 +949,26 @@
         <option value="">-- Carregando... --</option>
       </select>
 
-      <label>Nome</label>
-      <input id="contraMedNome" type="text" style="width:100%; padding:10px; margin-bottom:8px;" readonly>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label>Nome</label>
+          <input id="contraMedNome" type="text" style="width:100%; padding:10px; margin-bottom:8px;" readonly>
+        </div>
+        <div style="width:180px;">
+          <label>Mês de referência</label>
+          <input id="contraMedMes" type="month" style="width:100%; padding:10px; margin-bottom:8px;">
+        </div>
+      </div>
 
       <label>Medicamentos</label>
       <input id="contraMedMedicamentos" type="text" style="width:100%; padding:10px; margin-bottom:8px;" readonly>
 
       <div id="contraMedHorarios" style="margin-top:10px;"></div>
+
+      <div style="margin-top:14px;">
+        <label>Blister utilizado (nº de comprimidos)</label>
+        <div id="contraMedBlisterContainer" class="hora-multi-select" style="margin-top:6px;"></div>
+      </div>
 
       <div style="display:flex; gap:10px; margin-top:14px;">
         <button onclick="gerarPdfControleMedicacao()" style="flex:1; padding:12px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:10px; font-weight:700;">Gerar PDF Controle</button>
@@ -980,6 +993,357 @@ function renderizarCheckboxesEtiquetas() {
         wrapper.innerHTML = `<input type="checkbox" name="etiquetaHorario" value="${h}" id="${id}"><label for="${id}" style="display:inline-block; padding:6px 10px; border-radius:16px; background:#151f32; color:var(--texto-s); cursor:pointer;">${h}</label>`;
         container.appendChild(wrapper);
     });
+}
+
+// ==========================================
+// ABRE O MODAL DE ETIQUETAS / CONTROLE (chamada pelo item do menu lateral)
+// ==========================================
+function abrirModalEtiquetas() {
+    abrir('modalEtiquetas');
+    inicializarAbasEtiquetas();
+    atualizarListaAcolhidosEtiquetas();
+    atualizarListaAcolhidosContraMed();
+    renderizarCheckboxesEtiquetas();
+
+    // reset dos campos da aba "Gerar Etiqueta"
+    const selEtq = document.getElementById('etiquetaAcolhidoSelect');
+    if (selEtq) selEtq.value = "";
+    const campos = ['etiquetaNome', 'etiquetaDataNascimento', 'etiquetaCPF'];
+    campos.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    const tamanho = document.getElementById('etiquetaTamanho');
+    if (tamanho) tamanho.value = "pequeno";
+
+    // reset dos campos da aba "Controle de Medicação"
+    const selCtrl = document.getElementById('contraMedAcolhidoSelect');
+    if (selCtrl) selCtrl.value = "";
+    const nomeCtrl = document.getElementById('contraMedNome');
+    if (nomeCtrl) nomeCtrl.value = "";
+    const medCtrl = document.getElementById('contraMedMedicamentos');
+    if (medCtrl) medCtrl.value = "";
+    const horariosCtrl = document.getElementById('contraMedHorarios');
+    if (horariosCtrl) horariosCtrl.innerHTML = "";
+
+    const mesCtrl = document.getElementById('contraMedMes');
+    if (mesCtrl) {
+        const hoje = new Date();
+        mesCtrl.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+    }
+    renderizarBlisterOpcoes();
+}
+
+// ==========================================
+// RENDERIZA AS OPÇÕES DE BLISTER (5/10/15/20/28/30 comprimidos) COMO CHIPS EXCLUSIVOS
+// ==========================================
+function renderizarBlisterOpcoes() {
+    const container = document.getElementById('contraMedBlisterContainer');
+    if (!container) return;
+    const opcoes = [5, 10, 15, 20, 28, 30];
+    container.innerHTML = '';
+    opcoes.forEach(qtd => {
+        const id = `blister_${qtd}`;
+        const wrapper = document.createElement('label');
+        wrapper.className = 'hora-chip';
+        wrapper.style.marginRight = '6px';
+        wrapper.innerHTML = `<input type="radio" name="contraMedBlister" value="${qtd}" id="${id}"><label for="${id}" style="display:inline-block; padding:6px 14px; border-radius:16px; background:#151f32; color:var(--texto-s); cursor:pointer;">${qtd}</label>`;
+        container.appendChild(wrapper);
+    });
+}
+
+// ==========================================
+// CONTROLA A TROCA DE ABAS DENTRO DO MODAL DE ETIQUETAS
+// ==========================================
+function inicializarAbasEtiquetas() {
+    const botoes = document.querySelectorAll('.etiquetas-aba-btn');
+    botoes.forEach(btn => {
+        btn.onclick = function() {
+            botoes.forEach(b => {
+                b.classList.remove('ativa');
+                b.style.background = 'transparent';
+                b.style.color = 'var(--texto-p)';
+                b.style.border = '1px solid var(--borda)';
+            });
+            this.classList.add('ativa');
+            this.style.background = 'var(--cor-azul)';
+            this.style.color = 'white';
+            this.style.border = 'none';
+
+            document.querySelectorAll('.etiquetas-aba-conteudo').forEach(c => {
+                c.classList.remove('ativa');
+                c.style.display = 'none';
+            });
+            const alvo = document.getElementById(this.dataset.aba);
+            if (alvo) { alvo.classList.add('ativa'); alvo.style.display = 'block'; }
+        };
+    });
+}
+
+// ==========================================
+// POPULA OS SELECTS DE ACOLHIDO (usa a lista global "registros")
+// ==========================================
+function atualizarListaAcolhidosEtiquetas() {
+    const select = document.getElementById('etiquetaAcolhidoSelect');
+    if (!select) return;
+    const nomesUnicos = [...new Set((registros || []).map(r => r.nome).filter(Boolean))].sort();
+    select.innerHTML = '<option value="">-- Selecione o Acolhido --</option>' +
+        nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function atualizarListaAcolhidosContraMed() {
+    const select = document.getElementById('contraMedAcolhidoSelect');
+    if (!select) return;
+    const nomesUnicos = [...new Set((registros || []).map(r => r.nome).filter(Boolean))].sort();
+    select.innerHTML = '<option value="">-- Selecione o Acolhido --</option>' +
+        nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+// ==========================================
+// AO ESCOLHER UM ACOLHIDO NA ABA "GERAR ETIQUETA"
+// ==========================================
+function aoSelecionarAcolhidoEtiqueta() {
+    const nome = document.getElementById('etiquetaAcolhidoSelect').value;
+    document.getElementById('etiquetaNome').value = nome || "";
+    renderizarCheckboxesEtiquetas();
+
+    if (!nome) { document.getElementById('etiquetaCPF').value = ""; return; }
+
+    const regs = (registros || []).filter(r => r.nome === nome);
+    const comCpf = regs.find(r => r.cpf);
+    document.getElementById('etiquetaCPF').value = comCpf ? comCpf.cpf : "";
+
+    // marca automaticamente os horários já cadastrados para este acolhido
+    const horariosDoAcolhido = new Set(regs.flatMap(r => getHorariosArray(r)));
+    horariosDoAcolhido.forEach(h => {
+        const chk = document.getElementById(`etq_hora_${h.replace(/\W/g,'')}`);
+        if (chk) chk.checked = true;
+    });
+}
+
+// ==========================================
+// AO ESCOLHER UM ACOLHIDO NA ABA "CONTROLE DE MEDICAÇÃO"
+// ==========================================
+function aoSelecionarAcolhidoContraMed() {
+    const nome = document.getElementById('contraMedAcolhidoSelect').value;
+    document.getElementById('contraMedNome').value = nome || "";
+    const container = document.getElementById('contraMedHorarios');
+
+    if (!nome) {
+        document.getElementById('contraMedMedicamentos').value = "";
+        if (container) container.innerHTML = "";
+        return;
+    }
+
+    const regs = (registros || []).filter(r => r.nome === nome);
+    const medicamentos = [...new Set(regs.map(r => r.medicamento).filter(Boolean))];
+    document.getElementById('contraMedMedicamentos').value = medicamentos.length ? medicamentos.join(', ') : "—";
+
+    if (!container) return;
+    if (regs.length === 0) {
+        container.innerHTML = "<p style='color:var(--texto-s);'>Nenhum medicamento cadastrado para este acolhido.</p>";
+        return;
+    }
+    container.innerHTML = '<label>Medicamentos e Horários</label>' + regs.map(r => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background:#151f32; border-radius:8px; margin-top:6px;">
+            <span style="font-weight:600;">${r.medicamento || 'Sem nome'}</span>
+            <span style="color:var(--texto-s); font-size:13px;">${formatarHorariosDisplay(r)}</span>
+        </div>`).join('');
+}
+
+// ==========================================
+// GERA O PDF (HTML para impressão) DA ETIQUETA DE IDENTIFICAÇÃO
+// ==========================================
+function gerarPdfEtiqueta() {
+    const nome = document.getElementById('etiquetaNome').value.trim();
+    const dataNasc = document.getElementById('etiquetaDataNascimento').value;
+    const cpf = document.getElementById('etiquetaCPF').value.trim();
+    const tamanho = document.getElementById('etiquetaTamanho').value;
+    const horariosMarcados = Array.from(document.querySelectorAll('input[name="etiquetaHorario"]:checked')).map(c => c.value);
+
+    if (!nome) { toast("Campo obrigatório", "Preencha o nome do acolhido.", "warning"); return; }
+    if (horariosMarcados.length === 0) { toast("Campo obrigatório", "Selecione ao menos um horário.", "warning"); return; }
+
+    const dataNascFormatada = dataNasc ? formatarDataBr(dataNasc) : '—';
+    const grande = tamanho === 'grande';
+    const horariosHtml = horariosMarcados.map(h => `<span style="display:inline-block; padding:5px 12px; margin:3px; border-radius:16px; background:#dbeafe; color:#1e3a5f; font-weight:700; font-size:${grande ? '16px' : '13px'};">${h}</span>`).join('');
+
+    const etiquetaBloco = `
+        <div style="border:2px solid #1e3a5f; border-radius:10px; padding:${grande ? '22px' : '14px'}; margin-bottom:16px; page-break-inside:avoid;">
+            <div style="font-size:${grande ? '14px' : '11px'}; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Identificação de Medicação</div>
+            <div style="font-size:${grande ? '26px' : '18px'}; font-weight:800; color:#1e3a5f; margin-top:6px;">${nome}</div>
+            <div style="display:flex; gap:24px; margin-top:8px; font-size:${grande ? '15px' : '12px'}; color:#334155;">
+                <div><strong>Nasc.:</strong> ${dataNascFormatada}</div>
+                <div><strong>CPF:</strong> ${cpf || '—'}</div>
+            </div>
+            <div style="margin-top:10px;">${horariosHtml}</div>
+        </div>`;
+
+    // No tamanho "pequeno" (meia folha) repete a etiqueta duas vezes por folha
+    const conteudo = grande ? etiquetaBloco : etiquetaBloco + etiquetaBloco;
+
+    const hoje = new Date();
+    const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Etiqueta_${nome.replace(/\s+/g,'_')}</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:32px;font-size:13px}
+        @media print{@page{margin:12mm;size:A4}}
+    </style></head><body>
+    <div style="border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:24px">
+        <div style="font-size:20px;font-weight:800;color:#1e3a5f">FARMED</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao}</div>
+    </div>
+    ${conteudo}
+    <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+    </body></html>`;
+
+    const _blob = new Blob([_htmlPdf], { type: 'text/html;charset=utf-8' });
+    const _url = URL.createObjectURL(_blob);
+    const _a = document.createElement('a');
+    _a.href = _url;
+    _a.download = `Etiqueta_${nome.replace(/\s+/g,'_')}.html`;
+    document.body.appendChild(_a);
+    _a.click();
+    document.body.removeChild(_a);
+    setTimeout(() => URL.revokeObjectURL(_url), 10000);
+
+    toast("Etiqueta gerada", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
+}
+
+// ==========================================
+// GERA O PDF (HTML para impressão) DA FOLHA DE CONTROLE DE MEDICAÇÃO
+// ==========================================
+function gerarPdfControleMedicacao() {
+    const nome = document.getElementById('contraMedNome').value.trim();
+
+    if (!nome) { toast("Campo obrigatório", "Selecione um acolhido.", "warning"); return; }
+
+    const regs = (registros || []).filter(r => r.nome === nome);
+    if (regs.length === 0) { toast("Sem medicamentos", "Este acolhido não possui medicamentos cadastrados.", "warning"); return; }
+
+    const blisterSelecionado = document.querySelector('input[name="contraMedBlister"]:checked');
+    const blisterQtd = blisterSelecionado ? blisterSelecionado.value : null;
+    const opcoesBlister = [5, 10, 15, 20, 28, 30];
+
+    const mesInput = document.getElementById('contraMedMes').value; // "YYYY-MM"
+    const hoje = new Date();
+    const [anoRef, mesRef] = mesInput ? mesInput.split('-').map(Number) : [hoje.getFullYear(), hoje.getMonth() + 1];
+    const mesLabel = new Date(anoRef, mesRef - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    // Checklist de blister utilizado (marca a opção selecionada, se houver)
+    const blisterHtml = opcoesBlister.map(q => `
+        <span style="display:inline-flex; align-items:center; gap:6px; margin-right:18px;">
+            <span style="display:inline-block; width:16px; height:16px; border:2px solid #1e3a5f; border-radius:3px; text-align:center; line-height:14px; font-size:12px; font-weight:900; ${String(q) === blisterQtd ? 'background:#1e3a5f;color:#fff;' : 'color:#fff;'}">${String(q) === blisterQtd ? '✔' : ''}</span>
+            <span style="font-size:13px; font-weight:${String(q) === blisterQtd ? '800' : '600'}; color:#1e293b;">${q} cp</span>
+        </span>`).join('');
+
+    // Uma checkbox vazia (para marcar à mão) usada nos dias de cada semana
+    const caixaVazia = `<span style="display:inline-block; width:16px; height:16px; border:2px solid #94a3b8; border-radius:3px;"></span>`;
+    const diasSemanaLetras = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+    // Quantos medicamentos entram em cada folha impressa
+    const MEDS_POR_FOLHA = 2;
+    const grupos = [];
+    for (let i = 0; i < regs.length; i += MEDS_POR_FOLHA) {
+        grupos.push(regs.slice(i, i + MEDS_POR_FOLHA));
+    }
+
+    // Monta o bloco (tabela) de UM medicamento
+    function montarBlocoMedicamento(r) {
+        const nomeMedicamento = (r.medicamento && r.medicamento.trim()) ? r.medicamento.trim() : 'Medicamento não informado';
+        const horarioReg = formatarHorariosDisplay(r);
+
+        const linhasSemana = [1, 2, 3, 4].map(sem => `
+            <tr>
+                <td style="padding:7px;font-size:12px;font-weight:800;border:1px solid #cbd5e1;background:#f1f5f9;white-space:nowrap;">Semana ${sem}</td>
+                ${diasSemanaLetras.map(letra => `
+                    <td style="padding:5px 3px;text-align:center;border:1px solid #cbd5e1;">
+                        <div style="font-size:8px;color:#94a3b8;font-weight:700;margin-bottom:3px;">${letra}</div>
+                        ${caixaVazia}
+                    </td>`).join('')}
+                <td style="padding:5px 8px;border:1px solid #cbd5e1;height:40px;min-width:90px;"></td>
+                <td style="padding:5px 8px;border:1px solid #cbd5e1;height:40px;min-width:110px;"></td>
+                <td style="padding:5px 8px;border:1px solid #cbd5e1;height:40px;min-width:110px;"></td>
+            </tr>`).join('');
+
+        return `
+        <div style="margin-top:16px; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+                <div style="font-size:18px; font-weight:800; color:#1e3a5f;">${nomeMedicamento}</div>
+                <div style="font-size:12px; color:#475569;"><strong>Horário:</strong> ${horarioReg}</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;">
+                <thead><tr>
+                    <th style="background:#1e3a5f;color:#fff;font-size:10px;font-weight:700;text-align:left;padding:6px 8px;border:1px solid #1e3a5f;">Semana</th>
+                    ${diasSemanaLetras.map(() => `<th style="background:#1e3a5f;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #1e3a5f;width:30px;"></th>`).join('')}
+                    <th style="background:#1e3a5f;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:6px 8px;border:1px solid #1e3a5f;">Plantão</th>
+                    <th style="background:#1e3a5f;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:6px 8px;border:1px solid #1e3a5f;">Responsável</th>
+                    <th style="background:#1e3a5f;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:6px 8px;border:1px solid #1e3a5f;">Obs</th>
+                </tr></thead>
+                <tbody>${linhasSemana}</tbody>
+            </table>
+        </div>`;
+    }
+
+    // Monta UMA FOLHA com até MEDS_POR_FOLHA medicamentos do mesmo acolhido
+    const paginasHtml = grupos.map((grupo, idxPagina) => {
+        const blocosMedicamentos = grupo.map(r => montarBlocoMedicamento(r)).join('');
+
+        return `
+        <div style="${idxPagina > 0 ? 'page-break-before:always;' : ''}">
+            <div style="border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:20px">
+                <div style="font-size:20px;font-weight:800;color:#1e3a5f">FARMED</div>
+                <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao}</div>
+            </div>
+
+            <h1 style="font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;margin-bottom:8px;">💊 Controle de Medicação por Blister — ${mesLabel}</h1>
+
+            <div style="margin:14px 0 4px 0; padding:14px 18px; background:#f1f5f9; border-radius:8px; border-left:4px solid #1e3a5f;">
+                <div style="display:flex; flex-wrap:wrap; gap:28px;">
+                    <div><div style="font-size:10px;text-transform:uppercase;color:#64748b;letter-spacing:0.5px;margin-bottom:2px;">Nome</div><div style="font-size:16px;font-weight:800;">${nome}</div></div>
+                    <div><div style="font-size:10px;text-transform:uppercase;color:#64748b;letter-spacing:0.5px;margin-bottom:2px;">Data / Mês de Referência</div><div style="font-size:15px;font-weight:700;">${mesLabel}</div></div>
+                </div>
+            </div>
+
+            <div style="margin:10px 0; padding:12px 16px; background:#fff; border:1px solid #cbd5e1; border-radius:8px;">
+                <div style="font-size:11px; text-transform:uppercase; color:#64748b; margin-bottom:8px; letter-spacing:0.5px; font-weight:700;">Blister utilizado (nº de comprimidos)</div>
+                ${blisterHtml}
+            </div>
+
+            <p style="font-size:11px;color:#475569;margin-bottom:0;line-height:1.5;">Marcar ✔ em cada dia ao administrar a medicação. Preencher Plantão (turno), Responsável (nome de quem administrou) e Obs a cada troca ou intercorrência.</p>
+
+            ${blocosMedicamentos}
+
+            <div style="display:flex; gap:40px; margin-top:24px;">
+                <div style="flex:1; text-align:center; font-size:11px; color:#475569;"><div style="border-top:1px solid #1e293b; margin-bottom:6px; padding-top:28px;"></div>Responsável pela Conferência</div>
+                <div style="flex:1; text-align:center; font-size:11px; color:#475569;"><div style="border-top:1px solid #1e293b; margin-bottom:6px; padding-top:28px;"></div>Enfermeiro(a) / Técnico(a) Responsável</div>
+            </div>
+
+            <div style="margin-top:16px; border-top:1px solid #e2e8f0; padding-top:10px; font-size:11px; color:#94a3b8; line-height:1.6;"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
+        </div>`;
+    }).join('');
+
+    const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Controle_Medicacao_${nome.replace(/\s+/g,'_')}</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:28px;font-size:13px}
+        @media print{@page{margin:12mm;size:A4 landscape}}
+    </style></head><body>
+    ${paginasHtml}
+    <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+    </body></html>`;
+
+    const _blob = new Blob([_htmlPdf], { type: 'text/html;charset=utf-8' });
+    const _url = URL.createObjectURL(_blob);
+    const _a = document.createElement('a');
+    _a.href = _url;
+    _a.download = `Controle_Medicacao_${nome.replace(/\s+/g,'_')}_${mesRef}_${anoRef}.html`;
+    document.body.appendChild(_a);
+    _a.click();
+    document.body.removeChild(_a);
+    setTimeout(() => URL.revokeObjectURL(_url), 10000);
+
+    toast("Controle gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
 }
 
 // Inicialização: liga eventos e carrega selects
