@@ -929,7 +929,14 @@
             <option value="pequeno">Pequeno (meia folha)</option>
             <option value="grande">Grande (etiqueta)</option>
           </select>
-            <label>Tamanho da Fonte</label>
+            <label>Tamanho da Fonte (Cabeçalho)</label>
+<select id="etiquetaTamanhoFonteCabecalho" style="width:100%; padding:10px; margin-bottom:8px;">
+  <option value="pequena">Pequena</option>
+  <option value="media" selected>Média</option>
+  <option value="grande">Grande</option>
+  <option value="muiGrande">Muito Grande</option>
+</select>
+            <label>Tamanho da Fonte (Etiquetas de Horário)</label>
 <select id="etiquetaTamanhoFonte" style="width:100%; padding:10px;">
   <option value="pequena">Pequena (10px)</option>
   <option value="media" selected>Média (14px)</option>
@@ -937,32 +944,6 @@
   <option value="muiGrande">Muito Grande (22px)</option>
 </select>
         </div>
-          <div style="display:flex; gap:10px;">
-  <div style="flex:1;">
-    <label>Nome</label>
-    <input id="etiquetaNome" type="text" style="width:100%; padding:10px; margin-bottom:8px;">
-    <label>Data Nascimento</label>
-    <input id="etiquetaDataNascimento" type="date" style="width:100%; padding:10px; margin-bottom:8px;">
-  </div>
-  <div style="width:220px;">
-    <label>CPF</label>
-    <input id="etiquetaCPF" type="text" style="width:100%; padding:10px; margin-bottom:8px;" maxlength="14" oninput="aplicarMascaraCPF(this)">
-    <label>Tamanho (Layout)</label>
-    <select id="etiquetaTamanho" style="width:100%; padding:10px; margin-bottom:8px;">
-      <option value="pequeno">Pequeno (meia folha)</option>
-      <option value="grande">Grande (etiqueta)</option>
-    </select>
-      
-    <label>Tamanho da Fonte</label>
-    <select id="etiquetaTamanhoFonte" style="width:100%; padding:10px;">
-      <option value="pequena">Pequena (10px)</option>
-      <option value="media" selected>Média (14px)</option>
-      <option value="grande">Grande (18px)</option>
-      <option value="muiGrande">Muito Grande (22px)</option>
-    </select>
-      
-  </div>
-</div>
       </div>
 
       <div style="margin-top:10px;">
@@ -1193,6 +1174,8 @@ function gerarPdfEtiqueta() {
     const dataNasc = document.getElementById('etiquetaDataNascimento').value;
     const cpf = document.getElementById('etiquetaCPF').value.trim();
     const tamanho = document.getElementById('etiquetaTamanho').value;
+    const tamanhoFonte = document.getElementById('etiquetaTamanhoFonte').value;
+    const tamanhoFonteCabecalho = document.getElementById('etiquetaTamanhoFonteCabecalho').value;
     const horariosMarcados = Array.from(document.querySelectorAll('input[name="etiquetaHorario"]:checked')).map(c => c.value);
 
     if (!nome) { toast("Campo obrigatório", "Preencha o nome do acolhido.", "warning"); return; }
@@ -1203,6 +1186,12 @@ function gerarPdfEtiqueta() {
     // No modelo do Abrigo, cada etiqueta sai em 2 vias (para recortar); no tamanho "grande" sai só 1 via por folha
     const vias = grande ? 1 : 2;
 
+    // Tamanho da fonte escolhido pelo utilizador na aba "Gerar Etiqueta"
+    const fontSizeMap = { pequena: 10, media: 14, grande: 18, muiGrande: 22 };
+    const fonteBase = fontSizeMap[tamanhoFonte] || 14;
+    // no layout "grande" a etiqueta é maior, então a fonte fica um pouco maior também
+    const fonteEtiqueta = grande ? fonteBase + 3 : fonteBase;
+
     // Etiqueta com todos os horários juntos (só faz sentido com 2+ horários selecionados)
     const linhaTodosHorarios = horariosMarcados.length > 1 ? horariosMarcados.join(' - ') + ' Horas' : '';
 
@@ -1210,8 +1199,8 @@ function gerarPdfEtiqueta() {
     function montarEtiqueta(linhaHorario) {
         return `
         <div style="width:15.04cm; height:1.4cm; border:1.5px solid #000; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; overflow:hidden; margin:0 auto; page-break-inside:avoid;">
-            <div style="font-size:${grande ? '15px' : '12px'}; font-weight:700; text-decoration:underline; color:#000; line-height:1.15;">${nome}</div>
-            <div style="font-size:${grande ? '15px' : '12px'}; font-weight:700; color:#FF0000; line-height:1.15;">${linhaHorario}</div>
+            <div style="font-size:${fonteEtiqueta}px; font-weight:700; text-decoration:underline; color:#000; line-height:1.15;">${nome}</div>
+            <div style="font-size:${fonteEtiqueta}px; font-weight:700; color:#FF0000; line-height:1.15;">${linhaHorario}</div>
         </div>`;
     }
 
@@ -1246,7 +1235,17 @@ function gerarPdfEtiqueta() {
     const _caixaMedida = _medidor.querySelector('#_caixaMedida');
     const _nomeMedida = _medidor.querySelector('#_nomeMedida');
     const _dnMedida = _medidor.querySelector('#_dnMedida');
-    let tamanhoFonteNome = 26, tamanhoFonteDn = 16;
+    // Tamanho de fonte "desejado" para o cabeçalho, escolhido separadamente pelo utilizador.
+    // O algoritmo abaixo ainda encolhe automaticamente se o texto não couber na caixa fixa de 10cm x 6cm,
+    // mas agora parte do valor escolhido em vez de ignorar a seleção.
+    const cabecalhoFonteMap = {
+        pequena:   { nome: 18, dn: 11 },
+        media:     { nome: 26, dn: 16 },
+        grande:    { nome: 32, dn: 19 },
+        muiGrande: { nome: 38, dn: 22 }
+    };
+    const _fonteCabecalhoBase = cabecalhoFonteMap[tamanhoFonteCabecalho] || cabecalhoFonteMap.media;
+    let tamanhoFonteNome = _fonteCabecalhoBase.nome, tamanhoFonteDn = _fonteCabecalhoBase.dn;
     const _minNome = 11, _minDn = 8;
     _nomeMedida.style.fontSize = tamanhoFonteNome + 'pt';
     _dnMedida.style.fontSize = tamanhoFonteDn + 'pt';
@@ -4266,21 +4265,6 @@ async function importarPlanilhaAcolhidos(event) {
 
         btn.disabled = false; btn.textContent = 'Salvar Nova Senha';
     }
-
-    function gerarPdfEtiqueta() {
-    const tamanhoFonte = document.getElementById('etiquetaTamanhoFonte').value;
-    const fontSizeMap = {
-        'pequena': '10px',
-        'media': '14px',
-        'grande': '18px',
-        'muiGrande': '22px'
-    };
-    
-    const fontSize = fontSizeMap[tamanhoFonte] || '14px';
-    
-    // ... resto do código de geração PDF
-    // Use a variável fontSize ao construir o HTML do PDF
-}
 </script>
 
 <!-- ===== MODAL GESTÃO DE SENHA ===== -->
