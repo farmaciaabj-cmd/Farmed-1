@@ -929,7 +929,40 @@
             <option value="pequeno">Pequeno (meia folha)</option>
             <option value="grande">Grande (etiqueta)</option>
           </select>
+            <label>Tamanho da Fonte</label>
+<select id="etiquetaTamanhoFonte" style="width:100%; padding:10px;">
+  <option value="pequena">Pequena (10px)</option>
+  <option value="media" selected>Média (14px)</option>
+  <option value="grande">Grande (18px)</option>
+  <option value="muiGrande">Muito Grande (22px)</option>
+</select>
         </div>
+          <div style="display:flex; gap:10px;">
+  <div style="flex:1;">
+    <label>Nome</label>
+    <input id="etiquetaNome" type="text" style="width:100%; padding:10px; margin-bottom:8px;">
+    <label>Data Nascimento</label>
+    <input id="etiquetaDataNascimento" type="date" style="width:100%; padding:10px; margin-bottom:8px;">
+  </div>
+  <div style="width:220px;">
+    <label>CPF</label>
+    <input id="etiquetaCPF" type="text" style="width:100%; padding:10px; margin-bottom:8px;" maxlength="14" oninput="aplicarMascaraCPF(this)">
+    <label>Tamanho (Layout)</label>
+    <select id="etiquetaTamanho" style="width:100%; padding:10px; margin-bottom:8px;">
+      <option value="pequeno">Pequeno (meia folha)</option>
+      <option value="grande">Grande (etiqueta)</option>
+    </select>
+      
+    <label>Tamanho da Fonte</label>
+    <select id="etiquetaTamanhoFonte" style="width:100%; padding:10px;">
+      <option value="pequena">Pequena (10px)</option>
+      <option value="media" selected>Média (14px)</option>
+      <option value="grande">Grande (18px)</option>
+      <option value="muiGrande">Muito Grande (22px)</option>
+    </select>
+      
+  </div>
+</div>
       </div>
 
       <div style="margin-top:10px;">
@@ -4234,6 +4267,20 @@ async function importarPlanilhaAcolhidos(event) {
         btn.disabled = false; btn.textContent = 'Salvar Nova Senha';
     }
 
+    function gerarPdfEtiqueta() {
+    const tamanhoFonte = document.getElementById('etiquetaTamanhoFonte').value;
+    const fontSizeMap = {
+        'pequena': '10px',
+        'media': '14px',
+        'grande': '18px',
+        'muiGrande': '22px'
+    };
+    
+    const fontSize = fontSizeMap[tamanhoFonte] || '14px';
+    
+    // ... resto do código de geração PDF
+    // Use a variável fontSize ao construir o HTML do PDF
+}
 </script>
 
 <!-- ===== MODAL GESTÃO DE SENHA ===== -->
