@@ -178,6 +178,10 @@
         .hora-chip input[type="checkbox"] { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
         .hora-chip label { display: inline-block; padding: 8px 14px; border-radius: 20px; background: #151f32; color: var(--texto-s); font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-out); border: 1px solid var(--borda); transition: all 0.15s ease; user-select: none; margin: 0; }
         .hora-chip input[type="checkbox"]:checked + label { background: var(--cor-azul); color: #fff; border-color: var(--cor-azul); box-shadow: 0 0 0 2px rgba(0,156,217,0.35); }
+        .blister-chip-light { position: relative; }
+        .blister-chip-light input[type="radio"] { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+        .blister-chip-light label { display: inline-block; padding: 8px 16px; border-radius: 20px; background: #f1f5f9; color: #1e293b; font-size: 13px; font-weight: 700; cursor: pointer; border: 1.5px solid #cbd5e1; transition: all 0.15s ease; user-select: none; margin: 0; }
+        .blister-chip-light input[type="radio"]:checked + label { background: #1e3a5f; color: #fff; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.25); }
         .btn-marcar-todos { background: var(--cor-azul); color: white; border: none; padding: 0 14px; height: 38px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: var(--shadow-out); transition: all 0.1s ease; flex-shrink: 0; }
         .btn-marcar-todos:active { transform: scale(0.97); }
         
@@ -979,11 +983,6 @@
 
       <div id="contraMedHorarios" style="margin-top:10px;"></div>
 
-      <div style="margin-top:14px;">
-        <label>Blister utilizado (nº de comprimidos)</label>
-        <div id="contraMedBlisterContainer" class="hora-multi-select" style="margin-top:6px;"></div>
-      </div>
-
       <div style="display:flex; gap:10px; margin-top:14px;">
         <button onclick="gerarPdfControleMedicacao()" style="flex:1; padding:12px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:10px; font-weight:700;">Gerar PDF Controle</button>
         <button onclick="fechar('modalEtiquetas')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border-radius:10px; border:none;">Fechar</button>
@@ -1042,25 +1041,24 @@ function abrirModalEtiquetas() {
         const hoje = new Date();
         mesCtrl.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
     }
-    renderizarBlisterOpcoes();
 }
 
 // ==========================================
 // RENDERIZA AS OPÇÕES DE BLISTER (5/10/15/20/28/30 comprimidos) COMO CHIPS EXCLUSIVOS
+// PARA UM MEDICAMENTO ESPECÍFICO (cada medicamento tem seu próprio grupo de rádios,
+// identificado por regId, para permitir uma seleção de blister por medicamento)
 // ==========================================
-function renderizarBlisterOpcoes() {
-    const container = document.getElementById('contraMedBlisterContainer');
-    if (!container) return;
+function montarChipsBlister(regId, valorSelecionado) {
     const opcoes = [5, 10, 15, 20, 28, 30];
-    container.innerHTML = '';
-    opcoes.forEach(qtd => {
-        const id = `blister_${qtd}`;
-        const wrapper = document.createElement('label');
-        wrapper.className = 'hora-chip';
-        wrapper.style.marginRight = '6px';
-        wrapper.innerHTML = `<input type="radio" name="contraMedBlister" value="${qtd}" id="${id}"><label for="${id}" style="display:inline-block; padding:6px 14px; border-radius:16px; background:#151f32; color:var(--texto-s); cursor:pointer;">${qtd}</label>`;
-        container.appendChild(wrapper);
-    });
+    const groupName = `contraMedBlister_${regId}`;
+    return opcoes.map(qtd => {
+        const id = `${groupName}_${qtd}`;
+        const checked = String(valorSelecionado) === String(qtd) ? 'checked' : '';
+        return `<label class="blister-chip-light" style="margin-right:6px;">
+            <input type="radio" name="${groupName}" value="${qtd}" id="${id}" ${checked}>
+            <label for="${id}">${qtd}</label>
+        </label>`;
+    }).join('');
 }
 
 // ==========================================
@@ -1155,10 +1153,16 @@ function aoSelecionarAcolhidoContraMed() {
         container.innerHTML = "<p style='color:var(--texto-s);'>Nenhum medicamento cadastrado para este acolhido.</p>";
         return;
     }
-    container.innerHTML = '<label>Medicamentos e Horários</label>' + regs.map(r => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background:#151f32; border-radius:8px; margin-top:6px;">
-            <span style="font-weight:600;">${r.medicamento || 'Sem nome'}</span>
-            <span style="color:var(--texto-s); font-size:13px;">${formatarHorariosDisplay(r)}</span>
+    container.innerHTML = '<label>Medicamentos, Horários e Blister</label>' + regs.map(r => `
+        <div style="padding:12px 14px; background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; margin-top:8px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700; color:#1e293b; font-size:15px;">${r.medicamento || 'Sem nome'}</span>
+                <span style="color:#1e3a5f; font-size:12px; font-weight:700; background:#eff6ff; padding:3px 10px; border-radius:12px;">${formatarHorariosDisplay(r)}</span>
+            </div>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0;">
+                <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#64748b; font-weight:700; margin-bottom:8px;">Blister utilizado (nº de comprimidos)</div>
+                <div class="hora-multi-select">${montarChipsBlister(r.id, null)}</div>
+            </div>
         </div>`).join('');
 }
 
@@ -1304,8 +1308,6 @@ function gerarPdfControleMedicacao() {
     const regs = (registros || []).filter(r => r.nome === nome);
     if (regs.length === 0) { toast("Sem medicamentos", "Este acolhido não possui medicamentos cadastrados.", "warning"); return; }
 
-    const blisterSelecionado = document.querySelector('input[name="contraMedBlister"]:checked');
-    const blisterQtd = blisterSelecionado ? blisterSelecionado.value : null;
     const opcoesBlister = [5, 10, 15, 20, 28, 30];
 
     const mesInput = document.getElementById('contraMedMes').value; // "YYYY-MM"
@@ -1314,12 +1316,17 @@ function gerarPdfControleMedicacao() {
     const mesLabel = new Date(anoRef, mesRef - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-    // Checklist de blister utilizado (marca a opção selecionada, se houver)
-    const blisterHtml = opcoesBlister.map(q => `
-        <span style="display:inline-flex; align-items:center; gap:6px; margin-right:18px;">
-            <span style="display:inline-block; width:16px; height:16px; border:2px solid #1e3a5f; border-radius:3px; text-align:center; line-height:14px; font-size:12px; font-weight:900; ${String(q) === blisterQtd ? 'background:#1e3a5f;color:#fff;' : 'color:#fff;'}">${String(q) === blisterQtd ? '✔' : ''}</span>
-            <span style="font-size:13px; font-weight:${String(q) === blisterQtd ? '800' : '600'}; color:#1e293b;">${q} cp</span>
-        </span>`).join('');
+    // Monta o checklist de blister utilizado PARA UM medicamento específico
+    // (cada medicamento tem sua própria seleção de blister, marcada individualmente)
+    function montarBlisterHtml(r) {
+        const selecionado = document.querySelector(`input[name="contraMedBlister_${r.id}"]:checked`);
+        const blisterQtd = selecionado ? selecionado.value : null;
+        return opcoesBlister.map(q => `
+            <span style="display:inline-flex; align-items:center; gap:6px; margin-right:18px;">
+                <span style="display:inline-block; width:16px; height:16px; border:2px solid #1e3a5f; border-radius:3px; text-align:center; line-height:14px; font-size:12px; font-weight:900; ${String(q) === blisterQtd ? 'background:#1e3a5f;color:#fff;' : 'color:#fff;'}">${String(q) === blisterQtd ? '✔' : ''}</span>
+                <span style="font-size:13px; font-weight:${String(q) === blisterQtd ? '800' : '600'}; color:#1e293b;">${q} cp</span>
+            </span>`).join('');
+    }
 
     // Uma checkbox vazia (para marcar à mão) usada nos dias de cada semana
     const caixaVazia = `<span style="display:inline-block; width:16px; height:16px; border:2px solid #94a3b8; border-radius:3px;"></span>`;
@@ -1356,6 +1363,10 @@ function gerarPdfControleMedicacao() {
                 <div style="font-size:18px; font-weight:800; color:#1e3a5f;">${nomeMedicamento}</div>
                 <div style="font-size:12px; color:#475569;"><strong>Horário:</strong> ${horarioReg}</div>
             </div>
+            <div style="margin:0 0 10px 0; padding:8px 12px; background:#fff; border:1px solid #cbd5e1; border-radius:6px;">
+                <div style="font-size:10px; text-transform:uppercase; color:#64748b; margin-bottom:6px; letter-spacing:0.5px; font-weight:700;">Blister utilizado (nº de comprimidos)</div>
+                ${montarBlisterHtml(r)}
+            </div>
             <table style="width:100%;border-collapse:collapse;">
                 <thead><tr>
                     <th style="background:#1e3a5f;color:#fff;font-size:10px;font-weight:700;text-align:left;padding:6px 8px;border:1px solid #1e3a5f;">Semana</th>
@@ -1387,11 +1398,6 @@ function gerarPdfControleMedicacao() {
                     <div><div style="font-size:10px;text-transform:uppercase;color:#64748b;letter-spacing:0.5px;margin-bottom:2px;">Nome</div><div style="font-size:16px;font-weight:800;">${nome}</div></div>
                     <div><div style="font-size:10px;text-transform:uppercase;color:#64748b;letter-spacing:0.5px;margin-bottom:2px;">Data / Mês de Referência</div><div style="font-size:15px;font-weight:700;">${mesLabel}</div></div>
                 </div>
-            </div>
-
-            <div style="margin:10px 0; padding:12px 16px; background:#fff; border:1px solid #cbd5e1; border-radius:8px;">
-                <div style="font-size:11px; text-transform:uppercase; color:#64748b; margin-bottom:8px; letter-spacing:0.5px; font-weight:700;">Blister utilizado (nº de comprimidos)</div>
-                ${blisterHtml}
             </div>
 
             <p style="font-size:11px;color:#475569;margin-bottom:0;line-height:1.5;">Marcar ✔ em cada dia ao administrar a medicação. Preencher Plantão (turno), Responsável (nome de quem administrou) e Obs a cada troca ou intercorrência.</p>
