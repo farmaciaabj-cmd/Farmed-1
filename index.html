@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -288,6 +289,13 @@
         .alertas-secao-titulo { font-size: 11px; font-weight: 800; color: var(--texto-s); text-transform: uppercase; letter-spacing: 0.8px; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
         .alertas-secao-titulo::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
         .badge-count-alerta { display: inline-block; background: #f97316; color: white; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
+
+        .alerta-status-btn { flex: 1; padding: 9px 6px; background: #151f32; color: var(--texto-s); border: 1px solid var(--borda); border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; transition: all 0.15s; white-space: nowrap; }
+        .alerta-status-btn:hover { filter: brightness(1.15); }
+        .alerta-status-btn.ativo { border-color: transparent; }
+        .alerta-status-btn.ativo[data-status=""] { background: var(--cor-azul); color: #fff; }
+        .alerta-status-btn.ativo[data-status="vencida"] { background: #7f1d1d; color: #fca5a5; }
+        .alerta-status-btn.ativo[data-status="a_vencer"] { background: #7c2d12; color: #fed7aa; }
 
         .switch {
             position: relative;
@@ -811,6 +819,11 @@
                 <label style="display:block; font-size:11px; color:var(--texto-s); margin-bottom:4px;">Mês Final (vencimento)</label>
                 <input type="month" id="alertasMesFim" style="width:100%;" onchange="filtrarAlertasModal()">
             </div>
+        </div>
+        <div id="alertasStatusFiltro" style="display:flex; gap:8px; padding: 0 15px; margin-top:10px;">
+            <button class="alerta-status-btn ativo" data-status="" onclick="setFiltroStatusAlertas('')">Todos</button>
+            <button class="alerta-status-btn" data-status="vencida" onclick="setFiltroStatusAlertas('vencida')">🔴 Vencidas</button>
+            <button class="alerta-status-btn" data-status="a_vencer" onclick="setFiltroStatusAlertas('a_vencer')">🟠 A Vencer</button>
         </div>
         <div style="display:flex; gap:10px; padding: 0 15px; margin-top:10px; margin-bottom: 5px;">
             <button onclick="limparFiltroAlertas()" style="flex:1; padding:10px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">✖ Limpar Filtro</button>
@@ -1476,6 +1489,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let registros = [];
     let saidas = [];
+    let filtroStatusAlertas = ''; // '' = todos | 'vencida' | 'a_vencer' — filtro de status de RECEITA no modal de Alertas
     let registrosMedicacaoDia = [];
     let horaAtual = "07h";
     let dataAtual = new Date();
@@ -1774,8 +1788,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Monta as listas base (sem filtro de data) de alertas de estoque e de renovações agendadas
     function obterAlertasBase() {
         const alertasPacientes = agruparAlertasPorPaciente();
-        const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
-        const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes, alerta: true })).sort((a, b) => (a.dias_faltantes || 0) - (b.dias_faltantes || 0));
+        const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+        const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes, alerta: true })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
         return { alertasEstoque, alertasRenovacao };
     }
 
@@ -1794,6 +1808,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const alertasRenovacao = base.alertasRenovacao.filter(a => dentroDoIntervalo(a.data));
         const alertasEstoque = base.alertasEstoque
             .map(a => ({ ...a, medicamentos: a.medicamentos.filter(m => dentroDoIntervalo(m.receita_valida)) }))
+            .filter(a => a.medicamentos.length > 0);
+        return { alertasEstoque, alertasRenovacao };
+    }
+
+    // Filtra as listas base por STATUS DA RECEITA: 'vencida' (já passou da validade) ou 'a_vencer' (ainda dentro do
+    // prazo, mas próxima do vencimento — inclui "vence hoje"). Vazio ('') devolve tudo sem filtrar.
+    // No bloco de Estoque de Medicamentos usa diasReceita (calculado a partir de receita_valida).
+    // No bloco de Renovações Agendadas usa o status já calculado por calcularStatusRenovacao (data agendada).
+    function filtrarAlertasPorStatusReceita(base, statusFiltro) {
+        if (!statusFiltro) return base;
+        const alertasRenovacao = base.alertasRenovacao.filter(a =>
+            statusFiltro === 'vencida' ? a.status === 'vencida' : a.status !== 'vencida'
+        );
+        const alertasEstoque = base.alertasEstoque
+            .map(a => ({ ...a, medicamentos: a.medicamentos.filter(m => {
+                if (m.diasReceita === null) return false;
+                return statusFiltro === 'vencida' ? m.diasReceita < 0 : m.diasReceita >= 0;
+            }) }))
             .filter(a => a.medicamentos.length > 0);
         return { alertasEstoque, alertasRenovacao };
     }
@@ -1825,28 +1857,38 @@ document.addEventListener('DOMContentLoaded', function() {
         return montarHtmlAlertasSecoes(base.alertasEstoque, base.alertasRenovacao);
     }
 
-    // Reaplica o filtro de meses (campos do modal) e re-renderiza a lista de alertas exibida
+    // Reaplica o filtro de meses (campos do modal) + filtro de status (Vencidas/A Vencer) e re-renderiza a lista
     function filtrarAlertasModal() {
         const mesIni = (document.getElementById('alertasMesInicio') || {}).value || '';
         const mesFim = (document.getElementById('alertasMesFim') || {}).value || '';
         const base = obterAlertasBase();
-        const filtrado = filtrarAlertasPorMes(base, mesIni, mesFim);
+        const porMes = filtrarAlertasPorMes(base, mesIni, mesFim);
+        const filtrado = filtrarAlertasPorStatusReceita(porMes, filtroStatusAlertas);
         const modalBody = document.getElementById('alertasModalBody');
         if (modalBody) modalBody.innerHTML = montarHtmlAlertasSecoes(filtrado.alertasEstoque, filtrado.alertasRenovacao);
+    }
+
+    // Alterna o filtro de status (Todos / Vencidas / A Vencer), atualiza os botões e reaplica os filtros
+    function setFiltroStatusAlertas(status) {
+        filtroStatusAlertas = status;
+        document.querySelectorAll('#alertasStatusFiltro .alerta-status-btn').forEach(btn => {
+            btn.classList.toggle('ativo', btn.dataset.status === status);
+        });
+        filtrarAlertasModal();
     }
 
     function limparFiltroAlertas() {
         const mi = document.getElementById('alertasMesInicio'); if (mi) mi.value = '';
         const mf = document.getElementById('alertasMesFim'); if (mf) mf.value = '';
-        filtrarAlertasModal();
+        setFiltroStatusAlertas('');
     }
 
     function gerarAlertas() {
         const container = document.getElementById('listaAlertas');
         if (container) {
             const alertasPacientes = agruparAlertasPorPaciente();
-            const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.diasRestantes - b.diasRestantes);
-            const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes })).sort((a, b) => (a.dias_faltantes || 0) - (b.dias_faltantes || 0));
+            const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+            const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
             if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) {
                 container.innerHTML = `<p style='color:#22c55e; text-align:center; font-size:12px; padding:15px;'>✓ Nenhum alerta!</p>`;
             } else {
@@ -1871,6 +1913,10 @@ document.addEventListener('DOMContentLoaded', function() {
         abrir('modalAlertas');
         const mi = document.getElementById('alertasMesInicio'); if (mi) mi.value = '';
         const mf = document.getElementById('alertasMesFim'); if (mf) mf.value = '';
+        filtroStatusAlertas = '';
+        document.querySelectorAll('#alertasStatusFiltro .alerta-status-btn').forEach(btn => {
+            btn.classList.toggle('ativo', btn.dataset.status === '');
+        });
         document.getElementById('alertasModalBody').innerHTML = buildAlertasHTML();
     }
 
@@ -1879,9 +1925,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const mesIni = (document.getElementById('alertasMesInicio') || {}).value || '';
         const mesFim = (document.getElementById('alertasMesFim') || {}).value || '';
         const base = obterAlertasBase();
-        const { alertasEstoque, alertasRenovacao } = filtrarAlertasPorMes(base, mesIni, mesFim);
+        const porMes = filtrarAlertasPorMes(base, mesIni, mesFim);
+        const { alertasEstoque, alertasRenovacao } = filtrarAlertasPorStatusReceita(porMes, filtroStatusAlertas);
 
-        if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) { toast("Sem alertas", "Nenhum alerta encontrado para o período selecionado.", "warning"); return; }
+        if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) { toast("Sem alertas", "Nenhum alerta encontrado para o período/filtro selecionado.", "warning"); return; }
 
         const hoje = new Date();
         const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -1890,10 +1937,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const [ano, mes] = mesStr.split('-').map(Number);
             return new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         }
-        const periodoLabel = !mesIni && !mesFim ? 'Todos os alertas atuais'
+        let periodoLabel = !mesIni && !mesFim ? 'Todos os alertas atuais'
             : (mesIni === mesFim || !mesFim) ? labelMes(mesIni || mesFim)
             : !mesIni ? `Até ${labelMes(mesFim)}`
             : `${labelMes(mesIni)} — ${labelMes(mesFim)}`;
+        if (filtroStatusAlertas === 'vencida') periodoLabel += ' · Somente Vencidas';
+        else if (filtroStatusAlertas === 'a_vencer') periodoLabel += ' · Somente A Vencer';
 
         // Linhas de Estoque de Medicamentos (uma linha por medicamento, ordenadas pela data de vencimento da receita)
         let linhasEstoque = '';
