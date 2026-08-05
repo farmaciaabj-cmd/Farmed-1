@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -3910,8 +3907,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return houveNovo;
     }
 
+    // Chaves fechadas pelo usuário NESTA sessão (aba/carregamento de página atual).
+    // Propositalmente NÃO é salvo no localStorage: ao fechar o popup ele some só
+    // "por agora" — a notificação continua válida por até 2 dias e volta a aparecer
+    // na próxima vez que a página for aberta/o usuário logar novamente, até expirar.
+    let _notifHomeFechadasNestaSessao = new Set();
+
     // Desenha as notificações-popup ainda válidas (menos de 2 dias desde a criação)
-    // na tela inicial, e remove do armazenamento as que já expiraram.
+    // na tela inicial, e remove do armazenamento as que já expiraram de vez.
     function renderizarNotificacoesHome() {
         const container = document.getElementById('notificacoesHomeContainer');
         if (!container) return;
@@ -3920,10 +3923,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const validas = todas.filter(n => (agora - n.criadoEm) < NOTIF_HOME_DURACAO_MS);
         if (validas.length !== todas.length) _notifHomeSalvarLista(validas);
 
-        if (validas.length === 0) { container.style.display = 'none'; container.innerHTML = ''; return; }
+        // Só as fechadas nesta sessão ficam de fora da tela — a notificação em si
+        // continua guardada e vai reaparecer em um novo carregamento/login enquanto
+        // não completar os 2 dias.
+        const visiveis = validas.filter(n => !_notifHomeFechadasNestaSessao.has(n.chave));
+
+        if (visiveis.length === 0) { container.style.display = 'none'; container.innerHTML = ''; return; }
 
         container.style.display = 'flex';
-        const cardsHtml = validas.slice().reverse().map(n => {
+        const cardsHtml = visiveis.slice().reverse().map(n => {
             const horasRestantes = Math.max(0, Math.round((NOTIF_HOME_DURACAO_MS - (agora - n.criadoEm)) / 3600000));
             const tempoTxt = horasRestantes >= 24 ? `Some em ${Math.round(horasRestantes / 24)}d` : `Some em ${horasRestantes}h`;
             return `
@@ -3937,26 +3945,28 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = `
             <div class="notif-home-wrapper">
                 <div class="notif-home-header">
-                    <div class="notif-home-header-titulo">🔔 Novos Alertas ${validas.length > 1 ? `(${validas.length})` : ''}</div>
+                    <div class="notif-home-header-titulo">🔔 Novos Alertas ${visiveis.length > 1 ? `(${visiveis.length})` : ''}</div>
                     <button class="notif-home-fechartudo" onclick="fecharTodasNotificacoesHome()" title="Fechar todas as notificações">✕ Fechar tudo</button>
                 </div>
                 <div class="notif-home-scroll">${cardsHtml}</div>
             </div>`;
     }
 
-    // Fecha manualmente uma notificação-popup (o alerta continua marcado como "visto",
-    // então não volta a notificar de novo enquanto a gravidade não mudar).
+    // Fecha manualmente uma notificação-popup só para a sessão atual. O alerta
+    // continua guardado por até 2 dias e volta a aparecer num próximo login/
+    // carregamento de página, até completar o prazo — só então some de vez.
     function fecharNotificacaoHome(chave) {
-        const lista = _notifHomeLerLista().filter(n => n.chave !== chave);
-        _notifHomeSalvarLista(lista);
+        _notifHomeFechadasNestaSessao.add(chave);
         renderizarNotificacoesHome();
     }
 
     // Fecha de uma vez todas as notificações-popup atualmente exibidas (com tudo que
-    // há dentro do scroll). Os alertas continuam marcados como "vistos", então não
-    // voltam a notificar de novo enquanto a gravidade não mudar.
+    // há dentro do scroll), só para a sessão atual — elas continuam guardadas e
+    // voltam a aparecer em um próximo login/carregamento enquanto não completarem
+    // os 2 dias desde que surgiram.
     function fecharTodasNotificacoesHome() {
-        _notifHomeSalvarLista([]);
+        const todas = _notifHomeLerLista();
+        todas.forEach(n => _notifHomeFechadasNestaSessao.add(n.chave));
         renderizarNotificacoesHome();
     }
 
