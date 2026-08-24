@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -516,22 +517,22 @@
 
     <!-- ===== DASHBOARD INDICATORS ===== -->
     <div class="dashboard-stats" id="dashboardStats">
-        <div class="stat-card azul">
+        <div class="stat-card azul" onclick="explicarCardDashboard('totalAcolhidos')" style="cursor:pointer;">
             <span class="stat-icon">&#128101;</span>
             <div class="stat-value" id="statTotalAcolhidos">&#8212;</div>
             <div class="stat-label">Total Acolhidos</div>
         </div>
-        <div class="stat-card laranja">
+        <div class="stat-card laranja" onclick="explicarCardDashboard('vencendo')" style="cursor:pointer;">
             <span class="stat-icon">&#9200;</span>
             <div class="stat-value" id="statReceitasVencendo">&#8212;</div>
             <div class="stat-label">Receitas Vencendo (30d)</div>
         </div>
-        <div class="stat-card vermelho">
+        <div class="stat-card vermelho" onclick="explicarCardDashboard('vencidas')" style="cursor:pointer;">
             <span class="stat-icon">&#10060;</span>
             <div class="stat-value" id="statReceitasVencidas">&#8212;</div>
             <div class="stat-label">Receitas Vencidas</div>
         </div>
-        <div class="stat-card verde">
+        <div class="stat-card verde" onclick="explicarCardDashboard('medHoje')" style="cursor:pointer;">
             <span class="stat-icon">&#9989;</span>
             <div class="stat-value" id="statMedHoje">&#8212;</div>
             <div class="stat-label">Med. Tomados Hoje</div>
@@ -859,6 +860,16 @@
         <div id="alertasModalBody">
             <p style="color:#64748b; text-align:center; padding:30px;">A carregar alertas...</p>
         </div>
+    </div>
+</div>
+
+<div id="modalResumoDashboard" class="modal">
+    <div class="modal-alertas-content" style="max-width:600px;">
+        <div class="alertas-modal-header">
+            <div class="alertas-modal-titulo" id="resumoDashboardTitulo">Resumo</div>
+            <button onclick="fechar('modalResumoDashboard')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+        </div>
+        <div id="resumoDashboardBody" style="padding:4px 4px 8px;"></div>
     </div>
 </div>
 
@@ -4007,6 +4018,90 @@ document.addEventListener('DOMContentLoaded', function() {
         // Medicamentos tomados hoje
         const tomadosHoje = registrosMedicacaoDia.filter(rm => rm.status === true || rm.status === 'true').length;
         document.getElementById('statMedHoje').textContent = tomadosHoje;
+    }
+
+    // Monta, para 1 medicamento (linha de "registros"), a lista de "problemas"
+    // que fizeram ele entrar no card Vencendo/Vencidas — pode ser estoque,
+    // receita, ou os dois ao mesmo tempo.
+    function _problemasDoRegistro(r, modo) {
+        const dEstoque = calcularDiasFaltantes(r);
+        const dReceita = calcularDiasReceita(r);
+        const problemas = [];
+        if (modo === 'vencendo') {
+            if (dEstoque !== null && dEstoque >= 0 && dEstoque <= 30) problemas.push(`📦 Estoque acaba em ${dEstoque} dia(s)`);
+            if (dReceita !== null && dReceita >= 0 && dReceita <= 30) problemas.push(`📋 Receita vence em ${dReceita} dia(s)`);
+        } else if (modo === 'vencidas') {
+            if (dEstoque !== null && dEstoque < 0) problemas.push(`📦 Estoque zerado há ${Math.abs(dEstoque)} dia(s)`);
+            if (dReceita !== null && dReceita < 0) problemas.push(`📋 Receita vencida há ${Math.abs(dReceita)} dia(s)`);
+        }
+        return problemas;
+    }
+
+    // Abre um popup com o resumo detalhado (paciente + problema) do card clicado no dashboard.
+    function explicarCardDashboard(tipo) {
+        const titulos = {
+            totalAcolhidos: '👥 Total Acolhidos',
+            vencendo: '⏰ Receitas Vencendo (30d)',
+            vencidas: '❌ Receitas Vencidas',
+            medHoje: '✅ Medicação Tomada Hoje'
+        };
+        document.getElementById('resumoDashboardTitulo').textContent = titulos[tipo] || 'Resumo';
+        const body = document.getElementById('resumoDashboardBody');
+        let linhas = [];
+
+        if (tipo === 'vencendo' || tipo === 'vencidas') {
+            // Agrupa por paciente, juntando os problemas de cada medicamento dele.
+            const porPaciente = {};
+            registros.forEach(r => {
+                const problemas = _problemasDoRegistro(r, tipo);
+                if (problemas.length === 0) return;
+                if (!porPaciente[r.nome]) porPaciente[r.nome] = [];
+                porPaciente[r.nome].push({ medicamento: r.medicamento || 'Sem medicação', problemas });
+            });
+            const nomes = Object.keys(porPaciente).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            if (nomes.length === 0) {
+                linhas.push(`<p style="color:#64748b; text-align:center; padding:24px;">Nenhum acolhido nessa situação. ✅</p>`);
+            } else {
+                nomes.forEach(nome => {
+                    const cor = tipo === 'vencidas' ? '#dc2626' : '#ea580c';
+                    const itensHtml = porPaciente[nome].map(item => `
+                        <div style="margin-top:6px;">
+                            <div style="font-size:12px; color:var(--cor-azul); font-weight:600;">💊 ${item.medicamento}</div>
+                            ${item.problemas.map(p => `<div style="font-size:12px; color:var(--texto-s); padding-left:10px;">• ${p}</div>`).join('')}
+                        </div>`).join('');
+                    linhas.push(`
+                        <div style="background:var(--card-bg); border:1px solid var(--borda); border-left:4px solid ${cor}; border-radius:10px; padding:10px 14px; margin-bottom:10px; cursor:pointer;" onclick="fechar('modalResumoDashboard'); irParaReceitaPaciente('${nome.replace(/'/g, "\\'")}')" title="Clique para abrir a Central de Receitas Médicas">
+                            <div style="font-weight:700; font-size:14px; color:var(--texto-p);">${nome}</div>
+                            ${itensHtml}
+                        </div>`);
+                });
+            }
+        } else if (tipo === 'totalAcolhidos') {
+            const nomes = [...new Set(registros.map(r => r.nome))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            if (nomes.length === 0) {
+                linhas.push(`<p style="color:#64748b; text-align:center; padding:24px;">Nenhum acolhido cadastrado.</p>`);
+            } else {
+                linhas.push(`<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">${nomes.map(n => `<div style="background:var(--card-bg); border:1px solid var(--borda); border-radius:8px; padding:8px 10px; font-size:13px; color:var(--texto-p);">👤 ${n}</div>`).join('')}</div>`);
+            }
+        } else if (tipo === 'medHoje') {
+            const tomados = registrosMedicacaoDia.filter(rm => rm.status === true || rm.status === 'true');
+            if (tomados.length === 0) {
+                linhas.push(`<p style="color:#64748b; text-align:center; padding:24px;">Nenhuma medicação registrada como tomada hoje ainda.</p>`);
+            } else {
+                const nomesTomados = tomados.map(rm => {
+                    const pac = registros.find(r => r.id == rm.paciente_id);
+                    return { nome: pac ? pac.nome : 'Acolhido não encontrado', horario: rm.horario || '—' };
+                }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+                linhas.push(nomesTomados.map(t => `
+                    <div style="background:var(--card-bg); border:1px solid var(--borda); border-left:4px solid #16a34a; border-radius:10px; padding:8px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:700; font-size:13px; color:var(--texto-p);">👤 ${t.nome}</div>
+                        <div style="font-size:12px; color:var(--texto-s);">🕐 ${t.horario}</div>
+                    </div>`).join(''));
+            }
+        }
+
+        body.innerHTML = linhas.join('');
+        abrir('modalResumoDashboard');
     }
 
     // ==========================================
