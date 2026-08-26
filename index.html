@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -2822,7 +2823,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!lista) return;
 
         const buscaAtiva = termo !== "";
-        const buscaMed  = buscaAtiva && registros.some(r => (r.medicamento || "").toLowerCase().includes(termo));
+        const buscaMed  = buscaAtiva && registros.some(r => (r.medicamento || "Sem medicação definida").toLowerCase().includes(termo));
 
         // Monta uma lista de "linhas" no formato { r: registro, horarioCard: horário específico deste cartão }.
         // Fora da busca: 1 cartão por acolhido, sempre referente ao horário da aba ativa.
@@ -2832,7 +2833,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!buscaAtiva) {
             linhas = registros.filter(r => getHorariosArray(r).includes(horaAtual)).map(r => ({ r, horarioCard: horaAtual }));
         } else {
-            const encontrados = registros.filter(r => (r.nome || "").toLowerCase().includes(termo) || (r.medicamento || "").toLowerCase().includes(termo));
+            const encontrados = registros.filter(r => (r.nome || "").toLowerCase().includes(termo) || (r.medicamento || "Sem medicação definida").toLowerCase().includes(termo));
             encontrados.forEach(r => {
                 const horariosDoRegistro = getHorariosArray(r);
                 if (horariosDoRegistro.length === 0) {
