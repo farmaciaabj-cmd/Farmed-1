@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -506,6 +504,31 @@
     </div>
 </div>
 
+<!-- ===== MODAL IMPRIMIR LISTA (DIA / SEMANA) ===== -->
+<div id="modalImprimirLista" class="modal">
+    <div class="modal-content" style="max-width: 430px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px;">
+            <div style="font-size: 18px; font-weight: 800; color: var(--texto-p);">🖨️ Imprimir Lista</div>
+            <button onclick="fechar('modalImprimirLista')" style="border:none; background:#151f32; color:var(--texto-s); width:32px; height:32px; border-radius:10px; cursor:pointer; font-weight:bold;">✕</button>
+        </div>
+
+        <label style="font-size:12px; font-weight:700; color:var(--texto-s); text-transform:uppercase; letter-spacing:0.5px;">Data de referência</label>
+        <input type="date" id="popupImprimirData" onchange="atualizarPopupImprimir()" style="width:100%; margin-top:6px; margin-bottom:16px; padding:10px 12px; border-radius:10px; border:1px solid var(--borda); background:#151f32; color:var(--texto-p); font-size:14px;">
+
+        <div style="background:#151f32; border:1px solid var(--borda); border-radius:14px; padding:14px; margin-bottom:20px;">
+            <div style="font-size:12px; color:var(--texto-s); margin-bottom:2px;">Semana correspondente</div>
+            <div id="popupImprimirSemanaLabel" style="font-size:14px; font-weight:700; color:var(--cor-azul);"></div>
+        </div>
+
+        <button onclick="imprimirListaDoDia(document.getElementById('popupImprimirData').value)" style="width:100%; padding:14px; margin-bottom:10px; background:#1a5276; color:white; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+            📄 Imprimir Lista do Dia
+        </button>
+        <button onclick="imprimirListaDaSemana(document.getElementById('popupImprimirData').value)" style="width:100%; padding:14px; background:#1e3a5f; color:white; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+            📅 Imprimir Lista da Semana
+        </button>
+    </div>
+</div>
+
 <div class="dashboard">
     <div style="text-align: center; margin-bottom: 10px; margin-top: 10px;">
         <img src="https://lh3.googleusercontent.com/d/1BIAepPrrliHft2rnjcCdQxAWu0icfL2y" alt="Logo Farmed" style="max-width: 150px; height: auto; border-radius: 12px; box-shadow: var(--shadow-out);">
@@ -568,7 +591,7 @@
             <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="abrirVistaSemanal(); fecharMenuLateral();">📅 Vista Semanal</div>
-            <div class="sidebar-item" onclick="imprimirListaDoDia(); fecharMenuLateral();">🖨️ Imprimir Lista do Dia</div>
+            <div class="sidebar-item" onclick="abrirPopupImprimir(); fecharMenuLateral();">🖨️ Imprimir Lista do Dia</div>
             <div class="sidebar-item" onclick="abrirModalDuplicados(); fecharMenuLateral();">🔎 Verificar Duplicados</div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="toggleModoClaro(); fecharMenuLateral();" id="btnModoClaro">☀️ Modo Claro</div>
@@ -4196,17 +4219,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ==========================================
+    // POPUP IMPRIMIR LISTA (DIA / SEMANA)
+    // ==========================================
+    function segundaFeiraDaSemana(dataISO) {
+        // Devolve a data (Date) da segunda-feira da semana que contém dataISO
+        const d = new Date(dataISO + 'T00:00:00');
+        const diaSemana = d.getDay(); // 0=domingo ... 6=sábado
+        const offset = diaSemana === 0 ? -6 : 1 - diaSemana; // volta até segunda-feira
+        d.setDate(d.getDate() + offset);
+        return d;
+    }
+
+    function abrirPopupImprimir() {
+        const hoje = obterDataAtualLocal();
+        document.getElementById('popupImprimirData').value = hoje;
+        atualizarPopupImprimir();
+        abrir('modalImprimirLista');
+    }
+
+    function atualizarPopupImprimir() {
+        const dataISO = document.getElementById('popupImprimirData').value || obterDataAtualLocal();
+        const seg = segundaFeiraDaSemana(dataISO);
+        const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+        const fmt = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        document.getElementById('popupImprimirSemanaLabel').textContent = `${fmt(seg)} — ${fmt(dom)}/${dom.getFullYear()} (Segunda a Domingo)`;
+    }
+
+    // ==========================================
     // IMPRIMIR LISTA DO DIA (PDF)
     // ==========================================
-    function imprimirListaDoDia() {
-        const hoje = obterDataAtualLocal();
-        const hojeDate = new Date(hoje + 'T00:00:00');
-        const diaFormatado = hojeDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    function imprimirListaDoDia(dataISOParam) {
+        const dataISO = dataISOParam || obterDataAtualLocal();
+        const dataDate = new Date(dataISO + 'T00:00:00');
+        const diaFormatado = dataDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
         const horaEmissao = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
         // Agrupa por horário → pacientes (um acolhido com vários horários aparece em cada um deles)
+        // Só entram registos com horário E medicamento realmente definido — um registo com
+        // horário mas sem medicamento escolhido ("Sem medicação definida") não é uma dose real.
         const porHorario = {};
-        const medAtivos = registros.filter(r => getHorariosArray(r).length > 0);
+        const medAtivos = registros.filter(r => getHorariosArray(r).length > 0 && (r.medicamento || '').trim() !== '');
+        const semMedDefinidaComHorario = registros.filter(r => getHorariosArray(r).length > 0 && (r.medicamento || '').trim() === '');
         medAtivos.forEach(r => {
             getHorariosArray(r).forEach(h => {
                 if (!porHorario[h]) porHorario[h] = [];
@@ -4238,7 +4291,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <tr style="background: ${idx % 2 === 0 ? '#fff' : '#f7fbff'};">
                                     <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; color: #888;">${idx + 1}</td>
                                     <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; font-weight: 700;">${p.nome}</td>
-                                    <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; color: #444;">${p.medicamento || '—'}</td>
+                                    <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; color: #444;">${p.medicamento || 'Sem medicação definida'}</td>
                                     <td style="padding: 9px 12px; border-bottom: 1px solid #e3ecf7; text-align: center;">
                                         <div style="width: 22px; height: 22px; border: 2px solid #aaa; border-radius: 4px; margin: 0 auto;"></div>
                                     </td>
@@ -4249,8 +4302,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         const totalAcolhidos = new Set(medAtivos.map(r => r.nome)).size;
+        const totalSemMed = new Set(semMedDefinidaComHorario.map(r => r.nome)).size;
+        // Acolhidos com MEDICAMENTO definido mas SEM horário selecionado: como as listas são
+        // organizadas por horário, esses nunca aparecem em lugar nenhum (nem no dia, nem na semana)
+        // e isso é uma causa silenciosa de "sumiço" na contagem — sinalizamos aqui.
+        const nomesComMed = new Set(medAtivos.map(r => r.nome));
+        const nomesSemMedComHorario = new Set(semMedDefinidaComHorario.map(r => r.nome));
+        const semHorarioComMed = new Set(
+            registros
+                .filter(r => getHorariosArray(r).length === 0 && (r.medicamento || '').trim() !== '')
+                .map(r => r.nome)
+                .filter(nome => !nomesComMed.has(nome)) // só quem NÃO aparece já em outro registo com horário
+        );
+        const totalSemHorario = semHorarioComMed.size;
+        const notaSemMed = (totalSemMed > 0 || totalSemHorario > 0)
+            ? `<div style="font-size:11px; color:#a15c00; background:#fff6e5; border:1px solid #ffe0a3; border-radius:6px; padding:6px 10px; margin-bottom:16px;">
+                ${totalSemMed > 0 ? `⚠️ ${totalSemMed} acolhido(s) com horário agendado mas sem medicamento definido não entram nesta contagem.<br>` : ''}
+                ${totalSemHorario > 0 ? `⚠️ ${totalSemHorario} acolhido(s) TÊM medicamento cadastrado mas SEM horário selecionado — por isso não aparecem em nenhuma lista por horário. Verifique o cadastro de: ${[...semHorarioComMed].join(', ')}.` : ''}
+               </div>`
+            : '';
         const htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-        <title>Lista de Medicamentos — ${hoje}</title>
+        <title>Lista de Medicamentos — ${dataISO}</title>
         <style>
             body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; padding: 20px 30px; }
             h1 { font-size: 20px; color: #1a5276; margin-bottom: 4px; }
@@ -4260,15 +4332,16 @@ document.addEventListener('DOMContentLoaded', function() {
         </style></head>
         <body>
             <h1>Lista de Medicamentos — ${diaFormatado}</h1>
-            <div class="subtitulo">Emitido às ${horaEmissao} · Total: ${totalAcolhidos} acolhido(s)</div>
-            ${tabelasHtml || '<p style="color: #888; text-align: center; padding: 40px;">Nenhum medicamento registado para hoje.</p>'}
+            <div class="subtitulo">Emitido às ${horaEmissao} · Total: ${totalAcolhidos} acolhido(s) com medicamento ativo neste horário/dia · Cadastrados no sistema: ${new Set(registros.map(r => r.nome)).size}</div>
+            ${notaSemMed}
+            ${tabelasHtml || '<p style="color: #888; text-align: center; padding: 40px;">Nenhum medicamento registado para este dia.</p>'}
             <div class="rodape">Gerado automaticamente pelo sistema Farmed.</div>
             <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1a5276;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
         </body></html>`;
 
         const blob = new Blob([htmlPdf], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const nomeArquivo = `Lista_Medicamentos_${hoje}.html`;
+        const nomeArquivo = `Lista_Medicamentos_${dataISO}.html`;
         const a = document.createElement('a');
         a.href = url;
         a.download = nomeArquivo;
@@ -4276,7 +4349,136 @@ document.addEventListener('DOMContentLoaded', function() {
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 10000);
+        fechar('modalImprimirLista');
         toast("Lista gerada", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar \u2192 Guardar como PDF'.", "success");
+    }
+
+    // ==========================================
+    // IMPRIMIR LISTA DA SEMANA (chequin semanal por acolhido)
+    // ==========================================
+    function imprimirListaDaSemana(dataISOParam) {
+        const dataISO = dataISOParam || obterDataAtualLocal();
+        const segunda = segundaFeiraDaSemana(dataISO);
+        const diasDaSemana = [0, 1, 2, 3, 4, 5, 6].map(i => {
+            const d = new Date(segunda);
+            d.setDate(segunda.getDate() + i);
+            return d;
+        });
+        const domingo = diasDaSemana[6];
+        const fmtCurto = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const periodoFormatado = `${fmtCurto(segunda)} a ${fmtCurto(domingo)}/${domingo.getFullYear()}`;
+        const horaEmissao = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        // Agrupa TODOS os registos (medicamentos) de cada acolhido num único objeto,
+        // guardando para cada horário quais medicamentos são administrados nele
+        // (um acolhido pode tomar remédios diferentes em horários diferentes — ex.:
+        // Cloridrato de Verapamil às 07h/15h/23h e Aldazida às 10h).
+        // Só entram registos com medicamento realmente definido — um horário agendado
+        // sem medicamento escolhido ("Sem medicação definida") não conta como dose real.
+        const porPaciente = {};
+        const semMedDefinidaComHorario = new Set();
+        registros.filter(r => getHorariosArray(r).length > 0).forEach(r => {
+            const nome = r.nome || 'Sem nome';
+            if ((r.medicamento || '').trim() === '') { semMedDefinidaComHorario.add(nome); return; }
+            if (!porPaciente[nome]) porPaciente[nome] = { nome, observacoes: [], horarios: {} };
+            if (r.observacao && !porPaciente[nome].observacoes.includes(r.observacao)) {
+                porPaciente[nome].observacoes.push(r.observacao);
+            }
+            getHorariosArray(r).forEach(h => {
+                if (!porPaciente[nome].horarios[h]) porPaciente[nome].horarios[h] = [];
+                const nomeMed = (r.medicamento || 'Sem medicação definida').trim();
+                if (!porPaciente[nome].horarios[h].includes(nomeMed)) porPaciente[nome].horarios[h].push(nomeMed);
+            });
+        });
+        // Um acolhido só entra na lista "sem medicação" se NENHUM dos seus registos tiver medicamento definido
+        [...semMedDefinidaComHorario].forEach(nome => { if (porPaciente[nome]) semMedDefinidaComHorario.delete(nome); });
+
+        const pacientes = Object.values(porPaciente).sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt'));
+        const totalSemMed = semMedDefinidaComHorario.size;
+        const nomesComMed = new Set(pacientes.map(p => p.nome));
+        const semHorarioComMed = new Set(
+            registros
+                .filter(r => getHorariosArray(r).length === 0 && (r.medicamento || '').trim() !== '')
+                .map(r => r.nome)
+                .filter(nome => !nomesComMed.has(nome))
+        );
+        const totalSemHorario = semHorarioComMed.size;
+        const notaSemMed = (totalSemMed > 0 || totalSemHorario > 0)
+            ? `<div style="font-size:11px; color:#a15c00; background:#fff6e5; border:1px solid #ffe0a3; border-radius:6px; padding:6px 10px; margin-bottom:16px;">
+                ${totalSemMed > 0 ? `⚠️ ${totalSemMed} acolhido(s) com horário agendado mas sem medicamento definido não entram nesta contagem.<br>` : ''}
+                ${totalSemHorario > 0 ? `⚠️ ${totalSemHorario} acolhido(s) TÊM medicamento cadastrado mas SEM horário selecionado — por isso não aparecem em nenhuma lista por horário. Verifique o cadastro de: ${[...semHorarioComMed].join(', ')}.` : ''}
+               </div>`
+            : '';
+
+        let cartoesHtml = '';
+        pacientes.forEach((p, idxPaciente) => {
+            const horariosPaciente = Object.keys(p.horarios).sort((a, b) => parseInt(a) - parseInt(b));
+            const quebraDePagina = idxPaciente > 0 ? 'page-break-before: always;' : '';
+
+            const linhasDias = diasDaSemana.map(d => {
+                const nomeDia = diasSemanaNomes[d.getDay()];
+                const dataCurta = fmtCurto(d);
+                const celulas = horariosPaciente.map(h => `
+                    <td style="padding:10px 8px; border:1px solid #333; text-align:center; vertical-align:middle;">
+                        <div style="font-weight:700; font-size:12px; margin-bottom:8px; text-decoration:underline; text-underline-offset:3px;">${p.horarios[h].join(' + ')}</div>
+                        <div style="width:18px; height:18px; border:2px solid #555; border-radius:3px; margin:0 auto;"></div>
+                    </td>`).join('');
+                return `
+                    <tr>
+                        <td style="padding:10px 8px; border:1px solid #333; font-weight:700; white-space:nowrap;">${nomeDia}<br><span style="font-weight:400; font-size:11px; color:#555;">${dataCurta}</span></td>
+                        ${celulas}
+                    </tr>`;
+            }).join('');
+
+            cartoesHtml += `
+                <div style="margin-bottom:30px; break-inside: avoid; ${quebraDePagina}">
+                    <div style="background:#1a5276; color:white; padding:10px 16px; border-radius:8px 8px 0 0;">
+                        <div style="font-weight:800; font-size:16px;">${p.nome}</div>
+                        <div style="font-size:12px; opacity:0.9;">Semana: ${periodoFormatado}</div>
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #333;">
+                        <thead>
+                            <tr style="background:#eaf2ff;">
+                                <th style="padding:8px; border:1px solid #333; text-align:left; width:110px;">DIA</th>
+                                ${horariosPaciente.map(h => `<th style="padding:8px; border:1px solid #333;">${h}<br><span style="font-weight:600; font-size:10px;">HORAS</span></th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>${linhasDias}</tbody>
+                    </table>
+                    ${p.observacoes.length ? `<div style="font-size:12px; color:#555; font-style:italic; margin-top:6px; padding:0 4px;">💬 ${p.observacoes.join(' · ')}</div>` : ''}
+                </div>`;
+        });
+
+        const htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Lista Semanal de Medicamentos — ${periodoFormatado}</title>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; padding: 20px 30px; }
+            h1 { font-size: 20px; color: #1a5276; margin-bottom: 4px; }
+            .subtitulo { color: #555; font-size: 13px; margin-bottom: 20px; }
+            .rodape { margin-top: 30px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; color: #888; text-align: center; }
+            @media print { body { padding: 10px 20px; } }
+        </style></head>
+        <body>
+            <h1>Lista Semanal de Medicamentos</h1>
+            <div class="subtitulo">Período: ${periodoFormatado} · Emitido às ${horaEmissao} · Total: ${pacientes.length} acolhido(s) com medicação ativa · Cadastrados no sistema: ${new Set(registros.map(r => r.nome)).size}</div>
+            ${notaSemMed}
+            ${cartoesHtml || '<p style="color: #888; text-align: center; padding: 40px;">Nenhum medicamento registado.</p>'}
+            <div class="rodape">Gerado automaticamente pelo sistema Farmed.</div>
+            <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1a5276;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+        </body></html>`;
+
+        const blob = new Blob([htmlPdf], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const nomeArquivo = `Lista_Semanal_Medicamentos_${obterDataAtualLocal()}.html`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        fechar('modalImprimirLista');
+        toast("Lista semanal gerada", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar \u2192 Guardar como PDF'.", "success");
     }
     // ==========================================
     // IMPORTAÇÃO DE EXCEL (PLANILHA)
