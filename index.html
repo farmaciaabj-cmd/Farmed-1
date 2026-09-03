@@ -276,6 +276,22 @@
         .btn-plus { background: var(--cor-azul); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-out); transition: all 0.1s ease; }
         .btn-plus:active { transform: scale(0.92); }
 
+        .agenda-titulo-abas { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .agenda-titulo-abas h2 { margin-bottom: 0; }
+        .agenda-abas { display: flex; gap: 4px; background: #0f1726; padding: 4px; border-radius: 12px; box-shadow: var(--shadow-in); }
+        .agenda-aba-btn { border: none; background: transparent; color: var(--texto-s); padding: 7px 14px; border-radius: 9px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+        .agenda-aba-btn:hover:not(.ativa) { color: var(--texto-p); }
+        .agenda-aba-btn.ativa { background: var(--cor-azul); color: white; box-shadow: var(--shadow-out); }
+        body.modo-claro .agenda-abas { background: #e2e8f0; }
+        .card-saida-paciente.sus { border-left-color: var(--cor-azul); }
+        .cal-dia .marcador.marcador-sus { background: var(--cor-azul); }
+        @media (max-width: 768px) {
+            #modalCalendario .agenda-header { flex-wrap: wrap; gap: 10px; }
+            #modalCalendario .agenda-titulo-abas { width: 100%; justify-content: space-between; }
+            #modalCalendario .agenda-header h2 { font-size: 16px; }
+            #modalCalendario .agenda-header > div:last-child { width: 100%; justify-content: space-between; }
+        }
+
         .alertas-titulo { font-size: 12px; font-weight: bold; color: #f97316; margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-top: 2px solid #f97316; padding-top: 10px; }
         .col-esquerda-titulo { font-size: 13px; font-weight: bold; color: var(--cor-azul); margin-bottom: 8px; letter-spacing: 0.3px; }
         .info-calculo { font-size: 11px; color: var(--texto-s); margin-top: 5px; font-style: italic; }
@@ -680,10 +696,17 @@
 <div id="modalCalendario" class="modal">
     <div class="modal-content modal-grande">
         <div class="agenda-header">
-            <h2>Agenda Profissional - Saídas</h2>
+            <div class="agenda-titulo-abas">
+                <h2 id="tituloAgendaCalendario">Agenda Profissional - Saídas</h2>
+                <div class="agenda-abas">
+                    <button type="button" class="agenda-aba-btn ativa" id="btnAbaAgenda" onclick="trocarAbaCalendario('agenda')">📋 Agenda</button>
+                    <button type="button" class="agenda-aba-btn" id="btnAbaSus" onclick="trocarAbaCalendario('sus')">🏥 SUS</button>
+                </div>
+            </div>
             <div style="display: flex; gap: 10px; align-items: center;">
-                <button onclick="abrirExportarSaidas()" title="Baixar Saídas em PDF" style="border:none; background:#0f3652; color:#38bdf8; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;">📄 PDF</button>
-                <button class="btn-plus" onclick="abrirModalNovaSaida()" title="Agendar Nova Saída">+</button>
+                <button onclick="abrirCredenciaisSus()" title="Logins e Senhas do Sistema SUS" style="border:none; background:#2a1e4d; color:#c4b5fd; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;">🔐 SUS</button>
+                <button onclick="abrirExportarAgendaAtiva()" title="Baixar em PDF" style="border:none; background:#0f3652; color:#38bdf8; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;">📄 PDF</button>
+                <button class="btn-plus" onclick="abrirModalNovoAgendamento()" title="Agendar Novo">+</button>
                 <button onclick="fechar('modalCalendario')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
             </div>
         </div>
@@ -928,6 +951,39 @@
     </div>
 </div>
 
+<div id="modalNovoExameSus" class="modal">
+    <div class="modal-content" style="border: 1px solid var(--cor-azul); z-index: 100000;">
+        <h2 id="modalExameSusTitulo">Agendar Exame SUS</h2>
+        <input type="hidden" id="editExameSusId">
+        <label>Selecione o Acolhido:</label>
+        <select id="exameSusNomeSelect"></select>
+        <label>Tipo de Exame:</label>
+        <input type="text" id="exameSusTipo" placeholder="Ex: Hemograma, Raio-X, Ultrassom...">
+        <label>Link do Pedido/Comprovante (opcional):</label>
+        <input type="text" id="exameSusLinks" placeholder="https://drive.google.com/...">
+        <label>Data do Exame:</label>
+        <input type="date" id="exameSusData">
+        <label>Informações / Observações:</label>
+        <input type="text" id="exameSusInformacoes" placeholder="Digite detalhes do exame marcado pelo SUS...">
+        <button id="btnSalvarExameSus" onclick="window.salvarExameSus()" style="background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px;">Salvar Agendamento</button>
+        <button onclick="fechar('modalNovoExameSus')" style="width:100%; border:none; background:none; color:var(--texto-s); margin-top:10px; cursor:pointer; font-weight:600;">Voltar</button>
+    </div>
+</div>
+
+<div id="modalConfirmarRealizadoExameSus" class="modal" style="z-index: 110000;">
+    <div class="modal-content" style="max-width: 420px;">
+        <h3 style="margin-bottom: 5px; font-weight: 700;">✅ Confirmar Realização</h3>
+        <p id="confirmarRealizadoExameSusNome" style="color: var(--texto-s); font-size: 14px; margin-bottom: 15px;"></p>
+        <input type="hidden" id="confirmarRealizadoExameSusId">
+        <label>Informações sobre a realização:</label>
+        <textarea id="confirmarRealizadoExameSusInfo" rows="3" placeholder="Ex: Exame realizado no dia 24/06 na UBS..." style="resize: vertical; font-family: inherit;"></textarea>
+        <div style="display: flex; gap: 12px; margin-top: 18px;">
+            <button onclick="window.confirmarRealizacaoExameSus()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Confirmar</button>
+            <button onclick="fechar('modalConfirmarRealizadoExameSus')" style="flex: 1; padding: 12px; background: #151f32; color: var(--texto-s); border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <div id="modalExportarSaidas" class="modal">
     <div class="modal-content" style="max-width: 420px;">
         <h2>📄 Baixar Saídas em PDF</h2>
@@ -945,6 +1001,27 @@
         <div style="display:flex; gap:10px; margin-top:16px;">
             <button type="button" onclick="fechar('modalExportarSaidas')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:12px; cursor:pointer; font-weight:700;">Cancelar</button>
             <button type="button" id="expSaidaBtnGerar" onclick="gerarPdfSaidas()" class="gp-btn-salvar" style="flex:1.3; margin-top:0;">📄 Gerar PDF</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalExportarExamesSus" class="modal">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2>📄 Baixar Exames SUS em PDF</h2>
+        <p style="font-size:12px; color:var(--texto-s); margin:-6px 0 14px 0; line-height:1.5;">Selecione o período (mês inicial e mês final) para gerar o relatório dos exames marcados pelo SUS.</p>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+                <label>Mês Inicial</label>
+                <input type="month" id="expExameSusMesIni">
+            </div>
+            <div style="flex:1;">
+                <label>Mês Final</label>
+                <input type="month" id="expExameSusMesFim">
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" onclick="fechar('modalExportarExamesSus')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:12px; cursor:pointer; font-weight:700;">Cancelar</button>
+            <button type="button" id="expExameSusBtnGerar" onclick="gerarPdfExamesSus()" class="gp-btn-salvar" style="flex:1.3; margin-top:0;">📄 Gerar PDF</button>
         </div>
     </div>
 </div>
@@ -1551,6 +1628,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let registros = [];
     let saidas = [];
+    let examesSus = [];
+    let abaAgendaAtiva = 'agenda'; // 'agenda' (Saídas) ou 'sus' (Exames SUS)
     let filtroStatusAlertas = ''; // '' = todos | 'vencida' | 'a_vencer' — filtro de status de RECEITA no modal de Alertas
     let registrosMedicacaoDia = [];
     let horaAtual = "07h";
@@ -2144,6 +2223,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     info_realizado: item.info_realizado || item.Info_realizado || ""
                 }));
             }
+
+            // Agenda de Exames marcados pelo SUS (aba "SUS" da Agenda Profissional)
+            try {
+                const respExamesSus = await supabaseClient.from('calendario_sus').select('*');
+                if (respExamesSus.data) {
+                    examesSus = respExamesSus.data.map(item => ({
+                        id: item.id,
+                        nome: item.nome || "",
+                        exame: item.exame || "",
+                        links: item.links || "",
+                        data: item.data || "",
+                        informacoes: item.informacoes || "",
+                        realizado: item.realizado === true,
+                        info_realizado: item.info_realizado || ""
+                    }));
+                }
+            } catch (_) { /* tabela calendario_sus ainda não existe no Supabase */ }
 
             const hoje = obterDataAtualLocal();
             const respMed = await supabaseClient.from('registro_medicacao').select('*').eq('data', hoje);
@@ -3009,6 +3105,95 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!error) { carregar(); toast("Eliminado", "Agendamento removido.", "success"); } else toast("Erro", error.message, "error");
         });
     };
+
+    // ==========================================
+    // AGENDA DE EXAMES SUS (aba "SUS" da Agenda Profissional)
+    // Espelha as funções de Saídas/Renovações, mas usa a tabela 'calendario_sus'
+    // ==========================================
+    function abrirModalNovoExameSus() {
+        document.getElementById('modalExameSusTitulo').innerText = "Agendar Exame SUS";
+        document.getElementById('editExameSusId').value = ""; document.getElementById('exameSusTipo').value = ""; document.getElementById('exameSusLinks').value = ""; document.getElementById('exameSusData').value = ""; document.getElementById('exameSusInformacoes').value = ""; const select = document.getElementById('exameSusNomeSelect'); select.innerHTML = '';
+        const nomesUnicos = [...new Set(registros.map(r => r.nome))].sort();
+        if(nomesUnicos.length === 0) { const opt = document.createElement('option'); opt.innerText = "Nenhum acolhido registado";
+        select.appendChild(opt); } 
+        else { nomesUnicos.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.innerText = nome; select.appendChild(opt); });
+        } 
+        abrir('modalNovoExameSus');
+    }
+
+    window.prepararEdicaoExameSus = function(id) { 
+        const item = examesSus.find(s => String(s.id) === String(id));
+        if (!item) return; abrirModalNovoExameSus();
+        document.getElementById('modalExameSusTitulo').innerText = "Editar Exame SUS"; document.getElementById('editExameSusId').value = String(item.id); document.getElementById('exameSusNomeSelect').value = item.nome || ""; document.getElementById('exameSusTipo').value = item.exame || ""; document.getElementById('exameSusLinks').value = item.links || ""; document.getElementById('exameSusData').value = item.data || ""; document.getElementById('exameSusInformacoes').value = item.informacoes || "";
+    };
+
+    window.salvarExameSus = async function() { 
+        const id = document.getElementById('editExameSusId').value;
+        const nome = document.getElementById('exameSusNomeSelect').value; const exame = document.getElementById('exameSusTipo').value; const links = document.getElementById('exameSusLinks').value; const data = document.getElementById('exameSusData').value; const informacoes = document.getElementById('exameSusInformacoes').value;
+        if(!nome || nome === "Nenhum acolhido cadastrado" || !data) { toast("Campos obrigatórios", "Preencha todos os dados obrigatórios!", "warning"); return; }
+        const btn = document.getElementById('btnSalvarExameSus');
+        btn.disabled = true; btn.innerText = "A guardar...";
+        const dados = { nome, exame, links, data, informacoes }; 
+        
+        let erro = null;
+        if (id) { const idTratado = isNaN(id) ? id : Number(id); const res = await supabaseClient.from('calendario_sus').update(dados).eq('id', idTratado); erro = res.error;
+        } 
+        else { const res = await supabaseClient.from('calendario_sus').insert([dados]); erro = res.error;
+        } 
+        
+        btn.disabled = false;
+        btn.innerText = "Salvar Agendamento";
+        if (!erro) { fechar('modalNovoExameSus'); carregar(); toast("Guardado", "Exame agendado com sucesso.", "success"); } else toast("Erro", erro.message, "error");
+    };
+
+    // Checkbox marcado no card: abre modal pedindo a informação da confirmação antes de salvar.
+    // Checkbox desmarcado: reverte "realizado" direto, sem precisar de input.
+    window.onToggleRealizadoExameSus = function(id, marcado) {
+        const item = examesSus.find(s => String(s.id) === String(id));
+        if (!item) return;
+        if (marcado) {
+            document.getElementById('confirmarRealizadoExameSusId').value = String(item.id);
+            document.getElementById('confirmarRealizadoExameSusNome').innerText = `Acolhido: ${item.nome}`;
+            document.getElementById('confirmarRealizadoExameSusInfo').value = "";
+            abrir('modalConfirmarRealizadoExameSus');
+            setTimeout(() => document.getElementById('confirmarRealizadoExameSusInfo').focus(), 100);
+        } else {
+            window.salvarStatusRealizadoExameSus(item.id, false, "");
+        }
+    };
+
+    window.confirmarRealizacaoExameSus = async function() {
+        const id = document.getElementById('confirmarRealizadoExameSusId').value;
+        const info = document.getElementById('confirmarRealizadoExameSusInfo').value.trim();
+        if (!info) { toast("Campo obrigatório", "Descreva brevemente como foi realizado o exame.", "warning"); return; }
+        fechar('modalConfirmarRealizadoExameSus');
+        await window.salvarStatusRealizadoExameSus(id, true, info);
+    };
+
+    // Atualiza o status "realizado" + a informação de confirmação no Supabase (tabela calendario_sus).
+    window.salvarStatusRealizadoExameSus = async function(id, realizado, info_realizado) {
+        const idTratado = isNaN(id) ? id : Number(id);
+        const item = examesSus.find(s => String(s.id) === String(id));
+        const anterior = item ? { realizado: item.realizado, info_realizado: item.info_realizado } : null;
+        if (item) { item.realizado = realizado; item.info_realizado = info_realizado; }
+        renderizarPacientesDoDia();
+        const { error } = await supabaseClient.from('calendario_sus').update({ realizado, info_realizado }).eq('id', idTratado);
+        if (error) {
+            if (item && anterior) { item.realizado = anterior.realizado; item.info_realizado = anterior.info_realizado; }
+            renderizarPacientesDoDia();
+            toast("Erro ao atualizar", error.message, "error");
+        } else {
+            carregar();
+        }
+    };
+
+    window.excluirExameSus = async function(id, nome) { 
+        perguntarConfirmacao("Remover Exame", `Deseja remover o exame agendado de "${nome}"?`, async () => {
+            const idTratado = isNaN(id) ? id : Number(id);
+            const { error } = await supabaseClient.from('calendario_sus').delete().eq('id', idTratado);
+            if (!error) { carregar(); toast("Eliminado", "Exame removido.", "success"); } else toast("Erro", error.message, "error");
+        });
+    };
     
     function abrirCadastroNovos() { 
         popularSelectHorariosFixo();
@@ -3513,6 +3698,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const [ano, mes, dia] = dataIso.split('-').map(Number);
         dataAtual = new Date(ano, mes - 1, dia);
         dataSelecionada = new Date(ano, mes - 1, dia);
+        // Alertas de renovação são sempre da aba "Agenda" (Saídas), nunca do SUS
+        abaAgendaAtiva = 'agenda';
+        const btnAgenda = document.getElementById('btnAbaAgenda'); if (btnAgenda) btnAgenda.classList.add('ativa');
+        const btnSus = document.getElementById('btnAbaSus'); if (btnSus) btnSus.classList.remove('ativa');
+        const titulo = document.getElementById('tituloAgendaCalendario'); if (titulo) titulo.innerText = 'Agenda Profissional - Saídas';
         abrir('modalCalendario');
         gerarCalendario();
         renderizarPacientesDoDia();
@@ -3631,6 +3821,122 @@ document.addEventListener('DOMContentLoaded', function() {
         toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
     }
 
+    // ==========================================
+    // EXPORTAÇÃO DE EXAMES SUS EM PDF (por período de mês inicial/final)
+    // ==========================================
+    function abrirExportarExamesSus() {
+        const hoje = new Date();
+        const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('expExameSusMesIni').value = mesAtual;
+        document.getElementById('expExameSusMesFim').value = mesAtual;
+        abrir('modalExportarExamesSus');
+    }
+
+    function gerarPdfExamesSus() {
+        const mesIniStr = document.getElementById('expExameSusMesIni').value; // formato "YYYY-MM"
+        const mesFimStr = document.getElementById('expExameSusMesFim').value;
+
+        if (!mesIniStr || !mesFimStr) { toast("Atenção", "Selecione o mês inicial e o mês final.", "warning"); return; }
+        if (mesFimStr < mesIniStr) { toast("Atenção", "O mês final deve ser igual ou posterior ao mês inicial.", "warning"); return; }
+
+        const [anoIni, numMesIni] = mesIniStr.split('-').map(Number);
+        const [anoFim, numMesFim] = mesFimStr.split('-').map(Number);
+
+        const dataIniISO = `${anoIni}-${String(numMesIni).padStart(2, '0')}-01`;
+        const ultimoDiaFim = new Date(anoFim, numMesFim, 0).getDate(); // último dia do mês final
+        const dataFimISO = `${anoFim}-${String(numMesFim).padStart(2, '0')}-${String(ultimoDiaFim).padStart(2, '0')}`;
+
+        const examesFiltrados = examesSus
+            .filter(s => s.data && s.data >= dataIniISO && s.data <= dataFimISO)
+            .sort((a, b) => a.data.localeCompare(b.data));
+
+        montarESalvarPdfExamesSus(examesFiltrados, mesIniStr, mesFimStr);
+    }
+
+    function montarESalvarPdfExamesSus(lista, mesIniStr, mesFimStr) {
+        const hoje = new Date();
+        const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        const horaEmissao = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        function labelMes(mesStr) {
+            const [ano, mes] = mesStr.split('-').map(Number);
+            return new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        }
+        const periodoLabel = mesIniStr === mesFimStr ? labelMes(mesIniStr) : `${labelMes(mesIniStr)} — ${labelMes(mesFimStr)}`;
+
+        const totalRealizados = lista.filter(s => s.realizado).length;
+        const totalPendentes = lista.length - totalRealizados;
+
+        const linhas = lista.map((s, idx) => `
+            <tr style="border-bottom:1px solid #e2e8f0; ${idx % 2 === 0 ? '' : 'background:#f8fafc;'}">
+                <td style="padding:9px 12px; font-size:13px; color:#334155;">${formatarDataBr(s.data)}</td>
+                <td style="padding:9px 12px; font-size:13px; font-weight:600; color:#1e293b;">${s.nome || '—'}</td>
+                <td style="padding:9px 12px; font-size:12px; color:#475569;">${s.exame || '—'}</td>
+                <td style="padding:9px 12px; font-size:12px; color:#475569;">${s.informacoes || '—'}</td>
+                <td style="padding:9px 12px; text-align:center;">
+                    <span style="background:${s.realizado ? '#dcfce7' : '#fee2e2'}; color:${s.realizado ? '#166534' : '#b91c1c'}; font-weight:700; font-size:11px; padding:3px 10px; border-radius:20px; border:1px solid ${s.realizado ? '#86efac' : '#fca5a5'};">
+                        ${s.realizado ? 'REALIZADO' : 'PENDENTE'}
+                    </span>
+                </td>
+            </tr>`).join('');
+
+        const tabelaOuAviso = lista.length === 0
+            ? `<p style="text-align:center;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">Nenhum exame do SUS registado no período selecionado.</p>`
+            : `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <thead><tr style="background:#1e3a5f;color:white;">
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">DATA</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">ACOLHIDO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">EXAME</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">INFORMAÇÕES</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;">SITUAÇÃO</th>
+                </tr></thead>
+                <tbody>${linhas}</tbody>
+            </table>`;
+
+        const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>ExamesSUS_${new Date().toISOString().slice(0,10)}</title>
+        <style>
+            *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:32px;font-size:13px}
+            h1{font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;margin-bottom:8px}
+            p{font-size:13px;color:#475569;margin-bottom:20px;line-height:1.7}
+            table{width:100%;border-collapse:collapse;margin-top:10px}thead tr{background:#1e3a5f;color:white}
+            th{padding:10px 12px;text-align:left;font-size:12px;font-weight:700}td{padding:9px 12px;font-size:13px;border-bottom:1px solid #e2e8f0}tr{page-break-inside:avoid}
+            .cards{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}.card{flex:1;min-width:130px;border-radius:10px;padding:14px 18px}
+            .rodape{margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6}
+            @media print{@page{margin:15mm;size:A4}}
+        </style></head><body>
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px">
+            <div style="font-size:22px;font-weight:800;color:#1e3a5f">FARMED</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
+        </div>
+        <h1>🏥 Agenda Profissional — Exames Marcados pelo SUS</h1>
+        <p>Relatório dos exames do SUS agendados/registados no período selecionado.</p>
+        <div class="cards">
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Período</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${periodoLabel}</div></div>
+            <div class="card" style="background:#dbeafe;border-left:4px solid #1e40af"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f">Total</div><div style="font-size:22px;font-weight:800;color:#1e40af;margin-top:4px">${lista.length}</div></div>
+            <div class="card" style="background:#dcfce7;border-left:4px solid #16a34a"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#166534">Realizados</div><div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:4px">${totalRealizados}</div></div>
+            <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Pendentes</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${totalPendentes}</div></div>
+        </div>
+        ${tabelaOuAviso}
+        <div class="rodape"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
+        <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+        </body></html>`;
+
+        const _blob = new Blob([_htmlPdf], { type: 'text/html;charset=utf-8' });
+        const _url = URL.createObjectURL(_blob);
+        const _nomeArquivo = `ExamesSUS_${mesIniStr}_a_${mesFimStr}.html`;
+        const _a = document.createElement('a');
+        _a.href = _url;
+        _a.download = _nomeArquivo;
+        document.body.appendChild(_a);
+        _a.click();
+        document.body.removeChild(_a);
+        setTimeout(() => URL.revokeObjectURL(_url), 10000);
+
+        fechar('modalExportarExamesSus');
+        toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
+    }
+
     function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
     }
     function selecionarDia(ano, mes, dia) { dataSelecionada = new Date(ano, mes, dia); gerarCalendario(); renderizarPacientesDoDia();
@@ -3646,11 +3952,12 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = prim; i > 0; i--) { const div = document.createElement('div');
         div.className = 'cal-dia outro-mes'; div.innerText = ultAnt - i + 1; grade.appendChild(div);
         } 
+        const dadosAgendaAtiva = abaAgendaAtiva === 'sus' ? examesSus : saidas;
         for (let dia = 1; dia <= ult; dia++) { 
             const div = document.createElement('div');
             div.className = 'cal-dia'; div.innerText = dia; const dIso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
             if(dataSelecionada.getDate() === dia && dataSelecionada.getMonth() === mes && dataSelecionada.getFullYear() === ano) div.classList.add('selecionado');
-            if (saidas.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador'; div.appendChild(m);
+            if (dadosAgendaAtiva.some(s => s.data === dIso)) { const m = document.createElement('span'); m.className = 'marcador' + (abaAgendaAtiva === 'sus' ? ' marcador-sus' : ''); div.appendChild(m);
             } 
             div.onclick = () => selecionarDia(ano, mes, dia);
             grade.appendChild(div); 
@@ -3661,9 +3968,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const dia = String(dataSelecionada.getDate()).padStart(2, '0');
         const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0'); const ano = dataSelecionada.getFullYear(); const dIso = `${ano}-${mes}-${dia}`;
         document.getElementById('dataSelecionadaTitulo').innerText = `${diasSemanaNomes[dataSelecionada.getDay()]}, ${dataSelecionada.getDate()} de ${mesesNomes[dataSelecionada.getMonth()]}`; const lista = document.getElementById('listaPacientesAgendados'); if (!lista) return;
+
+        if (abaAgendaAtiva === 'sus') {
+            const age = examesSus.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum exame do SUS agendado para hoje.</p>";
+            return; }
+            lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente sus ${s.realizado ? 'realizado' : ''}"><div class="card-saida-conteudo">${s.realizado ? '<span class="badge-realizado">✅ Realizado</span>' : ''}<h4>👤 ${s.nome}</h4><p><strong>Exame:</strong> ${s.exame || 'Exame SUS'}</p>${s.informacoes ? `<p style="color: var(--cor-azul); font-size: 13px; margin-bottom: 8px;"><strong>Info:</strong> ${s.informacoes}</p>` : ''}${s.realizado && s.info_realizado ? `<p class="info-realizado"><strong>✅ Confirmação:</strong> ${s.info_realizado}</p>` : ''}${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Documento</a>` : ''}<label class="check-realizado-card" onclick="event.stopPropagation()"><input type="checkbox" ${s.realizado ? 'checked' : ''} onchange="window.onToggleRealizadoExameSus('${s.id}', this.checked)"> ${s.realizado ? 'Desmarcar como realizado' : 'Marcar como realizado'}</label></div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoExameSus('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirExameSus('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
+            return;
+        }
+
         const age = saidas.filter(s => s.data === dIso); if (age.length === 0) { lista.innerHTML = "<p style='text-align:center; color:#64748b; margin-top:40px;'>Nenhum evento agendado para hoje.</p>";
         return; } 
         lista.innerHTML = age.map(s => { return `<div class="card-saida-paciente ${s.realizado ? 'realizado' : ''}"><div class="card-saida-conteudo">${s.realizado ? '<span class="badge-realizado">✅ Realizado</span>' : ''}<h4>👤 ${s.nome}</h4><p><strong>Evento:</strong> Renovação de Receita / Saída</p>${s.informacoes ? `<p style="color: var(--cor-azul); font-size: 13px; margin-bottom: 8px;"><strong>Info:</strong> ${s.informacoes}</p>` : ''}${s.realizado && s.info_realizado ? `<p class="info-realizado"><strong>✅ Confirmação:</strong> ${s.info_realizado}</p>` : ''}${s.links ? `<a href="${s.links}" target="_blank" class="link-drive">📁 Ver Receita</a>` : ''}<label class="check-realizado-card" onclick="event.stopPropagation()"><input type="checkbox" ${s.realizado ? 'checked' : ''} onchange="window.onToggleRealizadoSaida('${s.id}', this.checked)"> ${s.realizado ? 'Desmarcar como realizado' : 'Marcar como realizado'}</label></div><div class="actions-wrapper"><button class="btn-action" style="background: #452b14; color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);" onclick="window.prepararEdicaoSaida('${s.id}')" title="Editar">✏️</button><button class="btn-action" style="background: #4c1d1d; color: #f87171; border: 1px solid rgba(248,113,113,0.2);" onclick="excluirSaida('${s.id}', '${(s.nome||"").replace(/'/g, "\\'")}')" title="Excluir">🗑️</button></div></div>`; }).join('');
+    }
+
+    // Alterna entre a aba "Agenda" (Saídas/Renovações) e "SUS" (Exames marcados pelo SUS)
+    // Troca o conjunto de dados exibido no calendário e na lista do dia selecionado.
+    function trocarAbaCalendario(aba) {
+        if (abaAgendaAtiva === aba) return;
+        abaAgendaAtiva = aba;
+        document.getElementById('btnAbaAgenda').classList.toggle('ativa', aba === 'agenda');
+        document.getElementById('btnAbaSus').classList.toggle('ativa', aba === 'sus');
+        document.getElementById('tituloAgendaCalendario').innerText = aba === 'sus' ? 'Agenda Profissional - Exames SUS' : 'Agenda Profissional - Saídas';
+        gerarCalendario();
+        renderizarPacientesDoDia();
+    }
+
+    // Botão "+" do cabeçalho: abre o modal correto conforme a aba selecionada
+    function abrirModalNovoAgendamento() {
+        if (abaAgendaAtiva === 'sus') abrirModalNovoExameSus();
+        else abrirModalNovaSaida();
+    }
+
+    // Botão "PDF" do cabeçalho: exporta o relatório correto conforme a aba selecionada
+    function abrirExportarAgendaAtiva() {
+        if (abaAgendaAtiva === 'sus') abrirExportarExamesSus();
+        else abrirExportarSaidas();
     }
     
     function abrir(id) { document.getElementById(id).style.display = 'flex';
@@ -4661,6 +5000,174 @@ async function importarPlanilhaAcolhidos(event) {
         }
     }
 
+    // ==========================================
+    // CREDENCIAIS DO SISTEMA SUS (LOGINS E SENHAS)
+    // ==========================================
+    async function abrirCredenciaisSus() {
+        cancelarEdicaoCredencialSus();
+        abrir('modalCredenciaisSus');
+        await carregarListaCredenciaisSus();
+    }
+
+    async function carregarListaCredenciaisSus() {
+        const container = document.getElementById('listaCredenciaisSusContainer');
+        const termo = (document.getElementById('searchCredenciaisSusInput')?.value || '').trim().toLowerCase();
+        container.innerHTML = '<p style="color: var(--texto-s); font-size: 13px;">A carregar...</p>';
+        try {
+            const { data, error } = await supabaseClient
+                .from('credenciais_sus')
+                .select('*')
+                .order('sistema', { ascending: true });
+
+            if (error || !data) {
+                container.innerHTML = '<p style="color:#f87171; font-size:13px;">Erro ao carregar credenciais.</p>';
+                return;
+            }
+
+            const filtrados = termo
+                ? data.filter(c => (c.sistema || '').toLowerCase().includes(termo) || (c.login || '').toLowerCase().includes(termo) || (c.observacoes || '').toLowerCase().includes(termo))
+                : data;
+
+            if (filtrados.length === 0) {
+                container.innerHTML = '<p style="color: var(--texto-s); font-size: 13px;">Nenhuma credencial cadastrada.</p>';
+                return;
+            }
+
+            container.innerHTML = filtrados.map(c => {
+                const obsTag = c.observacoes ? `<div style="font-size:11px; color:var(--texto-s); margin-top:2px;">${c.observacoes}</div>` : '';
+                return `
+                <div style="background:#151f32; border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                        <div style="min-width:0;">
+                            <div style="font-weight:700; font-size:13px;">🏥 ${c.sistema}</div>
+                            <div style="font-size:12px; color:var(--texto-s); margin-top:4px; word-break:break-all;">👤 ${c.login || '—'}</div>
+                            <div style="font-size:12px; color:var(--texto-s); margin-top:2px; word-break:break-all;">🔑 ${'•'.repeat(Math.min((c.senha || '').length, 12)) || '—'}</div>
+                            ${obsTag}
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+                            <button onclick="copiarTextoCredSus('${(c.login || '').replace(/'/g, "\\'")}', 'Login')" title="Copiar login" style="background:#1e3a5f; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; color:white;">📋👤</button>
+                            <button onclick="copiarTextoCredSus('${(c.senha || '').replace(/'/g, "\\'")}', 'Senha')" title="Copiar senha" style="background:#1e3a5f; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; color:white;">📋🔑</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; margin-top:8px;">
+                        <button onclick='editarCredencialSus(${JSON.stringify(c).replace(/'/g, "&#39;")})' title="Editar" style="flex:1; background:#452b14; color:#fbbf24; border:1px solid rgba(251,191,36,0.2); border-radius:8px; padding:6px; cursor:pointer; font-weight:600; font-size:12px;">✏️ Editar</button>
+                        <button onclick="excluirCredencialSus(${c.id}, '${(c.sistema || '').replace(/'/g, "\\'")}')" title="Excluir" style="flex:1; background:#4c1d1d; color:#f87171; border:1px solid rgba(248,113,113,0.2); border-radius:8px; padding:6px; cursor:pointer; font-weight:600; font-size:12px;">🗑️ Excluir</button>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (err) {
+            container.innerHTML = '<p style="color:#f87171; font-size:13px;">Erro inesperado ao carregar credenciais.</p>';
+        }
+    }
+
+    function editarCredencialSus(c) {
+        document.getElementById('credencialSusEditId').value = c.id;
+        document.getElementById('inpCredSusSistema').value = c.sistema || '';
+        document.getElementById('inpCredSusLogin').value = c.login || '';
+        document.getElementById('inpCredSusSenha').value = c.senha || '';
+        document.getElementById('inpCredSusObs').value = c.observacoes || '';
+        document.getElementById('formCredencialSusTitulo').textContent = '✏️ Editar Credencial';
+        document.getElementById('btnSalvarCredencialSus').textContent = 'Salvar Alterações';
+        document.getElementById('btnCancelarEdicaoCredencialSus').style.display = 'block';
+    }
+
+    function cancelarEdicaoCredencialSus() {
+        document.getElementById('credencialSusEditId').value = '';
+        document.getElementById('inpCredSusSistema').value = '';
+        document.getElementById('inpCredSusLogin').value = '';
+        document.getElementById('inpCredSusSenha').value = '';
+        document.getElementById('inpCredSusObs').value = '';
+        document.getElementById('formCredencialSusTitulo').textContent = '+ Nova Credencial';
+        document.getElementById('btnSalvarCredencialSus').textContent = 'Salvar Credencial';
+        document.getElementById('btnCancelarEdicaoCredencialSus').style.display = 'none';
+        const inpSenha = document.getElementById('inpCredSusSenha');
+        if (inpSenha) inpSenha.type = 'password';
+        const btnOlho = document.getElementById('btnToggleSenhaCredSus');
+        if (btnOlho) btnOlho.textContent = '👁️';
+    }
+
+    function alternarVisibilidadeSenhaCredSus() {
+        const inp = document.getElementById('inpCredSusSenha');
+        const btn = document.getElementById('btnToggleSenhaCredSus');
+        if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+        else { inp.type = 'password'; btn.textContent = '👁️'; }
+    }
+
+    async function salvarCredencialSus() {
+        const id = document.getElementById('credencialSusEditId').value;
+        const sistema = document.getElementById('inpCredSusSistema').value.trim();
+        const login = document.getElementById('inpCredSusLogin').value.trim();
+        const senha = document.getElementById('inpCredSusSenha').value;
+        const observacoes = document.getElementById('inpCredSusObs').value.trim();
+
+        if (!sistema || !login) {
+            toast('Dados incompletos', 'Preencha ao menos o sistema e o login.', 'warning');
+            return;
+        }
+
+        try {
+            const dados = { sistema, login, senha, observacoes };
+            if (id) {
+                const { error } = await supabaseClient.from('credenciais_sus').update(dados).eq('id', id);
+                if (error) { toast('Erro', 'Não foi possível salvar. ' + (error.message || ''), 'error'); return; }
+                toast('Credencial atualizada', `${sistema} foi atualizado.`, 'success');
+            } else {
+                const { error } = await supabaseClient.from('credenciais_sus').insert([dados]);
+                if (error) { toast('Erro', 'Não foi possível criar. ' + (error.message || ''), 'error'); return; }
+                toast('Credencial criada', `${sistema} foi cadastrado.`, 'success');
+            }
+            cancelarEdicaoCredencialSus();
+            await carregarListaCredenciaisSus();
+        } catch (err) {
+            toast('Erro inesperado', err.message || '', 'error');
+        }
+    }
+
+    function excluirCredencialSus(id, sistema) {
+        perguntarConfirmacao(
+            'Excluir Credencial',
+            `Tem certeza que deseja excluir as credenciais de "${sistema}"? Esta ação não pode ser desfeita.`,
+            async () => {
+                const { error } = await supabaseClient.from('credenciais_sus').delete().eq('id', id);
+                if (error) {
+                    toast('Erro', 'Não foi possível excluir. ' + (error.message || ''), 'error');
+                } else {
+                    toast('Credencial excluída', `${sistema} foi removido.`, 'info');
+                    await carregarListaCredenciaisSus();
+                }
+            }
+        );
+    }
+
+    function copiarTextoCredSus(texto, label) {
+        if (!texto) { toast('Nada para copiar', `${label} está vazio.`, 'warning'); return; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texto).then(() => {
+                toast('Copiado!', `${label} copiado para a área de transferência.`, 'success', 2000);
+            }).catch(() => {
+                copiarTextoFallback(texto, label);
+            });
+        } else {
+            copiarTextoFallback(texto, label);
+        }
+    }
+
+    function copiarTextoFallback(texto, label) {
+        try {
+            const el = document.createElement('textarea');
+            el.value = texto;
+            el.style.position = 'fixed';
+            el.style.opacity = '0';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            toast('Copiado!', `${label} copiado para a área de transferência.`, 'success', 2000);
+        } catch (err) {
+            toast('Erro ao copiar', 'Não foi possível copiar automaticamente.', 'error');
+        }
+    }
+
     function editarUsuario(u) {
         document.getElementById('usuarioEditId').value = u.id;
         document.getElementById('inpUsuarioNome').value = u.nome_completo || '';
@@ -4959,6 +5466,57 @@ async function importarPlanilhaAcolhidos(event) {
             Cancelar Edição
         </button>
         <button onclick="fechar('modalGestaoUsuarios')"
+            style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Fechar
+        </button>
+    </div>
+</div>
+
+<!-- ===== MODAL CREDENCIAIS SUS (LOGINS E SENHAS) ===== -->
+<div id="modalCredenciaisSus" class="modal" style="z-index: 110000;">
+    <div class="modal-content" style="max-width: 480px;">
+        <h2 style="margin-bottom: 6px;">🔐 Credenciais do Sistema SUS</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 16px;">Cadastre os logins e senhas usados para acessar sistemas do SUS. Use o botão de copiar para colar rapidamente.</p>
+
+        <input type="text" id="searchCredenciaisSusInput" class="search-input-compacto" placeholder="🔍 Filtrar por sistema, login ou nome do paciente..." onkeyup="carregarListaCredenciaisSus()" style="width:100%; margin-bottom: 12px;">
+
+        <div id="listaCredenciaisSusContainer" style="max-height: 280px; overflow-y: auto; margin-bottom: 16px;">
+            <p style="color: var(--texto-s); font-size: 13px;">A carregar...</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--borda); margin: 10px 0 16px 0;">
+
+        <h3 id="formCredencialSusTitulo" style="font-size: 15px; margin-bottom: 10px;">+ Nova Credencial</h3>
+        <input type="hidden" id="credencialSusEditId" value="">
+
+        <label>Sistema / Portal</label>
+        <input type="text" id="inpCredSusSistema" placeholder="ex: e-SUS AB, Portal SUS, CADSUS"
+            style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+
+        <label>Login / Usuário</label>
+        <input type="text" id="inpCredSusLogin" placeholder="ex: 12345678900"
+            style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+
+        <label>Senha</label>
+        <div style="position:relative; margin: 6px 0 12px 0;">
+            <input type="password" id="inpCredSusSenha" placeholder="Senha de acesso"
+                style="width:100%; padding: 12px 44px 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in); box-sizing: border-box;">
+            <button type="button" onclick="alternarVisibilidadeSenhaCredSus()" id="btnToggleSenhaCredSus" title="Mostrar/ocultar senha"
+                style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--texto-s); cursor:pointer; font-size:16px; padding:6px;">👁️</button>
+        </div>
+
+        <label>Observações (Nome do Paciente)</label>
+        <input type="text" id="inpCredSusObs" placeholder="ex: nome do paciente/acolhido"
+            style="width:100%; margin: 6px 0 16px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+
+        <button onclick="salvarCredencialSus()" id="btnSalvarCredencialSus"
+            style="width:100%; padding:13px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:15px;">
+            Salvar Credencial
+        </button>
+        <button onclick="cancelarEdicaoCredencialSus()" id="btnCancelarEdicaoCredencialSus" style="display:none; width:100%; padding:12px; margin-top:8px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Cancelar Edição
+        </button>
+        <button onclick="fechar('modalCredenciaisSus')"
             style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
             Fechar
         </button>
