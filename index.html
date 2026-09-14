@@ -705,7 +705,7 @@
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <button onclick="abrirCredenciaisSus()" title="Logins e Senhas do Sistema SUS" style="border:none; background:#2a1e4d; color:#c4b5fd; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;">🔐 SUS</button>
-                <button onclick="abrirExportarAgendaAtiva()" title="Baixar em PDF" style="border:none; background:#0f3652; color:#38bdf8; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;">📄 PDF</button>
+                <button onclick="abrir('modalSelecionarExportacao')" title="Baixar em PDF" style="border:none; background:#0f3652; color:#38bdf8; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;">📄 PDF</button>
                 <button class="btn-plus" onclick="abrirModalNovoAgendamento()" title="Agendar Novo">+</button>
                 <button onclick="fechar('modalCalendario')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
             </div>
@@ -3715,6 +3715,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
         document.getElementById('expSaidaMesIni').value = mesAtual;
         document.getElementById('expSaidaMesFim').value = mesAtual;
+        fechar('modalSelecionarExportacao');
         abrir('modalExportarSaidas');
     }
 
@@ -3829,6 +3830,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
         document.getElementById('expExameSusMesIni').value = mesAtual;
         document.getElementById('expExameSusMesFim').value = mesAtual;
+        fechar('modalSelecionarExportacao');
         abrir('modalExportarExamesSus');
     }
 
@@ -3935,6 +3937,170 @@ document.addEventListener('DOMContentLoaded', function() {
 
         fechar('modalExportarExamesSus');
         toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
+    }
+
+    // ==========================================
+    // EXPORTAÇÃO COMBINADA (SAÍDAS + EXAMES SUS)
+    // ==========================================
+    function abrirExportarCombinada() {
+        const hoje = new Date();
+        const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('expCombinMesIni').value = mesAtual;
+        document.getElementById('expCombinMesFim').value = mesAtual;
+        fechar('modalSelecionarExportacao');
+        abrir('modalExportarCombinada');
+    }
+
+    function gerarPdfCombinada() {
+        const mesIniStr = document.getElementById('expCombinMesIni').value;
+        const mesFimStr = document.getElementById('expCombinMesFim').value;
+
+        if (!mesIniStr || !mesFimStr) { toast("Atenção", "Selecione o mês inicial e o mês final.", "warning"); return; }
+        if (mesFimStr < mesIniStr) { toast("Atenção", "O mês final deve ser igual ou posterior ao mês inicial.", "warning"); return; }
+
+        const [anoIni, numMesIni] = mesIniStr.split('-').map(Number);
+        const [anoFim, numMesFim] = mesFimStr.split('-').map(Number);
+
+        const dataIniISO = `${anoIni}-${String(numMesIni).padStart(2, '0')}-01`;
+        const ultimoDiaFim = new Date(anoFim, numMesFim, 0).getDate();
+        const dataFimISO = `${anoFim}-${String(numMesFim).padStart(2, '0')}-${String(ultimoDiaFim).padStart(2, '0')}`;
+
+        // Filtrar dados de ambas as agendas
+        const saidasFiltradas = saidas
+            .filter(s => s.data && s.data >= dataIniISO && s.data <= dataFimISO);
+        const examesFiltrados = examesSus
+            .filter(e => e.data && e.data >= dataIniISO && e.data <= dataFimISO);
+
+        montarESalvarPdfCombinada(saidasFiltradas, examesFiltrados, mesIniStr, mesFimStr);
+    }
+
+    function montarESalvarPdfCombinada(saidas, exames, mesIniStr, mesFimStr) {
+        const hoje = new Date();
+        const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        const horaEmissao = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        function labelMes(mesStr) {
+            const [ano, mes] = mesStr.split('-').map(Number);
+            return new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        }
+        const periodoLabel = mesIniStr === mesFimStr ? labelMes(mesIniStr) : `${labelMes(mesIniStr)} — ${labelMes(mesFimStr)}`;
+
+        // Combinar e ordenar todos os itens por data
+        const todosItens = [
+            ...saidas.map(s => ({ ...s, tipo: 'saida', data_sort: s.data })),
+            ...exames.map(e => ({ ...e, tipo: 'exame', data_sort: e.data }))
+        ].sort((a, b) => a.data_sort.localeCompare(b.data_sort));
+
+        // Agrupar por data
+        const agrupadosPorData = {};
+        todosItens.forEach(item => {
+            if (!agrupadosPorData[item.data_sort]) {
+                agrupadosPorData[item.data_sort] = [];
+            }
+            agrupadosPorData[item.data_sort].push(item);
+        });
+
+        // Gerar linhas agrupadas por data
+        let linhasAgrupadas = '';
+        Object.keys(agrupadosPorData).sort().forEach((data) => {
+            const itensData = agrupadosPorData[data];
+            linhasAgrupadas += `<tr style="background:#f0f9ff; border-bottom:2px solid #1e3a5f;">
+                <td colspan="5" style="padding:12px 12px; font-weight:700; color:#1e3a5f; font-size:14px;">
+                    📅 ${formatarDataBr(data)}
+                </td>
+            </tr>`;
+
+            itensData.forEach((item, idx) => {
+                if (item.tipo === 'saida') {
+                    linhasAgrupadas += `<tr style="border-bottom:1px solid #e2e8f0; ${idx % 2 === 0 ? '' : 'background:#fafafa;'}">
+                        <td style="padding:9px 12px; font-size:13px; color:#334155;">🚗 Saída</td>
+                        <td style="padding:9px 12px; font-size:13px; font-weight:600; color:#1e293b;">${item.nome || '—'}</td>
+                        <td style="padding:9px 12px; font-size:12px; color:#475569;">${item.informacoes || '—'}</td>
+                        <td style="padding:9px 12px; text-align:center;">
+                            <span style="background:${item.realizado ? '#dcfce7' : '#fee2e2'}; color:${item.realizado ? '#166534' : '#b91c1c'}; font-weight:700; font-size:11px; padding:3px 10px; border-radius:20px; border:1px solid ${item.realizado ? '#86efac' : '#fca5a5'};">
+                                ${item.realizado ? 'REALIZADO' : 'PENDENTE'}
+                            </span>
+                        </td>
+                        <td style="padding:9px 12px; font-size:11px; color:#64748b;">Saída</td>
+                    </tr>`;
+                } else {
+                    linhasAgrupadas += `<tr style="border-bottom:1px solid #e2e8f0; ${idx % 2 === 0 ? '' : 'background:#fafafa;'}">
+                        <td style="padding:9px 12px; font-size:13px; color:#334155;">🏥 Exame</td>
+                        <td style="padding:9px 12px; font-size:13px; font-weight:600; color:#1e293b;">${item.nome || '—'}</td>
+                        <td style="padding:9px 12px; font-size:12px; color:#475569;">${item.exame || '—'} ${item.informacoes ? '(' + item.informacoes + ')' : ''}</td>
+                        <td style="padding:9px 12px; text-align:center;">
+                            <span style="background:${item.realizado ? '#dcfce7' : '#fee2e2'}; color:${item.realizado ? '#166534' : '#b91c1c'}; font-weight:700; font-size:11px; padding:3px 10px; border-radius:20px; border:1px solid ${item.realizado ? '#86efac' : '#fca5a5'};">
+                                ${item.realizado ? 'REALIZADO' : 'PENDENTE'}
+                            </span>
+                        </td>
+                        <td style="padding:9px 12px; font-size:11px; color:#64748b;">Exame SUS</td>
+                    </tr>`;
+                }
+            });
+        });
+
+        const totalSaidas = saidas.length;
+        const totalExames = exames.length;
+        const totalRealizados = todosItens.filter(i => i.realizado).length;
+        const totalPendentes = todosItens.length - totalRealizados;
+
+        const tabelaOuAviso = todosItens.length === 0
+            ? `<p style="text-align:center;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">Nenhuma saída ou exame registado no período selecionado.</p>`
+            : `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <thead><tr style="background:#1e3a5f;color:white;">
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">TIPO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">ACOLHIDO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;">DESCRIÇÃO</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;">SITUAÇÃO</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;">CATEGORIA</th>
+                </tr></thead>
+                <tbody>${linhasAgrupadas}</tbody>
+            </table>`;
+
+        const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Agenda_Compilada_${new Date().toISOString().slice(0,10)}</title>
+        <style>
+            *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;background:#fff;padding:32px;font-size:13px}
+            h1{font-size:16px;font-weight:700;color:#1e293b;text-transform:uppercase;margin-bottom:8px}
+            p{font-size:13px;color:#475569;margin-bottom:20px;line-height:1.7}
+            table{width:100%;border-collapse:collapse;margin-top:10px}thead tr{background:#1e3a5f;color:white}
+            th{padding:10px 12px;text-align:left;font-size:12px;font-weight:700}td{padding:9px 12px;font-size:13px;border-bottom:1px solid #e2e8f0}tr{page-break-inside:avoid}
+            .cards{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}.card{flex:1;min-width:130px;border-radius:10px;padding:14px 18px}
+            .rodape{margin-top:40px;border-top:1px solid #e2e8f0;padding-top:16px;font-size:11px;color:#94a3b8;line-height:1.6}
+            @media print{@page{margin:15mm;size:A4}}
+        </style></head><body>
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:28px">
+            <div style="font-size:22px;font-weight:800;color:#1e3a5f">FARMED</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${dataEmissao} às ${horaEmissao}</div>
+        </div>
+        <h1>✨ Agenda Profissional — Compilado Único</h1>
+        <p>Relatório combinado de saídas e exames SUS agendados/registados no período selecionado, agrupados por data.</p>
+        <div class="cards">
+            <div class="card" style="background:#f1f5f9;border-left:4px solid #1e3a5f"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b">Período</div><div style="font-size:13px;font-weight:700;color:#1e293b;margin-top:4px">${periodoLabel}</div></div>
+            <div class="card" style="background:#dbeafe;border-left:4px solid #1e40af"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f">Total</div><div style="font-size:22px;font-weight:800;color:#1e40af;margin-top:4px">${todosItens.length}</div></div>
+            <div class="card" style="background:#dcfce7;border-left:4px solid #16a34a"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#166534">Realizados</div><div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:4px">${totalRealizados}</div></div>
+            <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Pendentes</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${totalPendentes}</div></div>
+            <div class="card" style="background:#fef3c7;border-left:4px solid #f59e0b"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#92400e">Saídas</div><div style="font-size:22px;font-weight:800;color:#d97706;margin-top:4px">${totalSaidas}</div></div>
+            <div class="card" style="background:#fce7f3;border-left:4px solid #ec4899"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#831843">Exames</div><div style="font-size:22px;font-weight:800;color:#be185d;margin-top:4px">${totalExames}</div></div>
+        </div>
+        ${tabelaOuAviso}
+        <div class="rodape"><p>Este relatório foi gerado automaticamente pelo sistema Farmed.</p></div>
+        <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div>
+        </body></html>`;
+
+        const _blob = new Blob([_htmlPdf], { type: 'text/html;charset=utf-8' });
+        const _url = URL.createObjectURL(_blob);
+        const _nomeArquivo = `Agenda_Compilada_${mesIniStr}_a_${mesFimStr}.html`;
+        const _a = document.createElement('a');
+        _a.href = _url;
+        _a.download = _nomeArquivo;
+        document.body.appendChild(_a);
+        _a.click();
+        document.body.removeChild(_a);
+        setTimeout(() => URL.revokeObjectURL(_url), 10000);
+
+        fechar('modalExportarCombinada');
+        toast("Compilado gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Partilhar → Guardar como PDF'.", "success");
     }
 
     function mudarMes(direcao) { dataAtual.setMonth(dataAtual.getMonth() + direcao); gerarCalendario();
@@ -5542,6 +5708,98 @@ async function importarPlanilhaAcolhidos(event) {
                 Cancelar
             </button>
         </div>
+    </div>
+</div>
+
+<!-- ===== MODAL SELEÇÃO TIPO EXPORTAÇÃO AGENDA ===== -->
+<div id="modalSelecionarExportacao" class="modal" style="z-index: 115000;">
+    <div class="modal-content" style="max-width: 450px;">
+        <h2 style="margin-bottom: 6px;">📄 Exportar Agenda Profissional</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 20px;">Selecione qual tipo de relatório deseja gerar:</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <button onclick="abrirExportarSaidas()" style="padding: 16px; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 15px; text-align: left; transition: transform 0.2s;">
+                <div style="font-size: 18px; margin-bottom: 4px;">📅 Saídas e Renovações</div>
+                <div style="font-size: 12px; opacity: 0.9;">Apenas a agenda de saídas</div>
+            </button>
+            
+            <button onclick="abrirExportarExamesSus()" style="padding: 16px; background: linear-gradient(135deg, #7c2d12 0%, #92400e 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 15px; text-align: left; transition: transform 0.2s;">
+                <div style="font-size: 18px; margin-bottom: 4px;">🏥 Exames SUS</div>
+                <div style="font-size: 12px; opacity: 0.9;">Apenas exames marcados pelo SUS</div>
+            </button>
+            
+            <button onclick="abrirExportarCombinada()" style="padding: 16px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 15px; text-align: left; transition: transform 0.2s;">
+                <div style="font-size: 18px; margin-bottom: 4px;">✨ Compilado Único</div>
+                <div style="font-size: 12px; opacity: 0.9;">Saídas e Exames SUS juntos, agrupados por data</div>
+            </button>
+        </div>
+
+        <button onclick="fechar('modalSelecionarExportacao')" style="width: 100%; padding: 12px; border: none; background: #151f32; color: var(--texto-s); border-radius: 12px; cursor: pointer; font-weight: 600;">
+            Cancelar
+        </button>
+    </div>
+</div>
+
+<!-- ===== MODAL EXPORTAR SAÍDAS (MANTÉM ORIGINAL) ===== -->
+<div id="modalExportarSaidas" class="modal" style="z-index: 114000;">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2 style="margin-bottom: 6px;">📅 Exportar Saídas e Renovações</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 16px;">Selecione o período para gerar o relatório:</p>
+        
+        <label>Mês Inicial</label>
+        <input type="month" id="expSaidaMesIni" style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+        
+        <label>Mês Final</label>
+        <input type="month" id="expSaidaMesFim" style="width:100%; margin: 6px 0 16px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+        
+        <button onclick="gerarPdfSaidas()" style="width:100%; padding:13px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:15px;">
+            📄 Gerar Relatório
+        </button>
+        <button onclick="fechar('modalExportarSaidas')" style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Cancelar
+        </button>
+    </div>
+</div>
+
+<!-- ===== MODAL EXPORTAR EXAMES SUS (MANTÉM ORIGINAL) ===== -->
+<div id="modalExportarExamesSus" class="modal" style="z-index: 114000;">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2 style="margin-bottom: 6px;">🏥 Exportar Exames SUS</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 16px;">Selecione o período para gerar o relatório:</p>
+        
+        <label>Mês Inicial</label>
+        <input type="month" id="expExameSusMesIni" style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+        
+        <label>Mês Final</label>
+        <input type="month" id="expExameSusMesFim" style="width:100%; margin: 6px 0 16px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+        
+        <button onclick="gerarPdfExamesSus()" style="width:100%; padding:13px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:15px;">
+            📄 Gerar Relatório
+        </button>
+        <button onclick="fechar('modalExportarExamesSus')" style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Cancelar
+        </button>
+    </div>
+</div>
+
+<!-- ===== MODAL EXPORTAR COMPILADA (NOVA) ===== -->
+<div id="modalExportarCombinada" class="modal" style="z-index: 114000;">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2 style="margin-bottom: 6px;">✨ Exportar Compilado Único</h2>
+        <p style="color: var(--texto-s); font-size: 13px; margin-bottom: 16px;">Saídas e Exames SUS em um único documento. Selecione o período:</p>
+        
+        <label>Mês Inicial</label>
+        <input type="month" id="expCombinMesIni" style="width:100%; margin: 6px 0 12px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+        
+        <label>Mês Final</label>
+        <input type="month" id="expCombinMesFim" style="width:100%; margin: 6px 0 16px 0; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; background: #151f32; color: white; outline: none; box-shadow: var(--shadow-in);">
+        
+        <button onclick="gerarPdfCombinada()" style="width:100%; padding:13px; background:linear-gradient(135deg,#059669,#10b981); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:15px;">
+            📄 Gerar Compilado
+        </button>
+        <button onclick="fechar('modalExportarCombinada')" style="width:100%; padding:12px; margin-top:10px; border:none; background:#151f32; color:var(--texto-s); border-radius:12px; cursor:pointer; font-weight:600;">
+            Cancelar
+        </button>
     </div>
 </div>
 
