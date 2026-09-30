@@ -605,6 +605,7 @@
             <div class="sidebar-item" onclick="abrirModalEtiquetas(); fecharMenuLateral();">🏷️ Etiquetas / Controle</div>
             <div class="sidebar-item" onclick="abrirGlicosePA(); fecharMenuLateral();">🩸 PA/HGT</div>
             <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></div>
+            <div class="sidebar-item" onclick="abrirModalConsultaRenovacao(); fecharMenuLateral();">🩺 Renovar p/ Consulta da Dra.</div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="abrirVistaSemanal(); fecharMenuLateral();">📅 Vista Semanal</div>
             <div class="sidebar-item" onclick="abrirPopupImprimir(); fecharMenuLateral();">🖨️ Imprimir Lista do Dia</div>
@@ -903,9 +904,32 @@
         <div style="display:flex; gap:10px; padding: 0 15px; margin-top:10px; margin-bottom: 5px;">
             <button onclick="limparFiltroAlertas()" style="flex:1; padding:10px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">✖ Limpar Filtro</button>
             <button onclick="exportarAlertasPdf()" style="flex:1.3; padding:10px; background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">📄 Exportar PDF</button>
+        
+            <button onclick="abrirModalConsultaRenovacao()" style="flex:1.3; padding:10px; background:#151f32; color:#fbbf24; border:1px solid #713f12; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">🩺 Consulta da Dra.</button>
         </div>
         <div id="alertasModalBody">
             <p style="color:#64748b; text-align:center; padding:30px;">A carregar alertas...</p>
+        </div>
+    </div>
+</div>
+
+<div id="modalConsultaRenovacao" class="modal">
+    <div class="modal-alertas-content">
+        <div class="alertas-modal-header">
+            <div class="alertas-modal-titulo">🩺 Renovação para a Consulta da Dra.</div>
+            <button onclick="fechar('modalConsultaRenovacao')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+        </div>
+        <div style="padding:0 15px; margin-top:12px;">
+            <label style="display:block; font-size:11px; color:var(--texto-s); margin-bottom:4px;">📅 Data da consulta da Dra.</label>
+            <input type="date" id="consultaDraData" style="width:100%;" onchange="analisarRenovacaoConsulta()">
+            <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; color:var(--texto-s); cursor:pointer;">
+                <input type="checkbox" id="consultaIncluirVencidas" checked onchange="analisarRenovacaoConsulta()" style="width:auto; margin:0;">
+                Incluir também quem já está vencido antes do mês da consulta
+            </label>
+            <button onclick="analisarRenovacaoConsulta()" style="width:100%; margin-top:10px; padding:11px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">🔍 Analisar</button>
+        </div>
+        <div id="consultaRenovacaoBody">
+            <p style="color:#64748b; text-align:center; padding:30px;">Informe a data da consulta para ver quem precisa renovar a receita.</p>
         </div>
     </div>
 </div>
@@ -2050,6 +2074,100 @@ document.addEventListener('DOMContentLoaded', function() {
         if (modalBody) modalBody.innerHTML = buildAlertasHTML();
 
         atualizarNotificacoesHome();
+    }
+
+    // ==========================================================
+    // RENOVAÇÃO PARA A CONSULTA DA DRA.
+    // Compara a data da consulta (informada em um input) com:
+    //   (a) a validade da receita (receita_valida), e
+    //   (b) a data em que a medicação acaba (última retirada + duração, via calcularDataVencimento).
+    // Se qualquer uma cair no MESMO MÊS/ANO da consulta (ou já tiver vencido antes, se o
+    // checkbox estiver marcado), o paciente entra na lista de quem precisa renovar a receita.
+    // ==========================================================
+    function abrirModalConsultaRenovacao() {
+        abrir('modalConsultaRenovacao');
+        const inp = document.getElementById('consultaDraData');
+        if (inp && inp.value) analisarRenovacaoConsulta();
+    }
+
+    function analisarRenovacaoConsulta() {
+        const body = document.getElementById('consultaRenovacaoBody');
+        const dataConsulta = (document.getElementById('consultaDraData') || {}).value || '';
+        const incluirVencidas = !!(document.getElementById('consultaIncluirVencidas') || {}).checked;
+        if (!body) return;
+        if (!dataConsulta) {
+            body.innerHTML = `<p style="color:#64748b; text-align:center; padding:30px;">Informe a data da consulta para ver quem precisa renovar a receita.</p>`;
+            return;
+        }
+        const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const mesConsulta = dataConsulta.slice(0, 7);
+        const inicioMes = mesConsulta + '-01';
+        const dtConsulta = new Date(dataConsulta + 'T00:00:00');
+        const diasAteConsulta = (dataStr) => Math.round((new Date(dataStr + 'T00:00:00') - dtConsulta) / 86400000);
+
+        // Classifica uma data de vencimento em relação ao mês da consulta
+        const classificar = (dataStr) => {
+            if (!dataStr) return null;
+            if (dataStr.slice(0, 7) === mesConsulta) return 'mes';
+            if (dataStr < inicioMes) return 'vencida';
+            return null; // vence depois do mês da consulta: não precisa renovar agora
+        };
+
+        const porPaciente = {};
+        registros.forEach(r => {
+            const itens = [];
+            const cRec = classificar(r.receita_valida);
+            if (cRec === 'mes' || (cRec === 'vencida' && incluirVencidas)) {
+                itens.push({ tipo: 'Receita', data: r.receita_valida, situacao: cRec });
+            }
+            // Só calcula o fim do estoque quando há Qtd. de Meses (senão o cálculo devolveria a própria data da retirada)
+            if (r.ultima_retirada && calcularDiasDuracaoMedicacao(r) !== null) {
+                const dEst = calcularDataVencimento(r);
+                const cEst = classificar(dEst);
+                if (cEst === 'mes' || (cEst === 'vencida' && incluirVencidas)) {
+                    itens.push({ tipo: 'Estoque', data: dEst, situacao: cEst });
+                }
+            }
+            if (itens.length === 0) return;
+            const nome = r.nome || 'Sem nome';
+            if (!porPaciente[nome]) porPaciente[nome] = [];
+            porPaciente[nome].push({ medicamento: r.medicamento || 'Sem medicação', itens });
+        });
+
+        const nomes = Object.keys(porPaciente).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        const mesLabel = `${mesesNomes[parseInt(mesConsulta.slice(5, 7), 10) - 1]}/${mesConsulta.slice(0, 4)}`;
+        if (nomes.length === 0) {
+            body.innerHTML = `<p style="color:#22c55e; text-align:center; font-size:13px; padding:30px 0;">✅ Nenhum paciente precisa renovar a receita para a consulta de ${esc(formatarDataBr(dataConsulta))}.</p>`;
+            return;
+        }
+
+        const cards = nomes.map(nome => {
+            const meds = porPaciente[nome];
+            const pior = meds.some(m => m.itens.some(i => i.situacao === 'vencida')) ? 'critico' : 'atencao';
+            const linhas = meds.map(m => {
+                const tags = m.itens.map(i => {
+                    const d = diasAteConsulta(i.data);
+                    const rel = d === 0 ? 'no dia da consulta' : (d > 0 ? `${d}d após a consulta` : `${Math.abs(d)}d antes da consulta`);
+                    const cls = i.situacao === 'vencida' ? 'invalida' : 'atencao';
+                    const estilo = i.situacao === 'vencida' ? '' : ' style="background:#713f12;color:#fde68a;"';
+                    return `<span class="alerta-receita-tag ${cls}"${estilo}>${i.tipo === 'Receita' ? '📋 Receita' : '📦 Estoque'} vence ${esc(formatarDataBr(i.data))} (${rel})</span>`;
+                }).join(' ');
+                return `<div style="margin-top:8px;"><div class="alerta-card-med">💊 ${esc(m.medicamento)}</div><div style="margin-top:4px;">${tags}</div></div>`;
+            }).join('');
+            return `
+            <div class="alerta-card" onclick="irParaReceitaPaciente('${nome.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" style="cursor:pointer;" title="Clique para abrir a Central de Receitas Médicas">
+                <div class="alerta-card-bar ${pior}"></div>
+                <div class="alerta-card-body">
+                    <div class="alerta-card-nome">${esc(nome)}</div>
+                    ${linhas}
+                </div>
+                <div class="alerta-card-footer ${pior}">Renovar receita antes da consulta</div>
+            </div>`;
+        }).join('');
+
+        body.innerHTML = `
+            <div class="alertas-secao-titulo">🩺 ${nomes.length} paciente(s) para renovar — consulta em ${esc(formatarDataBr(dataConsulta))} (${mesLabel})</div>
+            <div class="alertas-grid">${cards}</div>`;
     }
 
     function abrirModalAlertas() {
@@ -3350,6 +3468,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Navega da área de Alertas para a Central de Receitas Médicas, já com o acolhido selecionado
     function irParaReceitaPaciente(nomeAcolhido) {
         fechar('modalAlertas');
+        fechar('modalConsultaRenovacao');
         fechar('modalReceitas');
         const item = registros.find(r => r.nome === nomeAcolhido);
         const id = item ? item.id : 0;
