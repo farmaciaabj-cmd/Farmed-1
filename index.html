@@ -2175,12 +2175,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ==========================================================
     // RENOVAÇÃO PARA A CONSULTA DA DRA.
-    // Compara a data da consulta (informada em um input) com:
-    //   (a) a validade da receita (receita_valida), e
-    //   (b) a data em que a medicação acaba (última retirada + duração, via calcularDataVencimento).
-    // Se qualquer uma cair no MESMO MÊS/ANO da consulta (ou já tiver vencido antes, se o
-    // checkbox estiver marcado), o paciente entra na lista de quem precisa renovar a receita.
+    // Regra: a receita deve ser renovada no mês em que o lote termina, ou seja,
+    //   Última Retirada (início do lote) + Qtd. Meses de Validade (em meses de calendário).
+    // Ex.: retirada em setembro com 2 meses de medicação -> renovar em novembro.
+    // O paciente entra na lista quando esse mês de renovação for o MESMO mês/ano da consulta
+    // (ou já tiver passado, se o checkbox "Incluir também quem já está vencido" estiver marcado).
     // ==========================================================
+    // Soma meses de calendário a uma data (YYYY-MM-DD). Aceita meses fracionados (1.5 = 1 mês + 15 dias).
+    function somarMesesCalendario(dataStr, meses) {
+        const [a, m, d] = dataStr.split('-').map(Number);
+        const inteiros = Math.trunc(meses);
+        const fracDias = Math.round((meses - inteiros) * 30);
+        const alvo = new Date(a, m - 1 + inteiros, 1);
+        const ultimoDia = new Date(alvo.getFullYear(), alvo.getMonth() + 1, 0).getDate();
+        alvo.setDate(Math.min(d, ultimoDia)); // 31/jan + 1 mês = 28/fev (não pula para março)
+        alvo.setDate(alvo.getDate() + fracDias);
+        const pad = n => String(n).padStart(2, '0');
+        return `${alvo.getFullYear()}-${pad(alvo.getMonth() + 1)}-${pad(alvo.getDate())}`;
+    }
+
     function abrirModalConsultaRenovacao() {
         abrir('modalConsultaRenovacao');
         const inp = document.getElementById('consultaDraData');
@@ -2211,33 +2224,29 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const porPaciente = {};
+        let semDados = 0;
         registros.forEach(r => {
-            const itens = [];
-            const cRec = classificar(r.receita_valida);
-            if (cRec === 'mes' || (cRec === 'vencida' && incluirVencidas)) {
-                itens.push({ tipo: 'Receita', data: r.receita_valida, situacao: cRec });
-            }
-            // Só calcula o fim do estoque quando há Qtd. de Meses (senão o cálculo devolveria a própria data da retirada)
-            if (r.ultima_retirada && calcularDiasDuracaoMedicacao(r) !== null) {
-                const dEst = calcularDataVencimento(r);
-                const cEst = classificar(dEst);
-                if (cEst === 'mes' || (cEst === 'vencida' && incluirVencidas)) {
-                    itens.push({ tipo: 'Estoque', data: dEst, situacao: cEst });
-                }
-            }
-            if (itens.length === 0) return;
+            const meses = parseFloat(String(r.qtd_meses ?? '').replace(',', '.'));
+            if (!r.ultima_retirada || !isFinite(meses) || meses <= 0) { if (r.medicamento) semDados++; return; }
+            const dataRenovar = somarMesesCalendario(r.ultima_retirada, meses);
+            const cls = classificar(dataRenovar);
+            if (!(cls === 'mes' || (cls === 'vencida' && incluirVencidas))) return;
             const nome = r.nome || 'Sem nome';
             if (!porPaciente[nome]) porPaciente[nome] = [];
-            porPaciente[nome].push({ medicamento: r.medicamento || 'Sem medicação', itens });
+            porPaciente[nome].push({
+                medicamento: r.medicamento || 'Sem medicação',
+                itens: [{ data: dataRenovar, situacao: cls, retirada: r.ultima_retirada, meses }]
+            });
         });
 
         const nomes = Object.keys(porPaciente).sort((a, b) => a.localeCompare(b, 'pt-BR'));
         const mesLabel = `${mesesNomes[parseInt(mesConsulta.slice(5, 7), 10) - 1]}/${mesConsulta.slice(0, 4)}`;
         if (nomes.length === 0) {
-            body.innerHTML = `<p style="color:#22c55e; text-align:center; font-size:13px; padding:30px 0;">✅ Nenhum paciente precisa renovar a receita para a consulta de ${esc(formatarDataBr(dataConsulta))}.</p>`;
+            body.innerHTML = `<p style="color:#22c55e; text-align:center; font-size:13px; padding:30px 0;">✅ Nenhum paciente precisa renovar a receita para a consulta de ${esc(formatarDataBr(dataConsulta))}.</p>${semDados > 0 ? `<p style="color:#64748b; font-size:11px; text-align:center;">ℹ️ ${semDados} medicação(ões) sem Última Retirada ou Qtd. de Meses não puderam ser analisadas.</p>` : ''}`;
             return;
         }
 
+        const avisoSemDados = semDados > 0 ? `<p style="color:#64748b; font-size:11px; text-align:center; padding:10px 15px;">ℹ️ ${semDados} medicação(ões) sem Última Retirada ou Qtd. de Meses não puderam ser analisadas.</p>` : '';
         const cards = nomes.map(nome => {
             const meds = porPaciente[nome];
             const pior = meds.some(m => m.itens.some(i => i.situacao === 'vencida')) ? 'critico' : 'atencao';
@@ -2247,7 +2256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const rel = d === 0 ? 'no dia da consulta' : (d > 0 ? `${d}d após a consulta` : `${Math.abs(d)}d antes da consulta`);
                     const cls = i.situacao === 'vencida' ? 'invalida' : 'atencao';
                     const estilo = i.situacao === 'vencida' ? '' : ' style="background:#713f12;color:#fde68a;"';
-                    return `<span class="alerta-receita-tag ${cls}"${estilo}>${i.tipo === 'Receita' ? '📋 Receita' : '📦 Estoque'} vence ${esc(formatarDataBr(i.data))} (${rel})</span>`;
+                    return `<span class="alerta-receita-tag ${cls}"${estilo}>📦 Retirada ${esc(formatarDataBr(i.retirada))} + ${i.meses} mês(es) → renovar em ${esc(formatarDataBr(i.data))} (${rel})</span>`;
                 }).join(' ');
                 return `<div style="margin-top:8px;"><div class="alerta-card-med">💊 ${esc(m.medicamento)}</div><div style="margin-top:4px;">${tags}</div></div>`;
             }).join('');
@@ -2264,7 +2273,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         body.innerHTML = `
             <div class="alertas-secao-titulo">🩺 ${nomes.length} paciente(s) para renovar — consulta em ${esc(formatarDataBr(dataConsulta))} (${mesLabel})</div>
-            <div class="alertas-grid">${cards}</div>`;
+            <div class="alertas-grid">${cards}</div>${avisoSemDados}`;
     }
 
     function abrirModalAlertas() {
