@@ -637,7 +637,7 @@
         <input type="text" id="inpMed" placeholder="Ex: Dipirona, Omeprazol, Losartana">
 
         <label>Quantidade de Comprimidos/Cápsulas <span style="color:var(--cor-azul); font-size:11px;">(usada para calcular o gasto mensal)</span></label>
-        <input type="number" id="inpCapsula" placeholder="Ex: 2" min="0" oninput="atualizarPreviewDiasFaltantes()">
+        <input type="number" id="inpCapsula" placeholder="Ex: 2" min="0" step="any" oninput="atualizarPreviewDiasFaltantes()" onchange="atualizarPreviewDiasFaltantes()">
         
         <label>Horário(s) Fixo(s) <span style="color:var(--cor-azul); font-size:11px;">(selecione um ou mais — quanto mais horários, mais rápido a medicação acaba)</span></label>
         <div id="inpHoraContainer" class="hora-multi-select"></div>
@@ -652,14 +652,18 @@
         <input type="date" id="inpReceitaValida">
         
         <label>Última Retirada (data do início do lote)</label>
-        <input type="date" id="inpUltimaRetirada" oninput="atualizarPreviewDiasFaltantes()">
+        <input type="date" id="inpUltimaRetirada" oninput="atualizarPreviewDiasFaltantes()" onchange="atualizarPreviewDiasFaltantes()">
         
+        <label>Total de Comprimidos do Lote <span style="color:var(--cor-azul); font-size:11px;">(opcional — ex: 120 recebidos da Farmácia)</span></label>
+        <input type="number" id="inpQtdLote" placeholder="Ex: 120" min="0" step="any" oninput="atualizarPreviewDiasFaltantes()" onchange="atualizarPreviewDiasFaltantes()">
+
         <label>Qtd. Meses de Validade</label>
-        <input type="number" id="inpQtdMeses" placeholder="Ex: 3" oninput="atualizarPreviewDiasFaltantes()">
+        <input type="number" id="inpQtdMeses" placeholder="Ex: 3" min="0" step="any" oninput="atualizarPreviewDiasFaltantes()" onchange="atualizarPreviewDiasFaltantes()">
         
         <label>Dias Faltantes <span style="color: #22c55e;">(Calculado Automaticamente)</span></label>
         <input type="number" id="inpDiasFaltantes" placeholder="Preenchido automaticamente" disabled>
-        <div class="info-calculo">ℹ️ O cálculo considera: (Qtd. Meses × 30 dias) ÷ (Comprimidos por dose × Qtd. de Horários selecionados).</div>
+        <div class="info-calculo">ℹ️ Com o Total do Lote: Lote ÷ (Comprimidos por dose × Qtd. de Horários). Sem o Lote: Qtd. Meses × 30 dias.</div>
+        <div id="previewCalcDetalhe" class="info-calculo" style="font-style:normal; font-weight:600; color:var(--cor-azul);"></div>
 
         <label>Observação</label>
         <textarea id="inpObservacao" rows="3" placeholder="Ex: Acolhido com restrição alimentar, alergias, informações relevantes..." style="resize: vertical; font-family: inherit;"></textarea>
@@ -1827,17 +1831,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // na quantidade de comprimidos por dose e na quantidade de horários selecionados.
     // Fórmula: (qtd_meses * 30 dias) / (comprimidos por dose * qtd. de horários)
     function calcularDiasDuracaoMedicacao(paciente) {
-        if (!paciente.qtd_meses || paciente.qtd_meses <= 0) return null;
+        const num = v => parseFloat(String(v ?? '').replace(',', '.'));
+        const lote = num(paciente.qtd_lote);
+        const meses = num(paciente.qtd_meses);
+        const capsulaNum = num(paciente.capsula);
+        const capsula = (isFinite(capsulaNum) && capsulaNum > 0) ? capsulaNum : 1;
         const numHorarios = Math.max(1, getHorariosArray(paciente).length);
-        const capsula = (paciente.capsula && paciente.capsula > 0) ? parseFloat(paciente.capsula) : 1;
-        const totalDiasBase = parseFloat(paciente.qtd_meses) * 30;
         const consumoDiario = capsula * numHorarios;
-        if (consumoDiario <= 0) return null;
-        return Math.floor(totalDiasBase / consumoDiario);
+
+        // 1) Com o total de comprimidos do lote: dias = lote / consumo diário
+        if (isFinite(lote) && lote > 0 && consumoDiario > 0) return Math.floor(lote / consumoDiario);
+        // 2) Sem lote: o lote cobre a Qtd. de Meses informada (meses x 30 dias)
+        if (isFinite(meses) && meses > 0) return Math.round(meses * 30);
+        return null;
     }
 
     function calcularDiasFaltantes(paciente) {
         if (!paciente.ultima_retirada) return null;
+        // Sem Qtd. de Meses não há como estimar a duração: devolve null (em vez de contar dias desde a retirada)
+        if (calcularDiasDuracaoMedicacao(paciente) === null) return null;
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
         
@@ -1854,7 +1866,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const diferencaTempo = dataVencimento.getTime() - hoje.getTime();
-        return Math.ceil(diferencaTempo / (1000 * 60 * 60 * 24));
+        return Math.round(diferencaTempo / (1000 * 60 * 60 * 24));
     }
 
     // Igual ao cálculo acima, mas devolve a DATA de vencimento (YYYY-MM-DD) em vez dos dias restantes.
@@ -2516,12 +2528,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // conforme os horários/comprimidos/meses de validade preenchidos no modal
     function atualizarPreviewDiasFaltantes() {
         const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
-        const qtd_meses = document.getElementById('inpQtdMeses').value ? parseFloat(document.getElementById('inpQtdMeses').value) : null;
+        const qtd_meses = document.getElementById('inpQtdMeses').value !== "" ? parseFloat(document.getElementById('inpQtdMeses').value) : null;
         const capsula = document.getElementById('inpCapsula').value !== "" ? parseFloat(document.getElementById('inpCapsula').value) : null;
-        const hora = obterHorariosSelecionados().join(',');
+        const horarios = obterHorariosSelecionados();
+        const hora = horarios.join(',');
         const campo = document.getElementById('inpDiasFaltantes');
-        if (!ultima_retirada) { campo.value = ""; return; }
-        const dias = calcularDiasFaltantes({ ultima_retirada, qtd_meses, capsula, hora });
+        const detalhe = document.getElementById('previewCalcDetalhe');
+        const qtd_lote = document.getElementById('inpQtdLote').value !== "" ? parseFloat(document.getElementById('inpQtdLote').value) : null;
+        const paciente = { ultima_retirada, qtd_meses, capsula, hora, qtd_lote };
+
+        const duracao = calcularDiasDuracaoMedicacao(paciente);
+        let txt = '';
+        if (duracao === null) {
+            txt = 'Preencha a Qtd. de Meses (ou o Total do Lote) para calcular.';
+        } else {
+            const porDose = (capsula && capsula > 0) ? capsula : 1;
+            const nH = Math.max(1, horarios.length);
+            if (qtd_lote && qtd_lote > 0) {
+                txt = `${qtd_lote} cp ÷ (${porDose} cp × ${nH} horário${nH > 1 ? 's' : ''} = ${porDose * nH}/dia) → dura ${duracao} dia${duracao !== 1 ? 's' : ''}`;
+            } else {
+                txt = `${qtd_meses} mês(es) × 30 → dura ${duracao} dias`;
+            }
+            if (!ultima_retirada) txt += '. Informe a Última Retirada para ver os dias faltantes.';
+            else txt += ` (até ${formatarDataBr(calcularDataVencimento(paciente))})`;
+        }
+        if (detalhe) detalhe.textContent = txt ? '🧮 ' + txt : '';
+
+        const dias = calcularDiasFaltantes(paciente);
         campo.value = dias !== null ? dias : "";
     }
 
@@ -3402,15 +3435,15 @@ document.addEventListener('DOMContentLoaded', function() {
         popularSelectHorariosFixo();
         document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = "";
         document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpCapsula').value = ""; document.getElementById('inpDrive').value = ""; setHorariosSelecionados([horaAtual]); document.getElementById('inpDataPrescricao').value = "";
-        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; document.getElementById('inpReceitaValida').value = ""; abrir('modalCadastro');
+        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpQtdLote').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; document.getElementById('inpReceitaValida').value = ""; abrir('modalCadastro'); atualizarPreviewDiasFaltantes();
     }
     
     function prepararEdicao(id) { 
         const item = registros.find(r => r.id === id);
         if (!item) return; popularSelectHorariosFixo(); document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
         document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpCapsula').value = (item.capsula !== null && item.capsula !== undefined) ? item.capsula : ""; document.getElementById('inpDrive').value = item.links || ""; setHorariosSelecionados(getHorariosArray(item)); document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
-        document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
-        diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; document.getElementById('inpReceitaValida').value = item.receita_valida || ""; abrir('modalCadastro'); 
+        document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; document.getElementById('inpQtdLote').value = item.qtd_lote || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
+        diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; document.getElementById('inpReceitaValida').value = item.receita_valida || ""; abrir('modalCadastro'); atualizarPreviewDiasFaltantes(); 
     }
     
     // Verifica se já existe outro cadastro (mesmo nome + mesmo medicamento) usando
@@ -3434,10 +3467,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const id = document.getElementById('editId').value;
         const nome = document.getElementById('inpNome').value.trim(); const cpf = document.getElementById('inpCpf').value.trim(); const med = document.getElementById('inpMed').value.trim(); const horariosSelecionados = obterHorariosSelecionados(); const hora = horariosSelecionados.join(','); const driveRaw = document.getElementById('inpDrive').value;
         const linkLimpo = extrairIdDrive(driveRaw); const data_prescricao = document.getElementById('inpDataPrescricao').value || null; const ultima_retirada = document.getElementById('inpUltimaRetirada').value || null;
-        const qtd_meses = document.getElementById('inpQtdMeses').value ? parseInt(document.getElementById('inpQtdMeses').value) : null; 
+        const qtd_meses = document.getElementById('inpQtdMeses').value !== "" ? parseFloat(document.getElementById('inpQtdMeses').value) : null; 
         const observacao = document.getElementById('inpObservacao').value.trim() || null;
         const receita_valida = document.getElementById('inpReceitaValida').value || null;
-        const capsula = document.getElementById('inpCapsula').value !== "" ? parseInt(document.getElementById('inpCapsula').value) : null;
+        const qtd_lote = document.getElementById('inpQtdLote').value !== "" ? parseFloat(document.getElementById('inpQtdLote').value) : null;
+        const capsula = document.getElementById('inpCapsula').value !== "" ? parseFloat(document.getElementById('inpCapsula').value) : null;
         
         if (!nome) { toast("Campo obrigatório", "Por favor, preencha o nome!", "warning"); return; }
         if (horariosSelecionados.length === 0) { toast("Campo obrigatório", "Selecione ao menos um Horário Fixo!", "warning"); return; }
@@ -3449,21 +3483,23 @@ document.addEventListener('DOMContentLoaded', function() {
             perguntarConfirmacao(
                 "Possível cadastro duplicado",
                 `Já existe outro cadastro de "${nome}" para "${med || 'este medicamento'}" no(s) horário(s) ${horariosConflito}. Em vez de duplicar, considere editar o cadastro existente e juntar os horários nele. Deseja salvar mesmo assim?`,
-                () => executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula })
+                () => executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula, qtd_lote })
             );
             return;
         }
 
-        await executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula });
+        await executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula, qtd_lote });
     }
 
-    async function executarSalvarCadastro({ id, nome, cpf, med, hora, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula }) {
+    async function executarSalvarCadastro({ id, nome, cpf, med, hora, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula, qtd_lote }) {
         const btn = document.getElementById('btnSalvarCadastro');
         btn.disabled = true;
         btn.innerText = "A guardar...";
 
-        const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses, capsula, hora });
+        const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses, capsula, hora, qtd_lote });
         const dados = { nome, cpf, medicamento: med, capsula, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc, observacao, receita_valida };
+        // Só envia qtd_lote quando preenchido (exige a coluna qtd_lote na tabela pacientes)
+        if (qtd_lote !== null) dados.qtd_lote = qtd_lote;
         let erro = null;
         if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error;
         } 
