@@ -605,6 +605,7 @@
             <div class="sidebar-item" onclick="abrirModalEtiquetas(); fecharMenuLateral();">🏷️ Etiquetas / Controle</div>
             <div class="sidebar-item" onclick="abrirGlicosePA(); fecharMenuLateral();">🩸 PA/HGT</div>
             <div class="sidebar-item" id="btnAlertas" onclick="abrirModalAlertas(); fecharMenuLateral();">⚠️ Alertas <span id="badgeAlertasCount" class="badge-count-alerta" style="display:none;">0</span></div>
+            <div class="sidebar-item" onclick="abrirModalEntregas(); fecharMenuLateral();">🚚 Próximas Entregas <span id="badgeEntregasCount" class="badge-count-alerta" style="display:none; background:#0ea5e9;">0</span></div>
             <div class="sidebar-item" onclick="abrirModalConsultaRenovacao(); fecharMenuLateral();">🩺 Renovar p/ Consulta da Dra.</div>
             <hr style="border: none; border-top: 1px solid var(--borda); margin: 4px 0;">
             <div class="sidebar-item" onclick="abrirVistaSemanal(); fecharMenuLateral();">📅 Vista Semanal</div>
@@ -641,6 +642,11 @@
         
         <label>Horário(s) Fixo(s) <span style="color:var(--cor-azul); font-size:11px;">(selecione um ou mais — quanto mais horários, mais rápido a medicação acaba)</span></label>
         <div id="inpHoraContainer" class="hora-multi-select"></div>
+
+        <div id="dosesIrmasInfo" class="info-calculo" style="display:none;"></div>
+        <div id="dosesExtrasContainer"></div>
+        <button type="button" onclick="adicionarDoseExtra()" style="width:100%; margin-top:8px; padding:10px; background:rgba(0,156,217,0.10); color:var(--cor-azul); border:1px dashed var(--cor-azul); border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">➕ Adicionar outra quantidade/horário (mesmo remédio)</button>
+        <div class="info-calculo">ℹ️ Ex.: Haloperidol 1 comprimido às 07h e 2 comprimidos às 15h → preencha a 1ª dose acima e clique no botão para informar a 2ª.</div>
         
         <label>Link ou ID da Pasta do Google Drive</label>
         <input type="text" id="inpDrive" placeholder="Cole o link ou ID da pasta">
@@ -654,6 +660,9 @@
         <label>Última Retirada (data do início do lote)</label>
         <input type="date" id="inpUltimaRetirada" oninput="atualizarPreviewDiasFaltantes()" onchange="atualizarPreviewDiasFaltantes()">
         
+        <label>🚚 Próxima Entrega <span style="color:var(--cor-azul); font-size:11px;">(data prevista da próxima entrega da medicação — aparece em Alertas para agendar a busca)</span></label>
+        <input type="date" id="inpProximaEntrega">
+
         <label>Total de Comprimidos do Lote <span style="color:var(--cor-azul); font-size:11px;">(opcional — ex: 120 recebidos da Farmácia)</span></label>
         <input type="number" id="inpQtdLote" placeholder="Ex: 120" min="0" step="any" oninput="atualizarPreviewDiasFaltantes()" onchange="atualizarPreviewDiasFaltantes()">
 
@@ -881,6 +890,42 @@
             <button type="button" onclick="fechar('modalExportarGlicosePA')" style="flex:1; padding:12px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:12px; cursor:pointer; font-weight:700;">Cancelar</button>
             <button type="button" id="expGpBtnGerar" onclick="gerarPdfGlicosePA()" class="gp-btn-salvar" style="flex:1.3; margin-top:0;">📄 Gerar PDF</button>
         </div>
+    </div>
+</div>
+
+<div id="modalEntregas" class="modal">
+    <div class="modal-alertas-content">
+        <div class="alertas-modal-header">
+            <div class="alertas-modal-titulo" style="color:#0ea5e9;">🚚 Próximas Entregas de Medicação</div>
+            <button onclick="fechar('modalEntregas')" style="border:none; background:#151f32; color:var(--texto-s); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Sair</button>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; padding:0 15px;">
+            <div style="flex:2; min-width:180px;">
+                <label>🔍 Buscar acolhido / medicamento</label>
+                <input type="text" id="entregasBusca" placeholder="Digite para filtrar..." style="width:100%;" oninput="renderizarEntregas()">
+            </div>
+            <div style="flex:1; min-width:130px;">
+                <label>De (mês)</label>
+                <input type="month" id="entregasMesInicio" style="width:100%;" onchange="renderizarEntregas()">
+            </div>
+            <div style="flex:1; min-width:130px;">
+                <label>Até (mês)</label>
+                <input type="month" id="entregasMesFim" style="width:100%;" onchange="renderizarEntregas()">
+            </div>
+        </div>
+        <div id="entregasStatusFiltro" style="display:flex; gap:8px; padding:0 15px; margin-top:10px; flex-wrap:wrap;">
+            <button class="alerta-status-btn ativo" data-status="" onclick="setFiltroEntregas('')">Todas</button>
+            <button class="alerta-status-btn" data-status="atrasada" onclick="setFiltroEntregas('atrasada')">🔴 Atrasadas</button>
+            <button class="alerta-status-btn" data-status="semana" onclick="setFiltroEntregas('semana')">🟠 Próx. 7 dias</button>
+            <button class="alerta-status-btn" data-status="futura" onclick="setFiltroEntregas('futura')">🟢 Futuras</button>
+            <button class="alerta-status-btn" data-status="sem" onclick="setFiltroEntregas('sem')">⚪ Sem data</button>
+        </div>
+        <div style="display:flex; gap:10px; padding:10px 15px 0;">
+            <button onclick="limparFiltroEntregas()" style="flex:1; padding:10px; background:#151f32; color:var(--texto-s); border:1px solid var(--borda); border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">✖ Limpar Filtro</button>
+            <button onclick="exportarEntregasPdf()" style="flex:1.3; padding:10px; background: linear-gradient(135deg, #00b4ff, var(--cor-azul)); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">📄 Exportar PDF</button>
+        </div>
+        <div id="entregasResumo" style="padding:12px 15px 0; font-size:12px; color:var(--texto-s); font-weight:600;"></div>
+        <div id="entregasModalBody"></div>
     </div>
 </div>
 
@@ -1845,10 +1890,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const num = v => parseFloat(String(v ?? '').replace(',', '.'));
         const lote = num(paciente.qtd_lote);
         const meses = num(paciente.qtd_meses);
-        const capsulaNum = num(paciente.capsula);
-        const capsula = (isFinite(capsulaNum) && capsulaNum > 0) ? capsulaNum : 1;
-        const numHorarios = Math.max(1, getHorariosArray(paciente).length);
-        const consumoDiario = capsula * numHorarios;
+        const consumoDiario = calcularConsumoDiario(paciente);
 
         // 1) Com o total de comprimidos do lote: dias = lote / consumo diário
         if (isFinite(lote) && lote > 0 && consumoDiario > 0) return Math.floor(lote / consumoDiario);
@@ -1910,6 +1952,275 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.round((validade - hoje) / 86400000);
     }
 
+    // Dias até a PRÓXIMA ENTREGA da medicação (campo proxima_entrega). null se não preenchido; negativo = atrasada.
+    function calcularDiasEntrega(paciente) {
+        if (!paciente.proxima_entrega) return null;
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const d = new Date(paciente.proxima_entrega + 'T00:00:00');
+        return Math.round((d - hoje) / 86400000);
+    }
+
+    // Janela (em dias) para a próxima entrega aparecer em Alertas.
+    const DIAS_ALERTA_ENTREGA = 30;
+
+    // Agrupa por acolhido + data de entrega (vários medicamentos com a mesma data ficam no mesmo card).
+    function agruparAlertasEntrega() {
+        const mapa = {};
+        registros.forEach(p => {
+            const dias = calcularDiasEntrega(p);
+            if (dias === null || dias > DIAS_ALERTA_ENTREGA) return;
+            const chave = `${p.nome}|${p.proxima_entrega}`;
+            if (!mapa[chave]) mapa[chave] = { nome: p.nome, data: p.proxima_entrega, diasRestantes: dias, medicamentos: [], alerta: true };
+            const med = (p.medicamento || 'Sem medicação').trim();
+            if (!mapa[chave].medicamentos.includes(med)) mapa[chave].medicamentos.push(med);
+        });
+        return Object.values(mapa).sort((a, b) => a.data.localeCompare(b.data) || a.nome.localeCompare(b.nome, 'pt-BR'));
+    }
+
+    // Já existe um agendamento (Agenda) pendente para este acolhido nesta data?
+    function entregaJaAgendada(nome, data) {
+        return saidas.some(s => !s.realizado && s.nome === nome && s.data === data);
+    }
+
+    // Abre "Agendar Renovação/Saída" já preenchido para buscar a medicação na data da próxima entrega.
+    window.agendarBuscaEntrega = function(nome, data, meds) {
+        fecharSeAberto('modalAlertas'); fecharSeAberto('modalEntregas');
+        abrirModalNovaSaida();
+        document.getElementById('saidaNomeSelect').value = nome;
+        document.getElementById('saidaData').value = data;
+        document.getElementById('saidaInformacoes').value = `Buscar medicação (próxima entrega): ${meds}`;
+    };
+    function fecharSeAberto(id) { const el = document.getElementById(id); if (el && el.style.display !== 'none') fechar(id); }
+
+    // ==========================================================
+    // TELA "PRÓXIMAS ENTREGAS": lista só as entregas (todas as datas, não só os próximos 30 dias)
+    // ==========================================================
+    let filtroEntregas = ''; // '' | 'atrasada' | 'semana' | 'futura' | 'sem'
+
+    function classificarEntrega(dias) {
+        if (dias === null) return 'sem';
+        if (dias < 0) return 'atrasada';
+        if (dias <= 7) return 'semana';
+        return 'futura';
+    }
+
+    // Todas as entregas (agrupadas por acolhido + data), com os filtros da tela aplicados.
+    function obterEntregasFiltradas() {
+        const termo = ((document.getElementById('entregasBusca') || {}).value || '').trim().toLowerCase();
+        const mesIni = (document.getElementById('entregasMesInicio') || {}).value || '';
+        const mesFim = (document.getElementById('entregasMesFim') || {}).value || '';
+        const mapa = {};
+        registros.forEach(p => {
+            const med = (p.medicamento || 'Sem medicação').trim();
+            if (termo && !((p.nome || '').toLowerCase().includes(termo) || med.toLowerCase().includes(termo))) return;
+            const dias = calcularDiasEntrega(p);
+            if (dias !== null) {
+                const mes = p.proxima_entrega.slice(0, 7);
+                if (mesIni && mes < mesIni) return;
+                if (mesFim && mes > mesFim) return;
+            } else if (mesIni || mesFim) return; // sem data não entra quando há filtro de período
+            const cls = classificarEntrega(dias);
+            if (filtroEntregas && cls !== filtroEntregas) return;
+            const chave = `${p.nome}|${p.proxima_entrega || '-'}`;
+            if (!mapa[chave]) mapa[chave] = { nome: p.nome, data: p.proxima_entrega || null, diasRestantes: dias, medicamentos: [] };
+            if (!mapa[chave].medicamentos.includes(med)) mapa[chave].medicamentos.push(med);
+        });
+        // Com data: da mais próxima/atrasada para a mais distante. Sem data: no final.
+        return Object.values(mapa).sort((a, b) => {
+            if (!a.data && !b.data) return a.nome.localeCompare(b.nome, 'pt-BR');
+            if (!a.data) return 1; if (!b.data) return -1;
+            return a.data.localeCompare(b.data) || a.nome.localeCompare(b.nome, 'pt-BR');
+        });
+    }
+
+    function renderizarEntregas() {
+        const body = document.getElementById('entregasModalBody');
+        if (!body) return;
+        const lista = obterEntregasFiltradas();
+        const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const jsStr = (t) => String(t).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const comData = lista.filter(a => a.data);
+        const atrasadas = comData.filter(a => a.diasRestantes < 0).length;
+        const resumo = document.getElementById('entregasResumo');
+        if (resumo) resumo.textContent = `${lista.length} registro(s) · ${atrasadas} atrasada(s)`;
+        if (lista.length === 0) {
+            body.innerHTML = `<p style="color:#64748b; text-align:center; padding:30px;">Nenhuma entrega encontrada com esses filtros.</p>`;
+            return;
+        }
+        const linhas = lista.map(a => {
+            const meds = a.medicamentos.join(', ');
+            if (!a.data) {
+                return `<div class="alerta-card"><div class="alerta-card-bar" style="background:#475569;"></div><div class="alerta-card-body">
+                    <div class="alerta-card-head"><div><div class="alerta-card-nome">${esc(a.nome)}</div><div class="alerta-card-med">💊 ${esc(meds)}</div></div><div class="alerta-badge" style="background:rgba(0,0,0,0.2);color:var(--texto-s);">sem data</div></div>
+                    <span class="alerta-receita-tag nd">— Próxima entrega não informada</span></div>
+                    <div class="alerta-card-footer" style="color:var(--texto-s);">Edite o cadastro para informar a data</div></div>`;
+            }
+            const d = a.diasRestantes;
+            const status = d < 0 ? 'critico' : (d <= 7 ? 'atencao' : 'ok');
+            const badge = d < 0 ? `-${Math.abs(d)} dias` : (d === 0 ? 'HOJE' : `${d} dias`);
+            const msg = d < 0 ? `❌ Entrega atrasada há ${Math.abs(d)} dia(s)` : (d === 0 ? '🔴 Entrega prevista para HOJE' : `🚚 Entrega em ${d} dia(s)`);
+            const agendada = entregaJaAgendada(a.nome, a.data);
+            const acao = agendada
+                ? `<span class="alerta-receita-tag valida">✓ Busca já agendada</span>`
+                : `<button onclick="event.stopPropagation(); agendarBuscaEntrega('${jsStr(a.nome)}','${a.data}','${jsStr(meds)}')" style="width:100%; padding:9px; margin-top:4px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px;">📅 Agendar busca da medicação</button>`;
+            return `<div class="alerta-card"><div class="alerta-card-bar ${status}"></div><div class="alerta-card-body">
+                <div class="alerta-card-head"><div><div class="alerta-card-nome">${esc(a.nome)}</div>${a.medicamentos.map(m => `<div class="alerta-card-med">💊 ${esc(m)}</div>`).join('')}</div><div class="alerta-badge ${status}">${badge}</div></div>
+                <div class="alerta-info-grid"><div class="alerta-info-cell" style="grid-column: span 2;"><div class="alerta-info-label">🚚 Próxima Entrega</div><div class="alerta-info-val">${formatarDataBr(a.data)}</div></div></div>
+                ${acao}</div><div class="alerta-card-footer ${status}">${msg}</div></div>`;
+        }).join('');
+        body.innerHTML = `<div class="alertas-grid" style="padding:14px 15px 0;">${linhas}</div>`;
+    }
+
+    function abrirModalEntregas() {
+        abrir('modalEntregas');
+        limparFiltroEntregas();
+    }
+
+    function setFiltroEntregas(status) {
+        filtroEntregas = status;
+        document.querySelectorAll('#entregasStatusFiltro .alerta-status-btn').forEach(btn => btn.classList.toggle('ativo', btn.dataset.status === status));
+        renderizarEntregas();
+    }
+
+    function limparFiltroEntregas() {
+        ['entregasBusca', 'entregasMesInicio', 'entregasMesFim'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        setFiltroEntregas('');
+    }
+
+    // Contador azul no menu: entregas atrasadas ou nos próximos 7 dias
+    function atualizarBadgeEntregas() {
+        const badge = document.getElementById('badgeEntregasCount');
+        if (!badge) return;
+        const n = new Set(registros.filter(p => { const d = calcularDiasEntrega(p); return d !== null && d <= 7; }).map(p => `${p.nome}|${p.proxima_entrega}`)).size;
+        badge.textContent = n; badge.style.display = n > 0 ? 'inline-block' : 'none';
+    }
+
+    function exportarEntregasPdf() {
+        const lista = obterEntregasFiltradas();
+        if (lista.length === 0) { toast("Sem entregas", "Nenhuma entrega para exportar com esses filtros.", "warning"); return; }
+        const agora = new Date();
+        const emissao = agora.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const linhas = lista.map((a, i) => {
+            const d = a.diasRestantes;
+            const sit = !a.data ? '— Sem data' : (d < 0 ? `❌ Atrasada ${Math.abs(d)}d` : (d === 0 ? '🔴 Hoje' : `🚚 Em ${d}d`));
+            const cor = !a.data ? '#475569' : (d < 0 ? '#b91c1c' : (d <= 7 ? '#b45309' : '#166534'));
+            const bg = !a.data ? '#f1f5f9' : (d < 0 ? '#fee2e2' : (d <= 7 ? '#fef3c7' : '#dcfce7'));
+            const busca = !a.data ? '—' : (entregaJaAgendada(a.nome, a.data) ? '✓ Agendada' : 'Agendar');
+            return `<tr style="border-bottom:1px solid #e2e8f0;${i % 2 ? 'background:#f8fafc;' : ''}"><td style="padding:9px 12px;">${i + 1}</td><td style="padding:9px 12px;font-weight:600;">${a.nome}</td><td style="padding:9px 12px;color:#64748b;font-style:italic;">${a.medicamentos.join(', ')}</td><td style="padding:9px 12px;text-align:center;">${a.data ? formatarDataBr(a.data) : '—'}</td><td style="padding:9px 12px;text-align:center;"><span style="background:${bg};color:${cor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;">${sit}</span></td><td style="padding:9px 12px;text-align:center;">${busca}</td></tr>`;
+        }).join('');
+        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Proximas_Entregas_${agora.toISOString().slice(0,10)}</title>
+        <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1e293b;padding:32px;font-size:13px}table{width:100%;border-collapse:collapse;margin-top:14px}thead tr{background:#1e3a5f;color:#fff}th{padding:10px 12px;text-align:left;font-size:12px}tr{page-break-inside:avoid}@media print{@page{margin:15mm;size:A4}}</style></head><body>
+        <div style="border-bottom:3px solid #1e3a5f;padding-bottom:20px;margin-bottom:24px"><div style="font-size:22px;font-weight:800;color:#1e3a5f">FARMED</div><div style="font-size:11px;color:#64748b;margin-top:4px">GESTÃO DE MEDICAMENTOS — Emitido em: ${emissao}</div></div>
+        <h1 style="font-size:16px;text-transform:uppercase">🚚 Próximas Entregas de Medicação</h1>
+        <table><thead><tr><th>#</th><th>ACOLHIDO</th><th>MEDICAMENTO</th><th style="text-align:center">PRÓX. ENTREGA</th><th style="text-align:center">SITUAÇÃO</th><th style="text-align:center">BUSCA</th></tr></thead><tbody>${linhas}</tbody></table>
+        <div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:12px 28px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button></div></body></html>`;
+        const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+        const a = document.createElement('a'); a.href = url; a.download = `Proximas_Entregas_${agora.toISOString().slice(0,10)}.html`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        toast("Relatório gerado", "Ficheiro descarregado! Abra-o e use 'Imprimir' ou 'Guardar como PDF'.", "success");
+    }
+
+    // ==========================================================
+    // DOSES EXTRAS: mesmo remédio com quantidades diferentes em horários diferentes
+    // (cada dose extra vira um cadastro próprio com sua quantidade e seus horários)
+    // ==========================================================
+    let contadorDoseExtra = 0;
+
+    function chipsHtmlDose(uid, selecionados) {
+        return horariosAtivos.map(h => `
+            <div class="hora-chip">
+                <input type="checkbox" id="chkDoseExtra_${uid}_${h}" value="${h}" ${selecionados.includes(h) ? 'checked' : ''} onchange="atualizarPreviewDiasFaltantes()">
+                <label for="chkDoseExtra_${uid}_${h}">${h}</label>
+            </div>`).join('');
+    }
+
+    function adicionarDoseExtra(qtd = '', horas = []) {
+        const cont = document.getElementById('dosesExtrasContainer');
+        if (!cont) return;
+        const uid = ++contadorDoseExtra;
+        const div = document.createElement('div');
+        div.className = 'dose-extra';
+        div.dataset.uid = uid;
+        div.style.cssText = 'margin:10px 0; padding:12px; border:1px dashed var(--borda); border-radius:12px; background:rgba(0,156,217,0.05);';
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:12px; color:var(--cor-azul);">➕ Outra dose do mesmo remédio</strong>
+                <button type="button" onclick="removerDoseExtra(this)" style="border:none; background:#151f32; color:#f87171; padding:5px 10px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12px;">✕ Remover</button>
+            </div>
+            <label>Quantidade de Comprimidos/Cápsulas</label>
+            <input type="number" class="dose-extra-qtd" min="0" step="any" placeholder="Ex: 2" value="${qtd}" oninput="atualizarPreviewDiasFaltantes()" onchange="atualizarPreviewDiasFaltantes()">
+            <label>Horário(s) desta dose</label>
+            <div class="hora-multi-select dose-extra-horas">${chipsHtmlDose(uid, horas)}</div>`;
+        cont.appendChild(div);
+        atualizarPreviewDiasFaltantes();
+    }
+
+    function removerDoseExtra(btn) {
+        const div = btn.closest('.dose-extra');
+        if (div) div.remove();
+        atualizarPreviewDiasFaltantes();
+    }
+
+    function limparDosesExtras() {
+        const cont = document.getElementById('dosesExtrasContainer');
+        if (cont) cont.innerHTML = '';
+    }
+
+    function obterDosesExtras() {
+        return Array.from(document.querySelectorAll('#dosesExtrasContainer .dose-extra')).map(div => {
+            const v = div.querySelector('.dose-extra-qtd').value;
+            return {
+                qtd: v !== '' ? parseFloat(v) : null,
+                horas: Array.from(div.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value)
+            };
+        });
+    }
+
+    // Ao editar: mostra as outras doses já cadastradas do mesmo remédio (mesmo acolhido)
+    function atualizarInfoDosesIrmas(item) {
+        const el = document.getElementById('dosesIrmasInfo');
+        if (!el) return;
+        el.style.display = 'none'; el.textContent = '';
+        if (!item) return;
+        const norm = t => String(t || '').trim().toLowerCase();
+        const irmas = registros.filter(r => String(r.id) !== String(item.id) && r.nome === item.nome && norm(r.medicamento) === norm(item.medicamento));
+        if (irmas.length === 0) return;
+        el.textContent = 'ℹ️ Outras doses já cadastradas deste remédio: ' + irmas.map(r => `${getHorariosArray(r).join('/') || '—'} (${(r.capsula !== null && r.capsula !== undefined && r.capsula !== '') ? r.capsula : '?'}cp)`).join(' · ') + ' — edite-as pelos próprios cartões.';
+        el.style.display = 'block';
+    }
+
+    // Consumo diário das OUTRAS doses do mesmo remédio/acolhido que dividem o mesmo lote
+    // (mesmo nome + mesmo medicamento + mesma última retirada + mesmo total do lote).
+    function consumoDiarioIrmaos(paciente) {
+        const num = v => parseFloat(String(v ?? '').replace(',', '.'));
+        if (!paciente || !paciente.nome || !paciente.medicamento || !paciente.ultima_retirada) return 0;
+        const lote = num(paciente.qtd_lote);
+        if (!(isFinite(lote) && lote > 0)) return 0;
+        const norm = t => String(t || '').trim().toLowerCase();
+        let soma = 0;
+        (typeof registros !== 'undefined' ? registros : []).forEach(r => {
+            if (r === paciente) return;
+            if (paciente.id && String(r.id) === String(paciente.id)) return;
+            if (r.nome !== paciente.nome || norm(r.medicamento) !== norm(paciente.medicamento)) return;
+            if (r.ultima_retirada !== paciente.ultima_retirada) return;
+            if (num(r.qtd_lote) !== lote) return;
+            const c = num(r.capsula);
+            soma += ((isFinite(c) && c > 0) ? c : 1) * Math.max(1, getHorariosArray(r).length);
+        });
+        return soma;
+    }
+
+    // Consumo diário total = esta dose + doses extras do formulário + doses irmãs já cadastradas
+    function calcularConsumoDiario(paciente) {
+        const num = v => parseFloat(String(v ?? '').replace(',', '.'));
+        const c = num(paciente.capsula);
+        const capsula = (isFinite(c) && c > 0) ? c : 1;
+        const numHorarios = Math.max(1, getHorariosArray(paciente).length);
+        const extra = num(paciente.consumoExtraDiario);
+        return capsula * numHorarios + ((isFinite(extra) && extra > 0) ? extra : 0) + consumoDiarioIrmaos(paciente);
+    }
+
     function calcularStatusReceita(paciente) {
         const diasFaltantes = calcularDiasFaltantes(paciente);
         const resultado = { nome: paciente.nome, medicamento: paciente.medicamento, dias_faltantes: diasFaltantes, ultima_retirada: paciente.ultima_retirada, data_prescricao: paciente.data_prescricao, qtd_meses: paciente.qtd_meses, status: 'ok', mensagem: '', alerta: false };
@@ -1963,7 +2274,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const alertaEstoque = diasFaltantes !== null && diasFaltantes <= 30;
                 const alertaReceita = diasReceita !== null && diasReceita <= 30;
                 if (alertaEstoque || alertaReceita) {
-                     medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, diasReceita: diasReceita, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida, data_vencimento: calcularDataVencimento(p) });
+                     if (!medicamentosRenovacao.some(m => String(m.medicamento || '').trim().toLowerCase() === String(p.medicamento || 'Sem medicação').trim().toLowerCase() && m.diasFaltantes === diasFaltantes && m.diasReceita === diasReceita && (m.ultima_retirada || null) === (p.ultima_retirada || null))) medicamentosRenovacao.push({ medicamento: p.medicamento || 'Sem medicação', diasFaltantes: diasFaltantes, diasReceita: diasReceita, data_prescricao: p.data_prescricao || null, ultima_retirada: p.ultima_retirada || null, qtd_meses: p.qtd_meses || null, observacao: p.observacao || null, receita_valida: p.receita_valida, data_vencimento: calcularDataVencimento(p) });
                     const candidatos = [diasFaltantes, diasReceita].filter(d => d !== null);
                     const piorDias = candidatos.length ? Math.min(...candidatos) : null;
                     if (piorDias !== null && (diasFaltantesMinimo === null || piorDias < diasFaltantesMinimo)) diasFaltantesMinimo = piorDias;
@@ -2063,7 +2374,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const alertasPacientes = agruparAlertasPorPaciente();
         const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
         const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes, alerta: true })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-        return { alertasEstoque, alertasRenovacao };
+        const alertasEntrega = agruparAlertasEntrega();
+        return { alertasEstoque, alertasRenovacao, alertasEntrega };
     }
 
     // Filtra as listas base por INTERVALO DE MESES de VENCIMENTO DA RECEITA (campo receita_valida) / data agendada da renovação.
@@ -2082,7 +2394,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const alertasEstoque = base.alertasEstoque
             .map(a => ({ ...a, medicamentos: a.medicamentos.filter(m => dentroDoIntervalo(m.receita_valida)) }))
             .filter(a => a.medicamentos.length > 0);
-        return { alertasEstoque, alertasRenovacao };
+        const alertasEntrega = (base.alertasEntrega || []).filter(a => dentroDoIntervalo(a.data));
+        return { alertasEstoque, alertasRenovacao, alertasEntrega };
     }
 
     // Filtra as listas base por STATUS DA RECEITA: 'vencida' (já passou da validade) ou 'a_vencer' (ainda dentro do
@@ -2100,14 +2413,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 return statusFiltro === 'vencida' ? m.diasReceita < 0 : m.diasReceita >= 0;
             }) }))
             .filter(a => a.medicamentos.length > 0);
-        return { alertasEstoque, alertasRenovacao };
+        // Próxima Entrega: 'vencida' = atrasada (data já passou) | 'a_vencer' = hoje ou futura
+        const alertasEntrega = (base.alertasEntrega || []).filter(a =>
+            statusFiltro === 'vencida' ? a.diasRestantes < 0 : a.diasRestantes >= 0
+        );
+        return { alertasEstoque, alertasRenovacao, alertasEntrega };
+    }
+
+    // Card de alerta de PRÓXIMA ENTREGA (com botão para agendar a busca da medicação)
+    function buildCardEntrega(a) {
+        const d = a.diasRestantes;
+        const status = d < 0 ? 'critico' : (d <= 7 ? 'atencao' : 'ok');
+        const badge = d < 0 ? `-${Math.abs(d)} dias` : (d === 0 ? 'HOJE' : `${d} dias`);
+        const msg = d < 0 ? `❌ Entrega atrasada há ${Math.abs(d)} dia(s)` : (d === 0 ? '🔴 Entrega prevista para HOJE' : `🚚 Entrega em ${d} dia(s)`);
+        const agendada = entregaJaAgendada(a.nome, a.data);
+        const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const jsStr = (t) => String(t).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const meds = a.medicamentos.join(', ');
+        const medsHtml = a.medicamentos.map(m => `<div class="alerta-card-med">💊 ${esc(m)}</div>`).join('');
+        const acao = agendada
+            ? `<span class="alerta-receita-tag valida">✓ Busca já agendada para ${formatarDataBr(a.data)}</span>`
+            : `<button onclick="event.stopPropagation(); agendarBuscaEntrega('${jsStr(a.nome)}','${a.data}','${jsStr(meds)}')" style="width:100%; padding:9px; margin-top:4px; background:linear-gradient(135deg,#00b4ff,var(--cor-azul)); color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px;">📅 Agendar busca da medicação</button>`;
+        return `
+        <div class="alerta-card">
+            <div class="alerta-card-bar ${status}"></div>
+            <div class="alerta-card-body">
+                <div class="alerta-card-head">
+                    <div><div class="alerta-card-nome">${esc(a.nome)}</div>${medsHtml}</div>
+                    <div class="alerta-badge ${status}">${badge}</div>
+                </div>
+                <div class="alerta-info-grid">
+                    <div class="alerta-info-cell" style="grid-column: span 2;"><div class="alerta-info-label">🚚 Próxima Entrega</div><div class="alerta-info-val">${formatarDataBr(a.data)}</div></div>
+                </div>
+                ${acao}
+            </div>
+            <div class="alerta-card-footer ${status}">${msg}</div>
+        </div>`;
     }
 
     // Monta o HTML (cards) a partir de listas já filtradas
-    function montarHtmlAlertasSecoes(alertasEstoque, alertasRenovacao) {
-        const totalAlertas = alertasEstoque.length + alertasRenovacao.length;
+    function montarHtmlAlertasSecoes(alertasEstoque, alertasRenovacao, alertasEntrega = []) {
+        const totalAlertas = alertasEstoque.length + alertasRenovacao.length + alertasEntrega.length;
         if (totalAlertas === 0) return `<p style='color:#22c55e; text-align:center; font-size:13px; padding:30px 0;'>✅ Nenhum alerta encontrado!</p>`;
         let html = '';
+        if (alertasEntrega.length > 0) { html += `<div class="alertas-secao-titulo">🚚 Próximas Entregas — agendar busca</div><div class="alertas-grid">`; alertasEntrega.forEach(a => { html += buildCardEntrega(a); }); html += `</div>`; }
         if (alertasEstoque.length > 0) { html += `<div class="alertas-secao-titulo">💊 Estoque de Medicamentos</div><div class="alertas-grid">`; alertasEstoque.forEach(a => { html += buildCardEstoque(a); });
         html += `</div>`; }
         if (alertasRenovacao.length > 0) { html += `<div class="alertas-secao-titulo">📋 Renovações Agendadas</div><div class="alertas-grid">`;
@@ -2117,7 +2466,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildAlertasHTML() {
         const base = obterAlertasBase();
-        const totalAlertas = base.alertasEstoque.length + base.alertasRenovacao.length;
+        const totalAlertas = base.alertasEstoque.length + base.alertasRenovacao.length + base.alertasEntrega.length;
         const badge = document.getElementById('badgeAlertasCount');
         const btnAlertas = document.getElementById('btnAlertas');
         if (badge) {
@@ -2127,7 +2476,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         if (btnAlertas) btnAlertas.classList.toggle('alerta-ativo', totalAlertas > 0);
-        return montarHtmlAlertasSecoes(base.alertasEstoque, base.alertasRenovacao);
+        return montarHtmlAlertasSecoes(base.alertasEstoque, base.alertasRenovacao, base.alertasEntrega);
     }
 
     // Reaplica o filtro de meses (campos do modal) + filtro de status (Vencidas/A Vencer) e re-renderiza a lista
@@ -2138,7 +2487,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const porMes = filtrarAlertasPorMes(base, mesIni, mesFim);
         const filtrado = filtrarAlertasPorStatusReceita(porMes, filtroStatusAlertas);
         const modalBody = document.getElementById('alertasModalBody');
-        if (modalBody) modalBody.innerHTML = montarHtmlAlertasSecoes(filtrado.alertasEstoque, filtrado.alertasRenovacao);
+        if (modalBody) modalBody.innerHTML = montarHtmlAlertasSecoes(filtrado.alertasEstoque, filtrado.alertasRenovacao, filtrado.alertasEntrega);
     }
 
     // Alterna o filtro de status (Todos / Vencidas / A Vencer), atualiza os botões e reaplica os filtros
@@ -2162,10 +2511,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const alertasPacientes = agruparAlertasPorPaciente();
             const alertasRenovacao = saidas.filter(s => !s.realizado).map(s => ({ ...calcularStatusRenovacao(s), nome: s.nome, data: s.data })).filter(a => a.alerta).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
             const alertasEstoque = Object.entries(alertasPacientes).map(([nome, info]) => ({ nome, medicamentos: info.medicamentos, dias_faltantes: info.diasFaltantes })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-            if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) {
+            const alertasEntregaLat = agruparAlertasEntrega();
+            if (alertasEstoque.length === 0 && alertasRenovacao.length === 0 && alertasEntregaLat.length === 0) {
                 container.innerHTML = `<p style='color:#22c55e; text-align:center; font-size:12px; padding:15px;'>✓ Nenhum alerta!</p>`;
             } else {
-                container.innerHTML = [...alertasEstoque.map(a => {
+                container.innerHTML = [...alertasEntregaLat.map(a => {
+                    const cor = a.diasRestantes < 0 ? '#f87171' : (a.diasRestantes <= 7 ? '#fb923c' : '#fbbf24');
+                    const txt = a.diasRestantes < 0 ? `❌ Entrega atrasada ${Math.abs(a.diasRestantes)}d` : (a.diasRestantes === 0 ? '🔴 Entrega HOJE' : `🚚 Entrega em ${a.diasRestantes}d`);
+                    return `<div style="background:#151f32;border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid ${cor};"><div style="font-weight:700;font-size:13px;color:#fff;">${a.nome}</div><div style="font-size:11px;color:${cor};margin-top:3px;">💊 ${a.medicamentos.join(', ')} — ${txt} (${formatarDataBr(a.data)})</div></div>`;
+                }), ...alertasEstoque.map(a => {
                     const s = a.dias_faltantes < 0 ? 'critico' : (a.dias_faltantes <= 5 ? 'atencao' : 'ok');
                     const cor = s === 'critico' ? '#f87171' : s === 'atencao' ? '#fb923c' : '#fbbf24';
                     return `<div style="background:#151f32;border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid ${cor};"><div style="font-weight:700;font-size:13px;color:#fff;">${a.nome}</div>${a.medicamentos.map(m => {
@@ -2180,6 +2534,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const modalBody = document.getElementById('alertasModalBody');
         if (modalBody) modalBody.innerHTML = buildAlertasHTML();
+
+        atualizarBadgeEntregas();
+        const mEnt = document.getElementById('modalEntregas');
+        if (mEnt && mEnt.style.display === 'flex') renderizarEntregas();
 
         atualizarNotificacoesHome();
     }
@@ -2304,9 +2662,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const mesFim = (document.getElementById('alertasMesFim') || {}).value || '';
         const base = obterAlertasBase();
         const porMes = filtrarAlertasPorMes(base, mesIni, mesFim);
-        const { alertasEstoque, alertasRenovacao } = filtrarAlertasPorStatusReceita(porMes, filtroStatusAlertas);
+        const { alertasEstoque, alertasRenovacao, alertasEntrega } = filtrarAlertasPorStatusReceita(porMes, filtroStatusAlertas);
 
-        if (alertasEstoque.length === 0 && alertasRenovacao.length === 0) { toast("Sem alertas", "Nenhum alerta encontrado para o período/filtro selecionado.", "warning"); return; }
+        if (alertasEstoque.length === 0 && alertasRenovacao.length === 0 && alertasEntrega.length === 0) { toast("Sem alertas", "Nenhum alerta encontrado para o período/filtro selecionado.", "warning"); return; }
 
         const hoje = new Date();
         const dataEmissao = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -2393,6 +2751,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tbody>${linhasRenovacao}</tbody>
             </table>`;
 
+        // Linhas de Próximas Entregas
+        let linhasEntrega = '';
+        alertasEntrega.forEach((a, i) => {
+            const d = a.diasRestantes;
+            const status = d < 0 ? 'critico' : (d <= 7 ? 'atencao' : 'ok');
+            const cor = status === 'critico' ? '#b91c1c' : status === 'atencao' ? '#b45309' : '#166534';
+            const bg = status === 'critico' ? '#fee2e2' : status === 'atencao' ? '#fef3c7' : '#dcfce7';
+            const borda = status === 'critico' ? '#fca5a5' : status === 'atencao' ? '#fcd34d' : '#86efac';
+            const label = d < 0 ? `❌ Atrasada ${Math.abs(d)}d` : (d === 0 ? '🔴 Hoje' : `🚚 Em ${d}d`);
+            const agendada = entregaJaAgendada(a.nome, a.data) ? '✓ Agendada' : '— Agendar';
+            linhasEntrega += `<tr style="border-bottom:1px solid #e2e8f0;${i % 2 ? 'background:#f8fafc;' : ''}">
+                <td style="padding:9px 12px;font-size:13px;color:#334155;">${i + 1}</td>
+                <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#1e293b;">${a.nome}</td>
+                <td style="padding:9px 12px;font-size:12px;color:#64748b;font-style:italic;">${a.medicamentos.join(', ')}</td>
+                <td style="padding:9px 12px;font-size:13px;color:#334155;text-align:center;">${formatarDataBr(a.data)}</td>
+                <td style="padding:9px 12px;text-align:center;"><span style="background:${bg};color:${cor};font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${borda};">${label}</span></td>
+                <td style="padding:9px 12px;font-size:12px;color:#334155;text-align:center;">${agendada}</td>
+            </tr>`;
+        });
+        const tabelaEntrega = alertasEntrega.length === 0
+            ? `<p style="text-align:center;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:16px;font-size:14px;font-weight:600;">✓ Nenhuma entrega de medicação pendente no período selecionado.</p>`
+            : `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+                <thead><tr style="background:#1e3a5f;color:white;">
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;">#</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;">ACOLHIDO</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:12px;">MEDICAMENTO</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;">PRÓX. ENTREGA</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;">SITUAÇÃO</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:12px;">BUSCA</th>
+                </tr></thead>
+                <tbody>${linhasEntrega}</tbody>
+            </table>`;
+
         const _htmlPdf = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
         <title>Alertas_Renovacao_${new Date().toISOString().slice(0,10)}</title>
         <style>
@@ -2417,7 +2808,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="card" style="background:#fef3c7;border-left:4px solid #d97706"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#92400e">Alertas de Estoque</div><div style="font-size:22px;font-weight:800;color:#d97706;margin-top:4px">${totalMeds}</div></div>
             <div class="card" style="background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b">Renovações Agendadas</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">${alertasRenovacao.length}</div></div>
         </div>
-        <h2 style="color:#92400e">💊 Estoque de Medicamentos</h2>
+        <h2 style="color:#0369a1">🚚 Próximas Entregas (agendar busca)</h2>
+        ${tabelaEntrega}
+        <h2 style="color:#92400e;margin-top:32px">💊 Estoque de Medicamentos</h2>
         ${tabelaEstoque}
         <h2 style="color:#b91c1c;margin-top:32px">📋 Renovações Agendadas</h2>
         ${tabelaRenovacao}
@@ -2525,6 +2918,10 @@ document.addEventListener('DOMContentLoaded', function() {
             `).join('');
             if (selecionadosAntes.length) setHorariosSelecionados(selecionadosAntes);
         }
+        document.querySelectorAll('#dosesExtrasContainer .dose-extra').forEach(div => {
+            const sel = Array.from(div.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+            div.querySelector('.dose-extra-horas').innerHTML = chipsHtmlDose(div.dataset.uid, sel);
+        });
     }
 
     // Devolve um array com os horários marcados no modal de Cadastro/Edição
@@ -2555,7 +2952,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const campo = document.getElementById('inpDiasFaltantes');
         const detalhe = document.getElementById('previewCalcDetalhe');
         const qtd_lote = document.getElementById('inpQtdLote').value !== "" ? parseFloat(document.getElementById('inpQtdLote').value) : null;
-        const paciente = { ultima_retirada, qtd_meses, capsula, hora, qtd_lote };
+        const extras = obterDosesExtras();
+        const consumoExtraDiario = extras.reduce((t, e) => t + (e.horas.length ? ((e.qtd > 0) ? e.qtd : 1) * e.horas.length : 0), 0);
+        const paciente = {
+            id: document.getElementById('editId').value || null,
+            nome: document.getElementById('inpNome').value.trim(),
+            medicamento: document.getElementById('inpMed').value.trim(),
+            ultima_retirada, qtd_meses, capsula, hora, qtd_lote, consumoExtraDiario
+        };
 
         const duracao = calcularDiasDuracaoMedicacao(paciente);
         let txt = '';
@@ -2565,7 +2969,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const porDose = (capsula && capsula > 0) ? capsula : 1;
             const nH = Math.max(1, horarios.length);
             if (qtd_lote && qtd_lote > 0) {
-                txt = `${qtd_lote} cp ÷ (${porDose} cp × ${nH} horário${nH > 1 ? 's' : ''} = ${porDose * nH}/dia) → dura ${duracao} dia${duracao !== 1 ? 's' : ''}`;
+                const consumoTotal = calcularConsumoDiario(paciente);
+                txt = consumoTotal !== porDose * nH
+                    ? `${qtd_lote} cp ÷ ${consumoTotal} cp/dia (soma de todas as doses deste remédio) → dura ${duracao} dia${duracao !== 1 ? 's' : ''}`
+                    : `${qtd_lote} cp ÷ (${porDose} cp × ${nH} horário${nH > 1 ? 's' : ''} = ${porDose * nH}/dia) → dura ${duracao} dia${duracao !== 1 ? 's' : ''}`;
             } else {
                 txt = `${qtd_meses} mês(es) × 30 → dura ${duracao} dias`;
             }
@@ -3455,7 +3862,7 @@ document.addEventListener('DOMContentLoaded', function() {
         popularSelectHorariosFixo();
         document.getElementById('modalTitulo').innerText = "Novo Acolhido"; document.getElementById('editId').value = "";
         document.getElementById('inpNome').value = ""; document.getElementById('inpCpf').value = ""; document.getElementById('inpMed').value = ""; document.getElementById('inpCapsula').value = ""; document.getElementById('inpDrive').value = ""; setHorariosSelecionados([horaAtual]); document.getElementById('inpDataPrescricao').value = "";
-        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpQtdLote').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; document.getElementById('inpReceitaValida').value = ""; abrir('modalCadastro'); atualizarPreviewDiasFaltantes();
+        document.getElementById('inpUltimaRetirada').value = ""; document.getElementById('inpQtdMeses').value = ""; document.getElementById('inpQtdLote').value = ""; document.getElementById('inpDiasFaltantes').value = ""; document.getElementById('inpObservacao').value = ""; document.getElementById('inpReceitaValida').value = ""; document.getElementById('inpProximaEntrega').value = ""; limparDosesExtras(); atualizarInfoDosesIrmas(null); abrir('modalCadastro'); atualizarPreviewDiasFaltantes();
     }
     
     function prepararEdicao(id) { 
@@ -3463,7 +3870,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!item) return; popularSelectHorariosFixo(); document.getElementById('modalTitulo').innerText = "Editar Cadastro"; document.getElementById('editId').value = item.id; document.getElementById('inpNome').value = item.nome; document.getElementById('inpCpf').value = item.cpf || "";
         document.getElementById('inpMed').value = item.medicamento || ""; document.getElementById('inpCapsula').value = (item.capsula !== null && item.capsula !== undefined) ? item.capsula : ""; document.getElementById('inpDrive').value = item.links || ""; setHorariosSelecionados(getHorariosArray(item)); document.getElementById('inpDataPrescricao').value = item.data_prescricao || "";
         document.getElementById('inpUltimaRetirada').value = item.ultima_retirada || ""; document.getElementById('inpQtdMeses').value = item.qtd_meses || ""; document.getElementById('inpQtdLote').value = item.qtd_lote || ""; const diasCalc = calcularDiasFaltantes(item); document.getElementById('inpDiasFaltantes').value = diasCalc !== null ?
-        diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; document.getElementById('inpReceitaValida').value = item.receita_valida || ""; abrir('modalCadastro'); atualizarPreviewDiasFaltantes(); 
+        diasCalc : ""; document.getElementById('inpObservacao').value = item.observacao || ""; document.getElementById('inpReceitaValida').value = item.receita_valida || ""; document.getElementById('inpProximaEntrega').value = item.proxima_entrega || ""; limparDosesExtras(); atualizarInfoDosesIrmas(item); abrir('modalCadastro'); atualizarPreviewDiasFaltantes(); 
     }
     
     // Verifica se já existe outro cadastro (mesmo nome + mesmo medicamento) usando
@@ -3490,46 +3897,92 @@ document.addEventListener('DOMContentLoaded', function() {
         const qtd_meses = document.getElementById('inpQtdMeses').value !== "" ? parseFloat(document.getElementById('inpQtdMeses').value) : null; 
         const observacao = document.getElementById('inpObservacao').value.trim() || null;
         const receita_valida = document.getElementById('inpReceitaValida').value || null;
+        const proxima_entrega = document.getElementById('inpProximaEntrega').value || null;
         const qtd_lote = document.getElementById('inpQtdLote').value !== "" ? parseFloat(document.getElementById('inpQtdLote').value) : null;
         const capsula = document.getElementById('inpCapsula').value !== "" ? parseFloat(document.getElementById('inpCapsula').value) : null;
         
         if (!nome) { toast("Campo obrigatório", "Por favor, preencha o nome!", "warning"); return; }
         if (horariosSelecionados.length === 0) { toast("Campo obrigatório", "Selecione ao menos um Horário Fixo!", "warning"); return; }
+        const extras = obterDosesExtras();
+        for (let i = 0; i < extras.length; i++) {
+            if (!(extras[i].qtd > 0)) { toast("Dose extra incompleta", `Informe a quantidade de comprimidos da outra dose ${i + 1}.`, "warning"); return; }
+            if (extras[i].horas.length === 0) { toast("Dose extra incompleta", `Selecione ao menos um horário na outra dose ${i + 1}.`, "warning"); return; }
+        }
+        const todasHoras = [...horariosSelecionados, ...extras.flatMap(e => e.horas)];
+        const repetidas = [...new Set(todasHoras.filter((h, i) => todasHoras.indexOf(h) !== i))];
+        if (repetidas.length > 0) { toast("Horário repetido", `O horário ${repetidas.join(', ')} está em mais de uma dose. Use cada horário em uma só dose (some as quantidades).`, "warning"); return; }
         if (cpf && !validarCPF(cpf)) { toast("CPF inválido", "O CPF introduzido não é válido! Por favor corrija.", "warning"); return; }
 
-        const conflitos = detectarDuplicidadeHorario(nome, med, horariosSelecionados, id);
+        const conflitos = detectarDuplicidadeHorario(nome, med, todasHoras, id);
         if (conflitos.length > 0) {
             const horariosConflito = [...new Set(conflitos.flatMap(c => c.overlap))].join(', ');
             perguntarConfirmacao(
                 "Possível cadastro duplicado",
                 `Já existe outro cadastro de "${nome}" para "${med || 'este medicamento'}" no(s) horário(s) ${horariosConflito}. Em vez de duplicar, considere editar o cadastro existente e juntar os horários nele. Deseja salvar mesmo assim?`,
-                () => executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula, qtd_lote })
+                () => executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, proxima_entrega, capsula, qtd_lote, extras })
             );
             return;
         }
 
-        await executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula, qtd_lote });
+        await executarSalvarCadastro({ id, nome, cpf, med, hora, driveRaw, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, proxima_entrega, capsula, qtd_lote, extras });
     }
 
-    async function executarSalvarCadastro({ id, nome, cpf, med, hora, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, capsula, qtd_lote }) {
+    async function executarSalvarCadastro({ id, nome, cpf, med, hora, linkLimpo, data_prescricao, ultima_retirada, qtd_meses, observacao, receita_valida, proxima_entrega, capsula, qtd_lote, extras = [] }) {
         const btn = document.getElementById('btnSalvarCadastro');
         btn.disabled = true;
         btn.innerText = "A guardar...";
 
-        const diasFaltantesCalc = calcularDiasFaltantes({ ultima_retirada, qtd_meses, capsula, hora, qtd_lote });
-        const dados = { nome, cpf, medicamento: med, capsula, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasFaltantesCalc, observacao, receita_valida };
+        // Dias faltantes de cada linha considerando o consumo SOMADO de todas as doses do formulário
+        const consumoDe = (q, hs) => ((q > 0) ? q : 1) * Math.max(1, hs.length);
+        const horasPrincipal = String(hora).split(',').filter(Boolean);
+        const consumoTotalForm = consumoDe(capsula, horasPrincipal) + extras.reduce((t, e) => t + consumoDe(e.qtd, e.horas), 0);
+        const diasDaLinha = (q, hs) => calcularDiasFaltantes({ ultima_retirada, qtd_meses, capsula: q, hora: hs.join(','), qtd_lote, consumoExtraDiario: consumoTotalForm - consumoDe(q, hs) });
+
+        const dados = { nome, cpf, medicamento: med, capsula, hora, links: linkLimpo, data_prescricao, ultima_retirada, qtd_meses, dias_faltantes: diasDaLinha(capsula, horasPrincipal), observacao, receita_valida };
         // Só envia qtd_lote quando preenchido (exige a coluna qtd_lote na tabela pacientes)
         if (qtd_lote !== null) dados.qtd_lote = qtd_lote;
-        let erro = null;
-        if (id) { const res = await supabaseClient.from('pacientes').update(dados).eq('id', id); erro = res.error;
-        } 
-        else { const res = await supabaseClient.from('pacientes').insert([dados]); erro = res.error;
-        } 
-        
+        // Próxima Entrega (exige a coluna proxima_entrega [date]). Sempre enviada (mesmo null) para permitir LIMPAR a data ao editar.
+        dados.proxima_entrega = proxima_entrega;
+
+        let semColunaEntrega = false;
+        const gravar = (payload, atualizar) => atualizar
+            ? supabaseClient.from('pacientes').update(payload).eq('id', id)
+            : supabaseClient.from('pacientes').insert([payload]);
+        // Fallback: se a coluna proxima_entrega ainda não existe no Supabase, salva o resto normalmente.
+        const gravarComFallback = async (payload, atualizar) => {
+            let corpo = payload;
+            if (semColunaEntrega) { const { proxima_entrega: _x, ...resto } = payload; corpo = resto; }
+            let r = await gravar(corpo, atualizar);
+            if (r.error && !semColunaEntrega && /proxima_entrega/i.test(r.error.message || '')) {
+                semColunaEntrega = true;
+                const { proxima_entrega: _x, ...resto } = payload;
+                r = await gravar(resto, atualizar);
+            }
+            return r.error;
+        };
+
+        let erro = await gravarComFallback(dados, !!id);
+        let extrasGravados = 0, erroExtra = null;
+        if (!erro) {
+            for (const e of extras) {
+                const dEx = { ...dados, capsula: e.qtd, hora: e.horas.join(','), dias_faltantes: diasDaLinha(e.qtd, e.horas) };
+                const er = await gravarComFallback(dEx, false);
+                if (er) { erroExtra = er; break; }
+                extrasGravados++;
+            }
+        }
+
         btn.disabled = false;
         btn.innerText = "Guardar";
 
-        if (!erro) { fechar('modalCadastro'); carregar(); toast("Guardado", "Registo guardado com sucesso.", "success"); } else toast("Erro na gravação", erro.message, "error");
+        if (erro) { toast("Erro na gravação", erro.message, "error"); return; }
+        fechar('modalCadastro'); carregar();
+        if (erroExtra) {
+            toast("Gravação parcial", `A dose principal foi salva, mas houve erro ao salvar as doses extras: ${erroExtra.message}. Cadastre-as novamente pelo botão Novo.`, "error", 9000);
+        } else {
+            toast("Guardado", extrasGravados > 0 ? `Registo guardado com ${extrasGravados + 1} doses (quantidades/horários) do mesmo remédio.` : "Registo guardado com sucesso.", "success");
+        }
+        if (semColunaEntrega && proxima_entrega) toast("Atenção", "A Próxima Entrega NÃO foi gravada: crie a coluna proxima_entrega (date) na tabela pacientes do Supabase.", "warning", 9000);
     }
 
     async function excluirRegistro(id, nome) { 
@@ -4686,6 +5139,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
+        (base.alertasEntrega || []).forEach(al => {
+            const st = al.diasRestantes < 0 ? 'atrasada' : (al.diasRestantes <= 7 ? 'proxima' : 'ok30');
+            const chave = `entrega|${al.nome}|${al.data}|${st}`;
+            if (vistos.has(chave)) return;
+            vistos.add(chave);
+            if (primeiraExecucao) return;
+            const msg = al.diasRestantes < 0 ? `🚚 Entrega atrasada há ${Math.abs(al.diasRestantes)}d` : (al.diasRestantes === 0 ? '🚚 Entrega prevista HOJE' : `🚚 Entrega em ${al.diasRestantes}d (${formatarDataBr(al.data)})`);
+            lista.push({ chave, titulo: `🚚 ${al.nome}`, mensagem: `💊 ${al.medicamentos.join(', ')} — ${msg} · agendar busca`, tipo: al.diasRestantes < 0 ? 'critico' : 'atencao', criadoEm: Date.now() });
+            houveNovo = true;
+        });
+
         base.alertasRenovacao.forEach(al => {
             const chave = `renov|${al.nome}|${al.data}|${al.status}`;
             if (vistos.has(chave)) return;
@@ -5348,6 +5812,9 @@ async function importarPlanilhaAcolhidos(event) {
                     // Coluna "local" no Supabase — planilha usa "Local" (L maiúsculo)
                     local: row.Local || row.local || row.LOCAL || null
                 };
+
+                const proxEntregaImp = formatarDataParaBanco(row.proxima_entrega || row["proxima entrega"] || row["próxima entrega"]);
+                if (proxEntregaImp) dados.proxima_entrega = proxEntregaImp;
 
                 const { error } = await supabaseClient.from('pacientes').insert([dados]);
                 
